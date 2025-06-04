@@ -1,103 +1,402 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Search, MapPin, Hotel, House, Tent, Waves, Dog, Bone, Utensils, Car, Heart, Calendar, Users, BedDouble, Play, ParkingCircle } from 'lucide-react';
+import { useFavorites } from './context/FavoritesContext';
+import Link from 'next/link';
+
+export default function HomePage() {
+  const router = useRouter();
+  const { favoritesCount } = useFavorites();
+  const [searchParams, setSearchParams] = useState({
+    area: '全国',
+    checkinDate: '',
+    duration: '1泊2日',
+    dogSize: '指定なし',
+    guests: '2名',
+    rooms: '1室',
+    accommodationType: 'すべて'
+  });
+
+  const handleSearch = () => {
+    console.log('検索実行:', searchParams);
+    // 検索結果ページに遷移
+    router.push('/search');
+  };
+
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div className="min-h-screen bg-[#FDF8F3]">
+      {/* パターン背景 */}
+      <div className="fixed inset-0 opacity-15 pointer-events-none z-0">
+        <div 
+          className="w-full h-full"
+          style={{
+            backgroundImage: `
+              radial-gradient(ellipse 15px 8px at 25px 25px, #E8D5B7 40%, transparent 40%),
+              radial-gradient(ellipse 15px 8px at 75px 25px, #E8D5B7 40%, transparent 40%),
+              radial-gradient(circle 4px at 15px 25px, #E8D5B7 100%, transparent 100%),
+              radial-gradient(circle 4px at 35px 25px, #E8D5B7 100%, transparent 100%),
+              radial-gradient(circle 4px at 65px 25px, #E8D5B7 100%, transparent 100%),
+              radial-gradient(circle 4px at 85px 25px, #E8D5B7 100%, transparent 100%)
+            `,
+            backgroundSize: '100px 50px',
+            backgroundRepeat: 'repeat'
+          }}
         />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+      </div>
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      <div className="relative z-10">
+        {/* ヘッダー */}
+        <header className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white p-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center">
+              <Dog className="w-6 h-6 mr-2" />
+              <span className="font-bold text-lg">犬と泊まれる宿</span>
+            </div>
+            <nav className="flex items-center space-x-4">
+              <Link href="/favorites" className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
+                <Heart className="w-4 h-4 mr-1" />
+                お気に入り ({favoritesCount})
+              </Link>
+              <a className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
+                <Heart className="w-4 h-4 mr-1" />
+                宿を掲載する
+              </a>
+              <a className="text-sm hover:text-gray-200 cursor-pointer">ログイン</a>
+            </nav>
+          </div>
+        </header>
+
+        {/* ヒーローエリア */}
+        <section 
+          className="h-[650px] bg-cover bg-center relative flex flex-col justify-between items-center p-10 bg-gradient-to-br from-orange-100 to-pink-100"
+          style={{
+            backgroundImage: "url('https://images.unsplash.com/photo-1551717743-49959800b1f6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2067&q=80')"
+          }}
+        >
+          <div className="absolute inset-0 bg-black bg-opacity-40" />
+          
+          {/* キャッチコピー */}
+          <div className="relative z-10 text-center">
+            <h1 
+              className="text-5xl font-bold text-white mb-4"
+              style={{
+                textShadow: '0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.4), 2px 2px 4px rgba(0,0,0,0.7)'
+              }}
+            >
+              愛犬との最高の旅を、ここから。
+            </h1>
+          </div>
+
+          {/* 検索バー */}
+          <div className="relative z-10 w-full max-w-6xl bg-white bg-opacity-95 rounded-2xl p-6 backdrop-blur-sm shadow-xl">
+            <div className="grid grid-cols-7 gap-3 mb-4">
+              <div>
+                <label className="block text-xs text-gray-500 text-left mb-1">エリア</label>
+                <select 
+                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                  value={searchParams.area}
+                  onChange={(e) => setSearchParams({...searchParams, area: e.target.value})}
+                >
+                  <option>全国</option>
+                  <option>関東</option>
+                  <option>関西</option>
+                  <option>北海道</option>
+                  <option>東北</option>
+                  <option>中部</option>
+                  <option>中国</option>
+                  <option>四国</option>
+                  <option>九州</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs text-gray-500 text-left mb-1">宿泊日</label>
+                <input 
+                  type="date" 
+                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                  value={searchParams.checkinDate}
+                  onChange={(e) => setSearchParams({...searchParams, checkinDate: e.target.value})}
+                  placeholder="チェックイン日"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-xs text-gray-500 text-left mb-1">宿泊日数</label>
+                <select 
+                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                  value={searchParams.duration}
+                  onChange={(e) => setSearchParams({...searchParams, duration: e.target.value})}
+                >
+                  <option>1泊2日</option>
+                  <option>2泊3日</option>
+                  <option>3泊4日</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs text-gray-500 text-left mb-1">犬のサイズ</label>
+                <select 
+                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                  value={searchParams.dogSize}
+                  onChange={(e) => setSearchParams({...searchParams, dogSize: e.target.value})}
+                >
+                  <option>指定なし</option>
+                  <option>小型犬</option>
+                  <option>中型犬</option>
+                  <option>大型犬OK</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs text-gray-500 text-left mb-1">宿泊人数</label>
+                <select 
+                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                  value={searchParams.guests}
+                  onChange={(e) => setSearchParams({...searchParams, guests: e.target.value})}
+                >
+                  <option>1名</option>
+                  <option>2名</option>
+                  <option>3名</option>
+                  <option>4名</option>
+                  <option>5名以上</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs text-gray-500 text-left mb-1">部屋数</label>
+                <select 
+                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                  value={searchParams.rooms}
+                  onChange={(e) => setSearchParams({...searchParams, rooms: e.target.value})}
+                >
+                  <option>1室</option>
+                  <option>2室</option>
+                  <option>3室</option>
+                </select>
+              </div>
+              
+              <div>
+                <label className="block text-xs text-gray-500 text-left mb-1">宿タイプ</label>
+                <select 
+                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                  value={searchParams.accommodationType}
+                  onChange={(e) => setSearchParams({...searchParams, accommodationType: e.target.value})}
+                >
+                  <option>すべて</option>
+                  <option>ホテル</option>
+                  <option>旅館</option>
+                  <option>コテージ</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="flex justify-center">
+              <button 
+                onClick={handleSearch}
+                className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white px-6 py-3 rounded-full font-semibold flex items-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+              >
+                <Search className="w-5 h-5 mr-2" />
+                この条件で検索
+              </button>
+            </div>
+          </div>
+        </section>
+
+        {/* 詳細検索オプション */}
+        <div className="bg-gray-50 p-3">
+          <div className="max-w-7xl mx-auto flex justify-center space-x-6 text-sm">
+            <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
+              <Bone className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+              ドッグラン
+            </div>
+            <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
+              <Dog className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+              大型犬OK
+            </div>
+            <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
+              <Utensils className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+              部屋食あり
+            </div>
+            <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
+              <Waves className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+              温泉
+            </div>
+            <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
+              <ParkingCircle className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+              駐車場あり
+            </div>
+            <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
+              <Heart className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+              複数頭OK
+            </div>
+            <a className="text-[#FF5A5F] font-bold cursor-pointer hover:underline">+ 詳細条件</a>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* メインコンテンツ */}
+        <main className="max-w-7xl mx-auto px-4 py-8">
+          {/* エリアから探す */}
+          <section className="mb-12 p-3">
+            <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-t-xl border border-[#E8D5B7] flex items-center shadow-md">
+              <Heart className="w-6 h-6 mr-3 text-[#8B7355]" />
+              <h2 className="text-xl font-bold">エリアから探す</h2>
+            </div>
+            <div className="bg-white p-6 rounded-b-xl shadow-lg border border-t-0 border-[#E8D5B7]">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h4 className="font-bold mb-3 text-base">人気エリア</h4>
+                  <div className="flex flex-wrap">
+                    {['北海道', '東京', '箱根', '伊豆', '軽井沢', '京都'].map((area) => (
+                      <span 
+                        key={area}
+                        className="inline-flex items-center bg-[#F3F3F3] text-[#484848] rounded-full px-4 py-2 mr-2 mb-2 text-sm font-medium cursor-pointer transition-all duration-300 hover:bg-[#FF5A5F] hover:text-white hover:-translate-y-1 shadow-sm hover:shadow-md"
+                      >
+                        <MapPin className="w-4 h-4 mr-2" />
+                        {area}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <h4 className="font-bold mb-3 text-base">宿タイプで探す</h4>
+                  <div className="flex flex-wrap">
+                    {[
+                      {name: 'ホテル', icon: Hotel},
+                      {name: '旅館', icon: House},
+                      {name: 'コテージ', icon: Tent},
+                      {name: '温泉宿', icon: Waves}
+                    ].map(({name, icon: Icon}) => (
+                      <span 
+                        key={name}
+                        className="inline-flex items-center bg-[#F3F3F3] text-[#484848] rounded-full px-4 py-2 mr-2 mb-2 text-sm font-medium cursor-pointer transition-all duration-300 hover:bg-[#FF5A5F] hover:text-white hover:-translate-y-1 shadow-sm hover:shadow-md"
+                      >
+                        <Icon className="w-4 h-4 mr-2" />
+                        {name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* 特集記事 */}
+          <section className="p-3">
+            <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-t-xl border border-[#E8D5B7] flex items-center justify-between shadow-md">
+              <div className="flex items-center">
+                <Dog className="w-6 h-6 mr-3 text-[#8B7355]" />
+                <h2 className="text-xl font-bold">特集記事</h2>
+              </div>
+              <div className="ml-auto">
+                <a className="text-gray-600 text-sm font-normal hover:text-gray-800 cursor-pointer">
+                  もっと見る →
+                </a>
+              </div>
+            </div>
+            <div className="bg-white p-6 rounded-b-xl shadow-lg border border-t-0 border-[#E8D5B7]">
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  {
+                    icon: Play,
+                    title: '広々ドッグラン付き',
+                    description: '愛犬と思いっきり遊べる宿'
+                  },
+                  {
+                    icon: Dog,
+                    title: '大型犬歓迎の宿',
+                    description: '大きなワンちゃんもゆったり'
+                  },
+                  {
+                    icon: Utensils,
+                    title: '一緒に食事できる',
+                    description: '愛犬と同じ部屋で食事を'
+                  }
+                ].map(({icon: Icon, title, description}) => (
+                  <div 
+                    key={title}
+                    className="bg-white border-2 border-[#F0F0F0] rounded-lg p-3 flex items-center hover:shadow-md transition-shadow cursor-pointer"
+                  >
+                    <Icon className="w-8 h-8 mr-3 text-[#FF5A5F]" />
+                    <div>
+                      <h4 className="font-bold text-sm mb-1">{title}</h4>
+                      <p className="text-xs text-gray-600">{description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        </main>
+
+        {/* フッター */}
+        <footer className="bg-[#3A3A3A] text-white mt-16 rounded-b-xl">
+          <div className="max-w-7xl mx-auto px-4 py-12">
+            <div className="grid grid-cols-4 gap-8">
+              <div>
+                <div className="flex items-center mb-4">
+                  <Dog className="w-6 h-6 mr-2 text-[#FF5A5F]" />
+                  <h3 className="font-bold text-white">犬と泊まれる宿</h3>
+                </div>
+                <p className="text-sm text-gray-300 mb-4">
+                  愛犬との素敵な旅行をサポートします
+                </p>
+                <div className="flex space-x-3">
+                  {['facebook', 'twitter', 'instagram'].map((social) => (
+                    <div 
+                      key={social}
+                      className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300"
+                    >
+                      <span className="text-xs text-white font-bold">{social[0].toUpperCase()}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <div className="flex items-center font-bold mb-4 text-white">
+                  <Search className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+                  サービス
+                </div>
+                <ul className="space-y-2 text-sm">
+                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を探す</a></li>
+                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お気に入り</a></li>
+                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">予約履歴</a></li>
+                </ul>
+              </div>
+              
+              <div>
+                <div className="flex items-center font-bold mb-4 text-white">
+                  <Hotel className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+                  宿泊施設向け
+                </div>
+                <ul className="space-y-2 text-sm">
+                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を掲載する</a></li>
+                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">管理画面</a></li>
+                </ul>
+              </div>
+              
+              <div>
+                <div className="flex items-center font-bold mb-4 text-white">
+                  <Heart className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+                  サポート
+                </div>
+                <ul className="space-y-2 text-sm">
+                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">よくある質問</a></li>
+                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お問い合わせ</a></li>
+                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">利用規約</a></li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="border-t border-gray-600 mt-8 pt-8 text-center text-sm text-gray-300">
+              <p>&copy; 2024 犬と泊まれる宿. All rights reserved.</p>
+            </div>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }
+
