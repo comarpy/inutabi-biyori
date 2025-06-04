@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Dog, Heart, MapPin } from 'lucide-react';
-import type { Hotel } from '../../context/FavoritesContext';
+import { Heart, MapPin } from 'lucide-react';
+import { Hotel } from '../../context/FavoritesContext';
 
 // Leafletのデフォルトアイコンの問題を修正
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+delete (L.Icon.Default.prototype as L.Icon & { _getIconUrl?: () => void })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -46,7 +46,7 @@ const createCustomIcon = () => {
 
 interface HotelMapProps {
   hotels: Hotel[];
-  onHotelSelect?: (hotel: Hotel) => void;
+  onHotelSelect: (hotel: Hotel) => void;
 }
 
 export default function HotelMap({ hotels, onHotelSelect }: HotelMapProps) {

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, MapPin, Hotel as HotelIcon, House, Tent, Waves, Dog, Bone, Utensils, Car, Heart, Calendar, Users, BedDouble, Play, ParkingCircle, ArrowLeft, ArrowRight, Map, SortAsc, Wifi, Camera, Laptop, Battery, ShoppingBag, Tv, GlassWater, TreePine, List, LucideIcon } from 'lucide-react';
+import { MapPin, House, Waves, Dog, Bone, Utensils, Car, Heart, Play, ParkingCircle, ArrowLeft, ArrowRight, Map, SortAsc, Wifi, Camera, Laptop, Battery, ShoppingBag, Tv, GlassWater, TreePine, List } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useFavorites } from '../context/FavoritesContext';

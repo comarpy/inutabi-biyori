@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, MapPin, Hotel, House, Tent, Waves, Dog, Bone, Utensils, Car, Heart, Calendar, Users, BedDouble, Play, ParkingCircle } from 'lucide-react';
+import { Search, MapPin, Hotel, House, Tent, Waves, Dog, Bone, Utensils, Heart, Play, ParkingCircle } from 'lucide-react';
 import { useFavorites } from './context/FavoritesContext';
 import Link from 'next/link';
 

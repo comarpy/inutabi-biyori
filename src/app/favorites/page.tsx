@@ -1,9 +1,9 @@
 'use client';
 
-import { useFavorites } from '../context/FavoritesContext';
-import { Search, MapPin, Hotel, House, Tent, Waves, Dog, Bone, Utensils, Car, Heart, Calendar, Users, BedDouble, Play, ParkingCircle, ArrowLeft, ArrowRight, Map, SortAsc, Wifi, Camera, Laptop, Battery, ShoppingBag, Tv, GlassWater, TreePine, List, Star, Trash2 } from 'lucide-react';
-import Link from 'next/link';
 import { useState } from 'react';
+import { Search, MapPin, Dog, Bone, Heart, X } from 'lucide-react';
+import Link from 'next/link';
+import { useFavorites } from '../context/FavoritesContext';
 
 export default function FavoritesPage() {
   const { favorites, removeFromFavorites, favoritesCount } = useFavorites();
@@ -105,7 +105,7 @@ export default function FavoritesPage() {
                           onClick={() => setShowDeleteConfirm(hotel.id)}
                           className="absolute top-2 right-2 z-10 bg-white bg-opacity-90 hover:bg-red-50 text-red-500 hover:text-red-600 rounded-full w-8 h-8 flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all duration-300"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <X className="w-4 h-4" />
                         </button>
 
                         {/* 削除確認モーダル */}
@@ -167,7 +167,7 @@ export default function FavoritesPage() {
                                 href={`/search?hotel=${hotel.id}`}
                                 className="bg-[#FF5A5F] hover:bg-[#FF385C] text-white text-sm px-3 py-1 rounded-full transition-colors flex items-center"
                               >
-                                <Star className="w-3 h-3 mr-1" />
+                                <Heart className="w-3 h-3 mr-1" />
                                 詳細
                               </Link>
                             </div>
@@ -186,7 +186,7 @@ export default function FavoritesPage() {
                         もっと探す
                       </Link>
                       <Link href="/search" className="bg-white hover:bg-gray-50 text-[#FF5A5F] border-2 border-[#FF5A5F] px-6 py-2 rounded-full font-semibold transition-all duration-300 flex items-center">
-                        <List className="w-4 h-4 mr-2" />
+                        <Heart className="w-4 h-4 mr-2" />
                         検索結果へ
                       </Link>
                     </div>

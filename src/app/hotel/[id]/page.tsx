@@ -9,7 +9,7 @@ import Link from 'next/link';
 // 型定義
 interface DogFeature {
   name: string;
-  icon: any;
+  icon: React.ComponentType<{ className?: string }>;
 }
 
 interface PetInfo {
