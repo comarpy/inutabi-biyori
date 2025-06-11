@@ -44,7 +44,7 @@ export default function HomePage() {
             backgroundRepeat: 'repeat'
           }}
         />
-      </div>
+          </div>
 
       <div className="relative z-10">
         {/* ヘッダー */}
@@ -52,12 +52,15 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center">
               <Dog className="w-6 h-6 mr-2" />
-              <span className="font-bold text-lg">犬と泊まれる宿</span>
+              <span className="font-bold text-lg">犬旅びより</span>
             </div>
             <nav className="flex items-center space-x-4">
               <Link href="/favorites" className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
                 <Heart className="w-4 h-4 mr-1" />
                 お気に入り ({favoritesCount})
+              </Link>
+              <Link href="/contact" className="text-sm hover:text-gray-200 cursor-pointer">
+                お問い合わせ
               </Link>
               <a className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
                 <Heart className="w-4 h-4 mr-1" />
@@ -70,12 +73,14 @@ export default function HomePage() {
 
         {/* ヒーローエリア */}
         <section 
-          className="h-[650px] bg-cover bg-center relative flex flex-col justify-between items-center p-10 bg-gradient-to-br from-orange-100 to-pink-100"
+          className="h-[650px] bg-green-400 bg-cover bg-center bg-no-repeat relative flex flex-col justify-between items-center p-10"
           style={{
-            backgroundImage: "url('https://images.unsplash.com/photo-1551717743-49959800b1f6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2067&q=80')"
+            backgroundImage: "url('/images/hero-dog-meadow.jpg')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center center'
           }}
-        >
-          <div className="absolute inset-0 bg-black bg-opacity-40" />
+              >
+          <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
           
           {/* キャッチコピー */}
           <div className="relative z-10 text-center">
@@ -84,15 +89,15 @@ export default function HomePage() {
               style={{
                 textShadow: '0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.4), 2px 2px 4px rgba(0,0,0,0.7)'
               }}
-            >
+              >
               愛犬との最高の旅を、ここから。
             </h1>
-          </div>
+            </div>
 
           {/* 検索バー */}
           <div className="relative z-10 w-full max-w-6xl bg-white bg-opacity-95 rounded-2xl p-6 backdrop-blur-sm shadow-xl">
             <div className="grid grid-cols-7 gap-3 mb-4">
-              <div>
+                    <div>
                 <label className="block text-xs text-gray-500 text-left mb-1">エリア</label>
                 <select 
                   className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
@@ -109,20 +114,20 @@ export default function HomePage() {
                   <option>四国</option>
                   <option>九州</option>
                 </select>
-              </div>
+                    </div>
               
-              <div>
+                    <div>
                 <label className="block text-xs text-gray-500 text-left mb-1">宿泊日</label>
-                <input 
-                  type="date" 
+                      <input
+                        type="date"
                   className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
                   value={searchParams.checkinDate}
                   onChange={(e) => setSearchParams({...searchParams, checkinDate: e.target.value})}
                   placeholder="チェックイン日"
-                />
-              </div>
+                      />
+                    </div>
               
-              <div>
+                    <div>
                 <label className="block text-xs text-gray-500 text-left mb-1">宿泊日数</label>
                 <select 
                   className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
@@ -133,9 +138,9 @@ export default function HomePage() {
                   <option>2泊3日</option>
                   <option>3泊4日</option>
                 </select>
-              </div>
+                    </div>
               
-              <div>
+                    <div>
                 <label className="block text-xs text-gray-500 text-left mb-1">犬のサイズ</label>
                 <select 
                   className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
@@ -146,10 +151,10 @@ export default function HomePage() {
                   <option>小型犬</option>
                   <option>中型犬</option>
                   <option>大型犬OK</option>
-                </select>
-              </div>
+                      </select>
+                    </div>
               
-              <div>
+                    <div>
                 <label className="block text-xs text-gray-500 text-left mb-1">宿泊人数</label>
                 <select 
                   className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
@@ -161,10 +166,10 @@ export default function HomePage() {
                   <option>3名</option>
                   <option>4名</option>
                   <option>5名以上</option>
-                </select>
-              </div>
+                      </select>
+                    </div>
               
-              <div>
+                    <div>
                 <label className="block text-xs text-gray-500 text-left mb-1">部屋数</label>
                 <select 
                   className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
@@ -175,9 +180,9 @@ export default function HomePage() {
                   <option>2室</option>
                   <option>3室</option>
                 </select>
-              </div>
+                    </div>
               
-              <div>
+                    <div>
                 <label className="block text-xs text-gray-500 text-left mb-1">宿タイプ</label>
                 <select 
                   className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
@@ -188,9 +193,9 @@ export default function HomePage() {
                   <option>ホテル</option>
                   <option>旅館</option>
                   <option>コテージ</option>
-                </select>
-              </div>
-            </div>
+                      </select>
+                    </div>
+                  </div>
             
             <div className="flex justify-center">
               <button 
@@ -199,7 +204,7 @@ export default function HomePage() {
               >
                 <Search className="w-5 h-5 mr-2" />
                 この条件で検索
-              </button>
+                    </button>
             </div>
           </div>
         </section>
@@ -218,22 +223,22 @@ export default function HomePage() {
             <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
               <Utensils className="w-4 h-4 mr-2 text-[#FF5A5F]" />
               部屋食あり
-            </div>
+              </div>
             <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
               <Waves className="w-4 h-4 mr-2 text-[#FF5A5F]" />
               温泉
-            </div>
+              </div>
             <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
               <ParkingCircle className="w-4 h-4 mr-2 text-[#FF5A5F]" />
               駐車場あり
-            </div>
+              </div>
             <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
               <Heart className="w-4 h-4 mr-2 text-[#FF5A5F]" />
               複数頭OK
             </div>
             <a className="text-[#FF5A5F] font-bold cursor-pointer hover:underline">+ 詳細条件</a>
+            </div>
           </div>
-        </div>
 
         {/* メインコンテンツ */}
         <main className="max-w-7xl mx-auto px-4 py-8">
@@ -242,7 +247,7 @@ export default function HomePage() {
             <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-t-xl border border-[#E8D5B7] flex items-center shadow-md">
               <Heart className="w-6 h-6 mr-3 text-[#8B7355]" />
               <h2 className="text-xl font-bold">エリアから探す</h2>
-            </div>
+                  </div>
             <div className="bg-white p-6 rounded-b-xl shadow-lg border border-t-0 border-[#E8D5B7]">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -275,11 +280,11 @@ export default function HomePage() {
                         <Icon className="w-4 h-4 mr-2" />
                         {name}
                       </span>
-                    ))}
-                  </div>
+              ))}
+            </div>
                 </div>
               </div>
-            </div>
+                </div>
           </section>
 
           {/* 特集記事 */}
@@ -337,32 +342,33 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center mb-4">
                   <Dog className="w-6 h-6 mr-2 text-[#FF5A5F]" />
-                  <h3 className="font-bold text-white">犬と泊まれる宿</h3>
-                </div>
+                  <h3 className="font-bold text-white">犬旅びより</h3>
+                  </div>
                 <p className="text-sm text-gray-300 mb-4">
                   愛犬との素敵な旅行をサポートします
                 </p>
                 <div className="flex space-x-3">
-                  {['facebook', 'twitter', 'instagram'].map((social) => (
-                    <div 
-                      key={social}
-                      className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300"
-                    >
-                      <span className="text-xs text-white font-bold">{social[0].toUpperCase()}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
+                  <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
+                    <span className="text-xs text-white font-bold">F</span>
+                  </a>
+                  <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
+                    <span className="text-xs text-white font-bold">T</span>
+                  </a>
+                  <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
+                    <span className="text-xs text-white font-bold">I</span>
+                  </a>
+            </div>
+          </div>
+
               <div>
                 <div className="flex items-center font-bold mb-4 text-white">
                   <Search className="w-4 h-4 mr-2 text-[#FF5A5F]" />
                   サービス
                 </div>
                 <ul className="space-y-2 text-sm">
-                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を探す</a></li>
-                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お気に入り</a></li>
-                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">予約履歴</a></li>
+                  <li><Link href="/search" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を探す</Link></li>
+                  <li><Link href="/favorites" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お気に入り</Link></li>
+                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">予約履歴</Link></li>
                 </ul>
               </div>
               
@@ -372,8 +378,8 @@ export default function HomePage() {
                   宿泊施設向け
                 </div>
                 <ul className="space-y-2 text-sm">
-                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を掲載する</a></li>
-                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">管理画面</a></li>
+                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を掲載する</Link></li>
+                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">管理画面</Link></li>
                 </ul>
               </div>
               
@@ -383,20 +389,21 @@ export default function HomePage() {
                   サポート
                 </div>
                 <ul className="space-y-2 text-sm">
-                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">よくある質問</a></li>
-                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お問い合わせ</a></li>
-                  <li><a className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">利用規約</a></li>
+                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">よくある質問</Link></li>
+                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お問い合わせ</Link></li>
+                  <li><Link href="/terms" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">利用規約</Link></li>
+                  <li><Link href="/privacy" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">プライバシーポリシー</Link></li>
                 </ul>
               </div>
             </div>
             
             <div className="border-t border-gray-600 mt-8 pt-8 text-center text-sm text-gray-300">
-              <p>&copy; 2024 犬と泊まれる宿. All rights reserved.</p>
+              <p>&copy; 2024 犬旅びより. All rights reserved.</p>
             </div>
-          </div>
-        </footer>
+            </div>
+          </footer>
+        </div>
       </div>
-    </div>
   );
 }
 

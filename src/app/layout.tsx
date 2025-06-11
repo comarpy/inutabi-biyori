@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "犬と泊まれる宿",
-  description: "愛犬との最高の旅を、ここから。",
+  title: "犬旅びより - 愛犬と泊まれる宿が見つかる、旅の検索サイト",
+  description: "愛犬との最高の旅を、ここから。犬と一緒に泊まれる宿・ホテルを簡単検索。",
 };
 
 export default function RootLayout({
@@ -29,7 +29,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <FavoritesProvider>
-          {children}
+        {children}
         </FavoritesProvider>
       </body>
     </html>

@@ -41,12 +41,15 @@ export default function FavoritesPage() {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center hover:opacity-80">
               <Dog className="w-6 h-6 mr-2" />
-              <span className="font-bold text-lg">犬と泊まれる宿</span>
+                              <span className="font-bold text-lg">犬旅びより</span>
             </Link>
             <nav className="flex items-center space-x-4">
               <Link href="/favorites" className="text-sm hover:text-gray-200 cursor-pointer flex items-center bg-white bg-opacity-20 px-3 py-1 rounded-full">
                 <Heart className="w-4 h-4 mr-1 fill-white" />
                 お気に入り ({favoritesCount})
+              </Link>
+              <Link href="/contact" className="text-sm hover:text-gray-200 cursor-pointer">
+                お問い合わせ
               </Link>
               <a className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
                 <Heart className="w-4 h-4 mr-1" />
@@ -68,7 +71,7 @@ export default function FavoritesPage() {
                     <Heart className="w-8 h-8 mr-3 fill-[#FF5A5F]" />
                     <div>
                       <h1 className="text-2xl font-bold mb-1">お気に入りの宿</h1>
-                      <p className="text-sm opacity-80">あなたが保存した愛犬と泊まれる宿一覧</p>
+                      <p className="text-sm opacity-80">あなたが保存したお気に入りの宿一覧</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -203,9 +206,9 @@ export default function FavoritesPage() {
                       サービスについて
                     </h5>
                     <ul className="space-y-1 text-gray-300">
-                      <li className="hover:text-white cursor-pointer">ご利用ガイド</li>
-                      <li className="hover:text-white cursor-pointer">よくある質問</li>
-                      <li className="hover:text-white cursor-pointer">お問い合わせ</li>
+                      <li><Link href="/" className="hover:text-white cursor-pointer">ホーム</Link></li>
+                      <li><Link href="/search" className="hover:text-white cursor-pointer">宿を探す</Link></li>
+                      <li><Link href="/contact" className="hover:text-white cursor-pointer">お問い合わせ</Link></li>
                     </ul>
                   </div>
                   <div>
@@ -214,9 +217,9 @@ export default function FavoritesPage() {
                       利用規約
                     </h5>
                     <ul className="space-y-1 text-gray-300">
-                      <li className="hover:text-white cursor-pointer">プライバシーポリシー</li>
-                      <li className="hover:text-white cursor-pointer">特定商取引法</li>
-                      <li className="hover:text-white cursor-pointer">キャンセルポリシー</li>
+                      <li><Link href="/privacy" className="hover:text-white cursor-pointer">プライバシーポリシー</Link></li>
+                      <li><Link href="/terms" className="hover:text-white cursor-pointer">利用規約</Link></li>
+                      <li><Link href="/contact" className="hover:text-white cursor-pointer">お問い合わせ</Link></li>
                     </ul>
                   </div>
                   <div>
@@ -225,9 +228,9 @@ export default function FavoritesPage() {
                       運営会社
                     </h5>
                     <ul className="space-y-1 text-gray-300">
-                      <li className="hover:text-white cursor-pointer">会社概要</li>
-                      <li className="hover:text-white cursor-pointer">採用情報</li>
-                      <li className="hover:text-white cursor-pointer">パートナー募集</li>
+                      <li><Link href="/contact" className="hover:text-white cursor-pointer">会社概要</Link></li>
+                      <li><Link href="/contact" className="hover:text-white cursor-pointer">採用情報</Link></li>
+                      <li><Link href="/contact" className="hover:text-white cursor-pointer">パートナー募集</Link></li>
                     </ul>
                   </div>
                   <div>
@@ -236,24 +239,24 @@ export default function FavoritesPage() {
                       SNSでフォロー
                     </h5>
                     <div className="flex space-x-3 text-base">
-                      <div className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-600 transition-colors">
+                      <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-600 transition-colors">
                         <span className="text-xs font-bold">I</span>
-                      </div>
-                      <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors">
+                      </a>
+                      <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors">
                         <span className="text-xs font-bold">F</span>
-                      </div>
-                      <div className="w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-500 transition-colors">
+                      </a>
+                      <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-500 transition-colors">
                         <span className="text-xs font-bold">T</span>
-                      </div>
-                      <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors">
+                      </a>
+                      <a href="https://line.me" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors">
                         <span className="text-xs font-bold">L</span>
-                      </div>
+                      </a>
                     </div>
                   </div>
                 </div>
                 <div className="text-center text-gray-400 flex items-center justify-center">
                   <Heart className="w-3 h-3 mr-1" />
-                  © 2024 犬と泊まれる宿 All Rights Reserved.
+                                      © 2024 犬旅びより All Rights Reserved.
                 </div>
               </footer>
             </div>
