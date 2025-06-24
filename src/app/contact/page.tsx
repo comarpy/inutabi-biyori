@@ -59,7 +59,7 @@ export default function ContactPage() {
                 alt="犬旅びより"
               />
             </div>
-            <h2 className="text-xl font-bold">犬旅びより- 愛犬と泊まれる宿が見つかる、旅の検索サイト</h2>
+            <h2 className="text-xl font-bold">Inutabi-biyori- 愛犬と泊まれる宿が見つかる、旅の検索サイト</h2>
           </div>
           <div className="text-lg font-medium">お問い合わせ</div>
         </div>

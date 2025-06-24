@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "犬旅びより - 愛犬と泊まれる宿が見つかる、旅の検索サイト",
+  title: "Inutabi-biyori - 愛犬と泊まれる宿が見つかる、旅の検索サイト",
   description: "愛犬との最高の旅を、ここから。犬と一緒に泊まれる宿・ホテルを簡単検索。",
 };
 

@@ -176,7 +176,7 @@ export default function SearchResultsPage() {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center hover:opacity-80">
               <Dog className="w-6 h-6 mr-2" />
-                              <span className="font-bold text-lg">犬旅びより</span>
+              <span className="font-bold text-lg">Inutabi-biyori</span>
             </Link>
             <nav className="flex items-center space-x-4">
               <Link href="/favorites" className="text-sm hover:text-gray-200 cursor-pointer flex items-center">

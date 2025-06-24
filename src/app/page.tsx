@@ -52,7 +52,7 @@ export default function HomePage() {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center">
               <Dog className="w-6 h-6 mr-2" />
-              <span className="font-bold text-lg">犬旅びより</span>
+              <span className="font-bold text-lg">Inutabi-biyori</span>
             </div>
             <nav className="flex items-center space-x-4">
               <Link href="/favorites" className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
@@ -342,7 +342,7 @@ export default function HomePage() {
               <div>
                 <div className="flex items-center mb-4">
                   <Dog className="w-6 h-6 mr-2 text-[#FF5A5F]" />
-                  <h3 className="font-bold text-white">犬旅びより</h3>
+                  <h3 className="font-bold text-white">Inutabi-biyori</h3>
                   </div>
                 <p className="text-sm text-gray-300 mb-4">
                   愛犬との素敵な旅行をサポートします

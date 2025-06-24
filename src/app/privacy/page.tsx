@@ -27,7 +27,7 @@ export default function PrivacyPolicyPage() {
       />
 
       <div className="max-w-7xl mx-auto relative z-10 p-4">
-        <h1 className="text-2xl font-bold mb-2 text-[#484848]">犬旅びより - プライバシーポリシー</h1>
+        <h1 className="text-2xl font-bold mb-2 text-[#484848]">Inutabi-biyori - プライバシーポリシー</h1>
         
         {/* Header Section */}
         <div className="bg-gradient-to-br from-[#FF5A5F] to-[#FF385C] text-white p-3 rounded-t-lg mb-3 flex items-center justify-between">
@@ -39,7 +39,7 @@ export default function PrivacyPolicyPage() {
                 alt="犬旅びより"
               />
             </div>
-            <h2 className="text-xl font-bold">犬旅びより- 愛犬と泊まれる宿が見つかる、旅の検索サイト</h2>
+            <h2 className="text-xl font-bold">Inutabi-biyori- 愛犬と泊まれる宿が見つかる、旅の検索サイト</h2>
           </div>
           <div className="text-base font-medium">プライバシーポリシー</div>
         </div>
