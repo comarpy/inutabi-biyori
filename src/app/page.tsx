@@ -75,7 +75,7 @@ export default function HomePage() {
         <section 
           className="h-[650px] bg-green-400 bg-cover bg-center bg-no-repeat relative flex flex-col justify-between items-center p-10"
           style={{
-            backgroundImage: "url('/images/hero-dog-meadow.jpg')",
+            backgroundImage: "url('/images/hero-dog.jpg')",
             backgroundSize: 'cover',
             backgroundPosition: 'center center'
           }}
