@@ -258,6 +258,24 @@ export async function getHotelById(id: string): Promise<HotelDetail | null> {
 function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): HotelDetail {
   const baseHotel = convertMicroCMSToHotel(microCMSHotel, 0);
   
+  // microCMSから画像を取得（将来的に画像フィールドが追加される可能性に対応）
+  const images: string[] = [];
+  
+  // microCMSに画像フィールドがある場合の処理（現在は未実装だが将来対応）
+  // if (microCMSHotel.hotelImages && Array.isArray(microCMSHotel.hotelImages)) {
+  //   microCMSHotel.hotelImages.forEach(img => {
+  //     if (img.url) images.push(img.url);
+  //   });
+  // }
+  
+  // 現在はデフォルト画像を使用
+  if (images.length === 0) {
+    images.push('/images/画像2.jpeg');
+    // 複数のデフォルト画像を追加（バリエーションを提供）
+    images.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80');
+    images.push('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80');
+  }
+  
   return {
     ...baseHotel,
     access: microCMSHotel.access || 'アクセス情報なし',
@@ -266,7 +284,7 @@ function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): HotelDetail 
     parking: microCMSHotel.parking ? 'あり' : 'なし',
     payment: microCMSHotel.paymentInfo || '現金',
     phone: microCMSHotel.phoneNumber || '電話番号なし',
-    images: ['/images/画像2.jpeg'], // デフォルト画像
+    images: images, // 複数の画像URLを配列として設定
     dogFeatures: [
       { name: '小型犬OK', icon: Dog, available: microCMSHotel.smallDog },
       { name: '中型犬OK', icon: Dog, available: microCMSHotel.mediumDog },
@@ -310,6 +328,39 @@ function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel): HotelDetail {
     coordinates: generateCoordinates('全国', 0),
   };
   
+  // 楽天APIから取得できる複数の画像URLを配列として設定
+  const images: string[] = [];
+  
+  // メイン画像
+  if (rakutenHotel.hotelImageUrl) {
+    images.push(rakutenHotel.hotelImageUrl);
+  }
+  
+  // 客室画像
+  if (rakutenHotel.roomImageUrl) {
+    images.push(rakutenHotel.roomImageUrl);
+  }
+  
+  // サムネイル画像（メイン画像と異なる場合のみ）
+  if (rakutenHotel.hotelThumbnailUrl && rakutenHotel.hotelThumbnailUrl !== rakutenHotel.hotelImageUrl) {
+    images.push(rakutenHotel.hotelThumbnailUrl);
+  }
+  
+  // 客室サムネイル画像（他の画像と異なる場合のみ）
+  if (rakutenHotel.roomThumbnailUrl && !images.includes(rakutenHotel.roomThumbnailUrl)) {
+    images.push(rakutenHotel.roomThumbnailUrl);
+  }
+  
+  // 地図画像（他の画像と異なる場合のみ）
+  if (rakutenHotel.hotelMapImageUrl && !images.includes(rakutenHotel.hotelMapImageUrl)) {
+    images.push(rakutenHotel.hotelMapImageUrl);
+  }
+  
+  // 画像がない場合はデフォルト画像を設定
+  if (images.length === 0) {
+    images.push('/images/画像2.jpeg');
+  }
+  
   return {
     ...baseHotel,
     access: rakutenHotel.access || 'アクセス情報なし',
@@ -318,7 +369,7 @@ function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel): HotelDetail {
     parking: rakutenHotel.parkingInformation || '駐車場情報なし',
     payment: 'クレジットカード・現金',
     phone: rakutenHotel.telephoneNo || '電話番号なし',
-    images: [rakutenHotel.hotelImageUrl || '/images/画像2.jpeg'],
+    images: images, // 複数の画像URLを配列として設定
     dogFeatures: [
       { name: '小型犬OK', icon: Dog, available: true },
       { name: '中型犬OK', icon: Dog, available: true },

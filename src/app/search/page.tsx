@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { MapPin, House, Waves, Dog, Bone, Utensils, Car, Heart, Play, ParkingCircle, ArrowLeft, ArrowRight, Map, SortAsc, Wifi, Camera, Laptop, Battery, ShoppingBag, Tv, GlassWater, TreePine, List, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -21,7 +21,7 @@ const HotelMap = dynamic(() => import('./components/HotelMap'), {
   )
 });
 
-export default function SearchResultsPage() {
+function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { addToFavorites, removeFromFavorites, isFavorite, favoritesCount } = useFavorites();
@@ -465,5 +465,20 @@ export default function SearchResultsPage() {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function SearchResultsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5A5F] mx-auto mb-4"></div>
+          <p className="text-gray-600">ページを読み込み中...</p>
+        </div>
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
   );
 }
