@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Camera, Dog, Home, Info, CalendarCheck, MapPin, Phone, Car, CreditCard, Weight, Gift, Utensils, Building, Bed, Bath, UtensilsCrossed } from 'lucide-react';
 import { useFavorites } from '../../context/FavoritesContext';
@@ -14,7 +14,7 @@ interface BookingSite {
   color: string;
 }
 
-export default function HotelDetailPage() {
+function HotelDetailContent() {
   const params = useParams();
   const router = useRouter();
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
@@ -463,4 +463,19 @@ export default function HotelDetailPage() {
       </div>
     </div>
   );
-} 
+}
+
+export default function HotelDetailPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5A5F] mx-auto mb-4"></div>
+          <p className="text-gray-600">ホテル情報を読み込み中...</p>
+        </div>
+      </div>
+    }>
+      <HotelDetailContent />
+    </Suspense>
+  );
+}

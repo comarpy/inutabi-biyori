@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, MapPin, Hotel, House, Tent, Waves, Dog, Bone, Utensils, Heart, Play, ParkingCircle } from 'lucide-react';
 import { useFavorites } from './context/FavoritesContext';
 import Link from 'next/link';
 
-export default function HomePage() {
+function HomeContent() {
   const router = useRouter();
   const { favoritesCount } = useFavorites();
   const [searchParams, setSearchParams] = useState({
@@ -337,6 +337,21 @@ export default function HomePage() {
           </footer>
         </div>
       </div>
+  );
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5A5F] mx-auto mb-4"></div>
+          <p className="text-gray-600">ページを読み込み中...</p>
+        </div>
+      </div>
+    }>
+      <HomeContent />
+    </Suspense>
   );
 }
 
