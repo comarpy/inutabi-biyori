@@ -96,7 +96,7 @@ async function tryWithAreaCode(applicationId: string, affiliateId?: string): Pro
     const params = new URLSearchParams({
       applicationId,
       format: 'json',
-      hits: '5' // さらに少なく
+      hits: '30' // より多くの結果を取得
     });
 
     // 地区コードを個別に追加
@@ -274,7 +274,8 @@ export async function fetchRakutenHotels(
   console.log('=== ステップ2: 最小構成ホテル検索 ===');
   const params = new URLSearchParams({
     applicationId,
-    format: 'json'
+    format: 'json',
+    hits: '30' // より多くの結果を取得
   });
 
   const url = `https://app.rakuten.co.jp/services/api/Travel/SimpleHotelSearch/20170426?${params.toString()}`;

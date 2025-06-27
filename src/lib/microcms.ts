@@ -56,6 +56,9 @@ export async function getDogHotels(): Promise<DogHotelInfo[]> {
     
     const response = await client.get({
       endpoint: 'dog-hotels',
+      queries: {
+        limit: 100, // より多くのホテルを取得
+      },
     });
     
     console.log('microCMS レスポンス:', response);
@@ -79,6 +82,7 @@ export async function searchDogHotelsByPrefecture(prefecture: string): Promise<D
       endpoint: 'dog-hotels',
       queries: {
         filters: `prefecture[equals]${prefecture}`,
+        limit: 100, // より多くのホテルを取得
       },
     });
     return response.contents;
