@@ -66,6 +66,8 @@ function generatePrice(reviewAverage: number): number {
 
 // ホテルIDに基づいて異なる画像セットを生成
 function generateHotelImages(hotelId: string | number): string[] {
+  console.log('generateHotelImages called with ID:', hotelId, 'type:', typeof hotelId);
+  
   const imagePool = [
     // 犬と一緒の宿の外観
     'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
@@ -97,6 +99,8 @@ function generateHotelImages(hotelId: string | number): string[] {
   const seed = typeof hotelId === 'string' ? 
     hotelId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 
     hotelId;
+  
+  console.log('Generated seed:', seed, 'for hotelId:', hotelId);
 
   // シードを使って決定論的に画像を選択
   const images: string[] = [];
