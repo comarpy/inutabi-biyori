@@ -64,6 +64,67 @@ function generatePrice(reviewAverage: number): number {
   return Math.floor(basePrice * multiplier);
 }
 
+// ホテルIDに基づいて異なる画像セットを生成
+function generateHotelImages(hotelId: string | number): string[] {
+  const imagePool = [
+    // 犬と一緒の宿の外観
+    'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    // 客室
+    'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1618773928121-c32242e63f39?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    // 温泉・風呂
+    'https://images.unsplash.com/photo-1571902943202-507ec2618e8f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    // レストラン・食事
+    'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    // 庭園・ドッグラン
+    'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1574144611937-0df059b5ef3e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    // 犬と自然
+    'https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    // 宿の施設
+    'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+    'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
+  ];
+
+  // ホテルIDに基づいてシードを生成
+  const seed = typeof hotelId === 'string' ? 
+    hotelId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 
+    hotelId;
+
+  // シードを使って決定論的に画像を選択
+  const images: string[] = [];
+  
+  // 最初の画像はローカル画像
+  images.push('/images/画像2.jpeg');
+  
+  // 残りの画像をシードに基づいて選択
+  for (let i = 0; i < 4; i++) {
+    const index = (seed + i * 7) % imagePool.length; // 7は素数で分散を良くする
+    const selectedImage = imagePool[index];
+    if (!images.includes(selectedImage)) {
+      images.push(selectedImage);
+    }
+  }
+
+  // 画像が5枚未満の場合は追加
+  while (images.length < 5) {
+    const index = (seed + images.length * 11) % imagePool.length;
+    const selectedImage = imagePool[index];
+    if (!images.includes(selectedImage)) {
+      images.push(selectedImage);
+    }
+  }
+
+  return images.slice(0, 5); // 最大5枚
+}
+
 // 詳細条件のインターフェース
 export interface DetailFilters {
   dogRun?: boolean;
@@ -326,14 +387,10 @@ function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): HotelDetail 
   //   });
   // }
   
-  // 現在はデフォルト画像を使用
+  // 現在はホテルIDに基づいて画像を生成
   if (images.length === 0) {
-    images.push('/images/画像2.jpeg');
-    // 複数のデフォルト画像を追加（バリエーションを提供）
-    images.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
-    images.push('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
-    images.push('https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
-    images.push('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
+    const generatedImages = generateHotelImages(microCMSHotel.id);
+    images.push(...generatedImages);
   }
   
   return {
@@ -416,27 +473,18 @@ function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel): HotelDetail {
     images.push(rakutenHotel.hotelMapImageUrl);
   }
   
-  // 画像がない場合はデフォルト画像を設定
+  // 画像がない場合はホテルIDに基づいて画像を生成
   if (images.length === 0) {
-    images.push('/images/画像2.jpeg');
-    // バリエーションのためのデフォルト画像を追加
-    images.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
-    images.push('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
-    images.push('https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
+    const generatedImages = generateHotelImages(rakutenHotel.hotelNo);
+    images.push(...generatedImages);
   } else if (images.length < 4) {
-    // 画像が4枚未満の場合、追加のデフォルト画像を追加
-    const defaultImages = [
-      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
-    ];
+    // 画像が4枚未満の場合、ホテルIDに基づいて追加画像を生成
+    const generatedImages = generateHotelImages(rakutenHotel.hotelNo);
+    const additionalImages = generatedImages.filter(img => !images.includes(img));
     
-    for (const defaultImg of defaultImages) {
-      if (images.length >= 4) break;
-      if (!images.includes(defaultImg)) {
-        images.push(defaultImg);
-      }
+    for (const img of additionalImages) {
+      if (images.length >= 5) break;
+      images.push(img);
     }
   }
   
@@ -515,27 +563,18 @@ function convertRakutenDetailToHotelDetail(rakutenDetail: any): HotelDetail {
   // 詳細APIでは更に多くの画像が取得できる可能性があります
   // （楽天APIの仕様により追加の画像フィールドがある場合）
   
-  // 画像がない場合はデフォルト画像を設定
+  // 画像がない場合はホテルIDに基づいて画像を生成
   if (images.length === 0) {
-    images.push('/images/画像2.jpeg');
-    // バリエーションのためのデフォルト画像を追加
-    images.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
-    images.push('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
-    images.push('https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
+    const generatedImages = generateHotelImages(basicInfo.hotelNo);
+    images.push(...generatedImages);
   } else if (images.length < 4) {
-    // 画像が4枚未満の場合、追加のデフォルト画像を追加
-    const defaultImages = [
-      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
-      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
-    ];
+    // 画像が4枚未満の場合、ホテルIDに基づいて追加画像を生成
+    const generatedImages = generateHotelImages(basicInfo.hotelNo);
+    const additionalImages = generatedImages.filter(img => !images.includes(img));
     
-    for (const defaultImg of defaultImages) {
-      if (images.length >= 4) break;
-      if (!images.includes(defaultImg)) {
-        images.push(defaultImg);
-      }
+    for (const img of additionalImages) {
+      if (images.length >= 5) break;
+      images.push(img);
     }
   }
   
