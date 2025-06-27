@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { MapPin, House, Waves, Dog, Bone, Utensils, Car, Heart, Play, ParkingCircle, ArrowLeft, ArrowRight, Map, SortAsc, Wifi, Camera, Laptop, Battery, ShoppingBag, Tv, GlassWater, TreePine, List } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { MapPin, House, Waves, Dog, Bone, Utensils, Car, Heart, Play, ParkingCircle, ArrowLeft, ArrowRight, Map, SortAsc, Wifi, Camera, Laptop, Battery, ShoppingBag, Tv, GlassWater, TreePine, List, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useFavorites } from '../context/FavoritesContext';
@@ -23,24 +23,67 @@ const HotelMap = dynamic(() => import('./components/HotelMap'), {
 
 export default function SearchResultsPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { addToFavorites, removeFromFavorites, isFavorite, favoritesCount } = useFavorites();
   
-  const [searchParams, setSearchParams] = useState({
-    area: '東京',
-    checkinDate: '2024-03-15',
-    duration: '1泊2日',
-    dogSize: '小型犬',
-    guests: '2名',
-    rooms: '1室',
-    accommodationType: 'すべて'
+  const [searchFilters, setSearchFilters] = useState({
+    area: searchParams.get('area') || '全国',
+    dogSize: searchParams.get('dogSize') || '指定なし'
   });
 
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState('人気順');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
 
+  // 検索実行
+  const searchHotels = async () => {
+    setIsLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch(`/api/search-hotels?area=${encodeURIComponent(searchFilters.area)}&dogSize=${encodeURIComponent(searchFilters.dogSize)}`);
+      const data = await response.json();
+      
+      console.log('APIレスポンス:', data);
+      console.log('hotels配列:', data.hotels);
+      console.log('hotels配列の型:', typeof data.hotels);
+      console.log('hotels配列かどうか:', Array.isArray(data.hotels));
+      
+      if (data.success && data.hotels) {
+        // データが配列であることを確認
+        const hotelsArray = Array.isArray(data.hotels) ? data.hotels : [];
+        console.log('設定するhotels:', hotelsArray);
+        if (hotelsArray.length > 0) {
+          console.log('最初のホテルのamenities:', hotelsArray[0]?.amenities);
+          console.log('amenitiesの型:', typeof hotelsArray[0]?.amenities);
+          console.log('amenitiesは配列か:', Array.isArray(hotelsArray[0]?.amenities));
+        }
+        setHotels(hotelsArray);
+      } else {
+        console.log('APIエラーまたはhotelsが存在しない:', data);
+        setError(data.error || '検索に失敗しました');
+        setHotels([]); // エラー時は空配列を設定
+      }
+    } catch (err) {
+      console.error('検索エラー:', err);
+      setError('データの取得に失敗しました');
+      setHotels([]); // エラー時は空配列を設定
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 初回読み込み
+  useEffect(() => {
+    searchHotels();
+  }, []);
+
   const handleSearch = () => {
-    console.log('再検索実行:', searchParams);
+    console.log('再検索実行:', searchFilters);
+    searchHotels();
   };
 
   const handleHotelSelect = (hotel: Hotel) => {
@@ -57,96 +100,9 @@ export default function SearchResultsPage() {
     }
   };
 
-  const hotels: Hotel[] = [
-    {
-      id: 1,
-      name: '東京ドッグヴィラ',
-      location: '東京都・品川区',
-      price: 28000,
-      amenities: [Play, Utensils, ParkingCircle],
-      image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      coordinates: [35.6284, 139.7387] as [number, number]
-    },
-    {
-      id: 2,
-      name: '渋谷ペットホテル',
-      location: '東京都・渋谷区',
-      price: 32500,
-      amenities: [Play, Waves, Wifi],
-      image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      coordinates: [35.6581, 139.7014] as [number, number]
-    },
-    {
-      id: 3,
-      name: '新宿ワンコイン',
-      location: '東京都・新宿区',
-      price: 25800,
-      amenities: [Dog, Utensils, Car],
-      image: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      coordinates: [35.6938, 139.7036] as [number, number]
-    },
-    {
-      id: 4,
-      name: '銀座ペットパレス',
-      location: '東京都・中央区',
-      price: 45000,
-      amenities: [Play, Heart, Waves],
-      image: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      coordinates: [35.6762, 139.7647] as [number, number]
-    },
-    {
-      id: 5,
-      name: '浅草ドッグイン',
-      location: '東京都・台東区',
-      price: 22000,
-      amenities: [House, Utensils, ParkingCircle],
-      image: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      coordinates: [35.7148, 139.7967] as [number, number]
-    },
-    {
-      id: 6,
-      name: '上野アニマルイン',
-      location: '東京都・台東区',
-      price: 26500,
-      amenities: [TreePine, Play, Camera],
-      image: 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      coordinates: [35.7142, 139.7753] as [number, number]
-    },
-    {
-      id: 7,
-      name: '池袋ペットスイート',
-      location: '東京都・豊島区',
-      price: 29800,
-      amenities: [ShoppingBag, Utensils, Tv],
-      image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      coordinates: [35.7295, 139.7109] as [number, number]
-    },
-    {
-      id: 8,
-      name: '秋葉原テックイン',
-      location: '東京都・千代田区',
-      price: 31200,
-      amenities: [Laptop, Wifi, Battery],
-      image: 'https://images.unsplash.com/photo-1596394516093-501ba68a0ba6?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      coordinates: [35.7022, 139.7731] as [number, number]
-    },
-    {
-      id: 9,
-      name: '六本木ラグジュアリー',
-      location: '東京都・港区',
-      price: 58000,
-      amenities: [GlassWater, Waves, Heart],
-      image: 'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      coordinates: [35.6627, 139.7314] as [number, number]
-    }
-  ];
-
   const activeFilters = [
-    { icon: MapPin, label: '東京' },
-    { icon: Dog, label: '小型犬' },
-    { icon: Heart, label: '複数頭OK' },
-    { icon: Play, label: 'ドッグラン有' },
-    { icon: Heart, label: 'ペット同伴OK' }
+    { icon: MapPin, label: searchFilters.area },
+    ...(searchFilters.dogSize !== '指定なし' ? [{ icon: Dog, label: searchFilters.dogSize }] : []),
   ];
 
   return (
@@ -202,89 +158,43 @@ export default function SearchResultsPage() {
               {/* 検索結果ヘッダー */}
               <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-lg mb-4 flex items-center border border-[#E8D5B7] shadow-md">
                 <Heart className="w-5 h-5 mr-2 text-[#8B7355]" />
-                <h1 className="text-lg font-bold">検索結果 42件</h1>
+                <h1 className="text-lg font-bold">
+                  {isLoading ? '検索中...' : `検索結果 ${hotels ? hotels.length : 0}件`}
+                </h1>
               </div>
 
               {/* 再検索フォーム */}
               <div className="bg-white bg-opacity-95 rounded-xl shadow-lg p-4 mb-4 border border-gray-100">
-                <div className="grid grid-cols-7 gap-2 mb-3">
+                <div className="grid grid-cols-2 gap-4 mb-3">
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">エリア</label>
+                    <label className="block text-sm text-gray-600 mb-2">エリア</label>
                     <select 
-                      className="w-full bg-white border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
-                      value={searchParams.area}
-                      onChange={(e) => setSearchParams({...searchParams, area: e.target.value})}
+                      className="w-full bg-white border border-gray-200 rounded-lg p-3 text-base focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                      value={searchFilters.area}
+                      onChange={(e) => setSearchFilters({...searchFilters, area: e.target.value})}
                     >
-                      <option>東京</option>
-                      <option>神奈川</option>
-                      <option>千葉</option>
+                      <option>全国</option>
+                      <option>北海道</option>
+                      <option>関東</option>
+                      <option>関西</option>
+                      <option>東北</option>
+                      <option>中部</option>
+                      <option>中国</option>
+                      <option>四国</option>
+                      <option>九州</option>
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">宿泊日</label>
-                    <input 
-                      type="date" 
-                      className="w-full bg-white border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
-                      value={searchParams.checkinDate}
-                      onChange={(e) => setSearchParams({...searchParams, checkinDate: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">宿泊日数</label>
+                    <label className="block text-sm text-gray-600 mb-2">犬のサイズ</label>
                     <select 
-                      className="w-full bg-white border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
-                      value={searchParams.duration}
-                      onChange={(e) => setSearchParams({...searchParams, duration: e.target.value})}
+                      className="w-full bg-white border border-gray-200 rounded-lg p-3 text-base focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                      value={searchFilters.dogSize}
+                      onChange={(e) => setSearchFilters({...searchFilters, dogSize: e.target.value})}
                     >
-                      <option>1泊2日</option>
-                      <option>2泊3日</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">犬のサイズ</label>
-                    <select 
-                      className="w-full bg-white border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
-                      value={searchParams.dogSize}
-                      onChange={(e) => setSearchParams({...searchParams, dogSize: e.target.value})}
-                    >
+                      <option>指定なし</option>
                       <option>小型犬</option>
                       <option>中型犬</option>
                       <option>大型犬</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">宿泊人数</label>
-                    <select 
-                      className="w-full bg-white border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
-                      value={searchParams.guests}
-                      onChange={(e) => setSearchParams({...searchParams, guests: e.target.value})}
-                    >
-                      <option>2名</option>
-                      <option>3名</option>
-                      <option>4名</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">部屋数</label>
-                    <select 
-                      className="w-full bg-white border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
-                      value={searchParams.rooms}
-                      onChange={(e) => setSearchParams({...searchParams, rooms: e.target.value})}
-                    >
-                      <option>1室</option>
-                      <option>2室</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs text-gray-500 mb-1">宿タイプ</label>
-                    <select 
-                      className="w-full bg-white border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
-                      value={searchParams.accommodationType}
-                      onChange={(e) => setSearchParams({...searchParams, accommodationType: e.target.value})}
-                    >
-                      <option>すべて</option>
-                      <option>ホテル</option>
-                      <option>旅館</option>
                     </select>
                   </div>
                 </div>
@@ -360,17 +270,39 @@ export default function SearchResultsPage() {
                   </div>
                   
                   <div className="text-sm text-gray-600">
-                    表示中: <span className="font-semibold text-[#FF5A5F]">{hotels.length}</span>件
+                    表示中: <span className="font-semibold text-[#FF5A5F]">{hotels ? hotels.length : 0}</span>件
                   </div>
                 </div>
               </div>
 
               {/* 表示エリア */}
-              {viewMode === 'list' ? (
+              {isLoading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5A5F] mx-auto mb-4"></div>
+                  <p className="text-gray-600">検索中...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-12">
+                  <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+                  <p className="text-red-600 mb-4">{error}</p>
+                  <button 
+                    onClick={searchHotels}
+                    className="bg-[#FF5A5F] text-white px-6 py-2 rounded-full hover:bg-[#FF385C] transition-colors"
+                  >
+                    再試行
+                  </button>
+                </div>
+              ) : !hotels || hotels.length === 0 ? (
+                <div className="text-center py-12">
+                  <Dog className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600 mb-2">該当する宿泊施設が見つかりませんでした</p>
+                  <p className="text-sm text-gray-500">検索条件を変更してお試しください</p>
+                </div>
+              ) : viewMode === 'list' ? (
                 <>
                   {/* 宿泊施設一覧 */}
                   <div className="grid grid-cols-3 gap-4 mb-6">
-                    {hotels.map((hotel) => (
+                    {hotels && hotels.map((hotel) => (
                       <div 
                         key={hotel.id}
                         className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-gray-100 relative"
@@ -399,15 +331,21 @@ export default function SearchResultsPage() {
                           <div className="flex-1">
                             <h3 className="font-bold text-lg mb-1">{hotel.name}</h3>
                             <p className="text-sm text-gray-600 mb-2">{hotel.location}</p>
-                            <div className="flex mb-2">
-                              {hotel.amenities.map((Icon, index) => (
-                                <div 
-                                  key={index}
-                                  className="bg-[#FFF0F0] text-[#FF5A5F] rounded-full w-6 h-6 flex items-center justify-center mr-1"
-                                >
-                                  <Icon className="w-3 h-3" />
-                                </div>
-                              ))}
+                                                        <div className="flex mb-2">
+                              {hotel.amenities && hotel.amenities.map((IconComponent, index) => {
+                                // IconComponentがReactコンポーネントかどうかチェック
+                                if (typeof IconComponent === 'function') {
+                                  return (
+                                    <div
+                                      key={index}
+                                      className="bg-[#FFF0F0] text-[#FF5A5F] rounded-full w-6 h-6 flex items-center justify-center mr-1"
+                                    >
+                                      <IconComponent className="w-3 h-3" />
+                                    </div>
+                                  );
+                                }
+                                return null;
+                              })}
                             </div>
                             <div className="flex justify-between items-center">
                               <span className="font-bold text-[#FF5A5F]">¥{hotel.price.toLocaleString()}〜</span>
@@ -456,7 +394,7 @@ export default function SearchResultsPage() {
               ) : (
                 /* 地図表示 */
                 <div className="mb-6">
-                  <HotelMap hotels={hotels} onHotelSelect={handleHotelSelect} />
+                  <HotelMap hotels={hotels || []} onHotelSelect={handleHotelSelect} />
                 </div>
               )}
 

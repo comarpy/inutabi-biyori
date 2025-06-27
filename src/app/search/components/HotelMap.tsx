@@ -83,7 +83,7 @@ export default function HotelMap({ hotels, onHotelSelect }: HotelMapProps) {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {hotels.map((hotel) => (
+        {hotels && Array.isArray(hotels) && hotels.map((hotel) => (
           <Marker
             key={hotel.id}
             position={hotel.coordinates}

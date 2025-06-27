@@ -1,117 +1,75 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Camera, Dog, Home, Info, CalendarCheck, MapPin, Phone, Car, CreditCard, Weight, Gift, Utensils, Building, Bed } from 'lucide-react';
+import { Heart, ArrowLeft, Camera, Dog, Home, Info, CalendarCheck, MapPin, Phone, Car, CreditCard, Weight, Gift, Utensils, Building, Bed, Bath, UtensilsCrossed } from 'lucide-react';
 import { useFavorites } from '../../context/FavoritesContext';
 import Link from 'next/link';
+import { HotelDetail } from '@/lib/hotelService';
 
 // 型定義
-interface DogFeature {
-  name: string;
-  icon: React.ComponentType<{ className?: string }>;
-}
-
-interface PetInfo {
-  sizes: string;
-  maxPets: string;
-  petFee: string;
-  amenities: string;
-}
-
 interface BookingSite {
   name: string;
   price: string;
   color: string;
 }
 
-interface Hotel {
-  id: number;
-  name: string;
-  address: string;
-  access: string;
-  checkin: string;
-  checkout: string;
-  parking: string;
-  payment: string;
-  phone: string;
-  images: string[];
-  dogFeatures: DogFeature[];
-  petInfo: PetInfo;
-  bookingSites: BookingSite[];
-}
-
-// サンプルホテルデータ（実際のアプリでは API から取得）
-const hotelData: { [key: string]: Hotel } = {
-  '1': {
-    id: 1,
-    name: 'ドッグヴィラ東京',
-    address: '東京都中央区銀座5-6-7',
-    access: '東京メトロ銀座駅から徒歩10分',
-    checkin: '15:00 〜 19:00',
-    checkout: '11:00まで',
-    parking: 'あり（予約制・1泊¥2,000）',
-    payment: 'クレジットカード、現金、電子マネー',
-    phone: '03-1234-5678',
-    images: [
-      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3',
-      'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3',
-      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3',
-      'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3'
-    ],
-    dogFeatures: [
-      { name: '小型犬OK', icon: Dog },
-      { name: '中型犬OK', icon: Dog },
-      { name: '大型犬OK', icon: Dog },
-      { name: '多頭OK', icon: Dog },
-      { name: 'ドッグラン', icon: Dog },
-      { name: '屋内ドッグラン', icon: Home },
-      { name: 'お部屋にドッグラン', icon: Bed },
-      { name: '館内リードでOK', icon: Building },
-      { name: '一緒にごはんOK', icon: Utensils }
-    ],
-    petInfo: {
-      sizes: '全サイズOK（小型犬・中型犬・大型犬）',
-      maxPets: '1室につき最大3頭まで',
-      petFee: '1泊1頭につき ¥5,000（税込）',
-      amenities: 'ペットシーツ、タオル、食器、ベッド等'
-    },
-    bookingSites: [
-      { name: '楽天トラベル', price: '¥32,300〜', color: 'red' },
-      { name: 'じゃらん', price: '¥33,000〜', color: 'red' },
-      { name: '一休.com', price: '¥35,000〜', color: 'red' },
-      { name: '公式サイト', price: '公式予約', color: 'blue' }
-    ]
-  }
-};
-
 export default function HotelDetailPage() {
   const params = useParams();
   const router = useRouter();
   const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [hotel, setHotel] = useState<HotelDetail | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
   const paramId = Array.isArray(params.id) ? params.id[0] : params.id;
-  if (!paramId) {
+  
+  useEffect(() => {
+    const fetchHotelDetail = async () => {
+      if (!paramId) {
+        setError('ホテルIDが指定されていません');
+        setLoading(false);
+        return;
+      }
+      
+      try {
+        setLoading(true);
+        const response = await fetch(`/api/hotel/${paramId}`);
+        const data = await response.json();
+        
+        if (data.success) {
+          setHotel(data.hotel);
+        } else {
+          setError(data.error || 'ホテルが見つかりません');
+        }
+      } catch (err) {
+        console.error('ホテル詳細取得エラー:', err);
+        setError('データの取得に失敗しました');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchHotelDetail();
+  }, [paramId]);
+
+  if (loading) {
     return (
       <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">宿が見つかりません</h1>
-          <Link href="/search" className="text-[#FF5A5F] hover:underline">
-            検索結果に戻る
-          </Link>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#FF5A5F] mx-auto mb-4"></div>
+          <p className="text-gray-600">ホテル情報を取得中...</p>
         </div>
       </div>
     );
   }
-  
-  const hotel = hotelData[paramId];
 
-  if (!hotel) {
+  if (error || !hotel) {
     return (
       <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">宿が見つかりません</h1>
+          <h1 className="text-2xl font-bold mb-4">{error || '宿が見つかりません'}</h1>
           <Link href="/search" className="text-[#FF5A5F] hover:underline">
             検索結果に戻る
           </Link>
@@ -129,8 +87,8 @@ export default function HotelDetailPage() {
       addToFavorites({
         id: hotel.id,
         name: hotel.name,
-        location: hotel.address,
-        price: 32300,
+        location: hotel.location,
+        price: hotel.price,
         amenities: [],
         image: hotel.images[0],
         coordinates: [35.6762, 139.7647] as [number, number]
@@ -259,7 +217,7 @@ export default function HotelDetailPage() {
                       <tbody className="space-y-3">
                         <tr>
                           <td className="py-2 pr-4 font-medium text-gray-600 w-24">住所</td>
-                          <td className="py-2">{hotel.address}</td>
+                          <td className="py-2">{hotel.location}</td>
                         </tr>
                         <tr>
                           <td className="py-2 pr-4 font-medium text-gray-600">マップ</td>
@@ -313,8 +271,17 @@ export default function HotelDetailPage() {
                 </div>
                 <div className="bg-gray-50 rounded-xl p-4">
                   <div className="flex flex-wrap gap-2">
-                    {hotel.dogFeatures.map((feature, index) => {
-                      const IconComponent = feature.icon;
+                    {hotel.dogFeatures.filter(feature => feature.available).map((feature, index) => {
+                      // アイコンを名前に基づいて決定
+                      const getIcon = (featureName: string) => {
+                        if (featureName.includes('温泉')) return Bath;
+                        if (featureName.includes('駐車場')) return Car;
+                        if (featureName.includes('ごはん') || featureName.includes('メニュー')) return UtensilsCrossed;
+                        return Dog; // デフォルトは犬アイコン
+                      };
+                      
+                      const IconComponent = getIcon(feature.name);
+                      
                       return (
                         <span
                           key={index}
@@ -369,42 +336,65 @@ export default function HotelDetailPage() {
                 </div>
               </div>
 
+              {/* 追加情報・注意事項 */}
+              {hotel.notes && (
+                <div className="mb-8">
+                  <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-xl border border-[#E8D5B7] flex items-center mb-4">
+                    <Info className="w-6 h-6 mr-3 text-[#8B7355]" />
+                    <h2 className="text-xl font-bold">注意事項・その他</h2>
+                  </div>
+                  <div className="bg-gray-50 rounded-xl p-4">
+                    <p className="text-sm text-gray-700">{hotel.notes}</p>
+                  </div>
+                </div>
+              )}
+
               {/* 宿泊予約サイト */}
               <div className="bg-[#F9F6F2] rounded-xl p-6 border border-[#F0E8D8]">
                 <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-xl border border-[#E8D5B7] flex items-center mb-6">
                   <CalendarCheck className="w-6 h-6 mr-3 text-[#8B7355]" />
-                  <h2 className="text-xl font-bold">宿泊予約サイト</h2>
+                  <h2 className="text-xl font-bold">宿泊予約</h2>
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4">
-                  {hotel.bookingSites.map((site, index) => (
-                    <div
-                      key={index}
-                      className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:shadow-md hover:-translate-y-1 transition-all duration-300"
-                    >
+                <div className="grid grid-cols-1 gap-4">
+                  {hotel.website && (
+                    <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                       <div className="flex items-center">
                         <div className="bg-gray-100 rounded-lg px-4 py-2 mr-4 text-sm font-bold text-gray-700 min-w-[100px] text-center">
-                          {site.name}
+                          公式サイト
                         </div>
                         <div>
-                          <p className="font-bold text-base">{site.price}</p>
-                          {site.price.includes('¥') && (
-                            <p className="text-sm text-gray-600">（税込）/泊</p>
-                          )}
+                          <p className="font-bold text-base">公式予約</p>
+                          <p className="text-sm text-gray-600">最新情報・最安値保証</p>
                         </div>
                       </div>
-                      <button
-                        className={`${
-                          site.color === 'blue' 
-                            ? 'bg-blue-500 hover:bg-blue-600' 
-                            : 'bg-[#FF5A5F] hover:bg-[#FF385C]'
-                        } text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center`}
+                      <a
+                        href={hotel.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center"
                       >
                         <Dog className="w-4 h-4 mr-1" />
-                        {site.name === '公式サイト' ? '公式へ' : '予約へ'}
-                      </button>
+                        公式へ
+                      </a>
                     </div>
-                  ))}
+                  )}
+                  
+                  <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                    <div className="flex items-center">
+                      <div className="bg-gray-100 rounded-lg px-4 py-2 mr-4 text-sm font-bold text-gray-700 min-w-[100px] text-center">
+                        楽天トラベル
+                      </div>
+                      <div>
+                        <p className="font-bold text-base">¥{hotel.price.toLocaleString()}〜</p>
+                        <p className="text-sm text-gray-600">（税込）/泊</p>
+                      </div>
+                    </div>
+                    <button className="bg-[#FF5A5F] hover:bg-[#FF385C] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center">
+                      <Dog className="w-4 h-4 mr-1" />
+                      予約へ
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>

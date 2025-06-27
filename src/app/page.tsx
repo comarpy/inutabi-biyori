@@ -11,18 +11,17 @@ export default function HomePage() {
   const { favoritesCount } = useFavorites();
   const [searchParams, setSearchParams] = useState({
     area: '全国',
-    checkinDate: '',
-    duration: '1泊2日',
-    dogSize: '指定なし',
-    guests: '2名',
-    rooms: '1室',
-    accommodationType: 'すべて'
+    dogSize: '指定なし'
   });
 
   const handleSearch = () => {
     console.log('検索実行:', searchParams);
-    // 検索結果ページに遷移
-    router.push('/search');
+    // 検索結果ページに遷移（パラメータ付き）
+    const queryParams = new URLSearchParams({
+      area: searchParams.area,
+      dogSize: searchParams.dogSize,
+    });
+    router.push(`/search?${queryParams.toString()}`);
   };
 
   return (
@@ -95,55 +94,31 @@ export default function HomePage() {
             </div>
 
           {/* 検索バー */}
-          <div className="relative z-10 w-full max-w-6xl bg-white bg-opacity-95 rounded-2xl p-6 backdrop-blur-sm shadow-xl">
-            <div className="grid grid-cols-7 gap-3 mb-4">
-                    <div>
-                <label className="block text-xs text-gray-500 text-left mb-1">エリア</label>
+          <div className="relative z-10 w-full max-w-4xl bg-white bg-opacity-95 rounded-2xl p-6 backdrop-blur-sm shadow-xl">
+            <div className="grid grid-cols-2 gap-6 mb-4">
+              <div>
+                <label className="block text-sm text-gray-600 text-left mb-2">エリアを選択</label>
                 <select 
-                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded-lg p-3 text-base focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
                   value={searchParams.area}
                   onChange={(e) => setSearchParams({...searchParams, area: e.target.value})}
                 >
                   <option>全国</option>
+                  <option>北海道</option>
                   <option>関東</option>
                   <option>関西</option>
-                  <option>北海道</option>
                   <option>東北</option>
                   <option>中部</option>
                   <option>中国</option>
                   <option>四国</option>
                   <option>九州</option>
                 </select>
-                    </div>
+              </div>
               
-                    <div>
-                <label className="block text-xs text-gray-500 text-left mb-1">宿泊日</label>
-                      <input
-                        type="date"
-                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
-                  value={searchParams.checkinDate}
-                  onChange={(e) => setSearchParams({...searchParams, checkinDate: e.target.value})}
-                  placeholder="チェックイン日"
-                      />
-                    </div>
-              
-                    <div>
-                <label className="block text-xs text-gray-500 text-left mb-1">宿泊日数</label>
+              <div>
+                <label className="block text-sm text-gray-600 text-left mb-2">犬のサイズ</label>
                 <select 
-                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
-                  value={searchParams.duration}
-                  onChange={(e) => setSearchParams({...searchParams, duration: e.target.value})}
-                >
-                  <option>1泊2日</option>
-                  <option>2泊3日</option>
-                  <option>3泊4日</option>
-                </select>
-                    </div>
-              
-                    <div>
-                <label className="block text-xs text-gray-500 text-left mb-1">犬のサイズ</label>
-                <select 
-                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded-lg p-3 text-base focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
                   value={searchParams.dogSize}
                   onChange={(e) => setSearchParams({...searchParams, dogSize: e.target.value})}
                 >
@@ -151,51 +126,9 @@ export default function HomePage() {
                   <option>小型犬</option>
                   <option>中型犬</option>
                   <option>大型犬OK</option>
-                      </select>
-                    </div>
-              
-                    <div>
-                <label className="block text-xs text-gray-500 text-left mb-1">宿泊人数</label>
-                <select 
-                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
-                  value={searchParams.guests}
-                  onChange={(e) => setSearchParams({...searchParams, guests: e.target.value})}
-                >
-                  <option>1名</option>
-                  <option>2名</option>
-                  <option>3名</option>
-                  <option>4名</option>
-                  <option>5名以上</option>
-                      </select>
-                    </div>
-              
-                    <div>
-                <label className="block text-xs text-gray-500 text-left mb-1">部屋数</label>
-                <select 
-                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
-                  value={searchParams.rooms}
-                  onChange={(e) => setSearchParams({...searchParams, rooms: e.target.value})}
-                >
-                  <option>1室</option>
-                  <option>2室</option>
-                  <option>3室</option>
                 </select>
-                    </div>
-              
-                    <div>
-                <label className="block text-xs text-gray-500 text-left mb-1">宿タイプ</label>
-                <select 
-                  className="w-full bg-transparent text-gray-800 border border-gray-200 rounded p-2 text-sm focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
-                  value={searchParams.accommodationType}
-                  onChange={(e) => setSearchParams({...searchParams, accommodationType: e.target.value})}
-                >
-                  <option>すべて</option>
-                  <option>ホテル</option>
-                  <option>旅館</option>
-                  <option>コテージ</option>
-                      </select>
-                    </div>
-                  </div>
+              </div>
+            </div>
             
             <div className="flex justify-center">
               <button 
