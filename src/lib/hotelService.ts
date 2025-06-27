@@ -348,7 +348,7 @@ export async function getHotelById(id: string): Promise<HotelDetail | null> {
     const rakutenHotelDetail = await fetchRakutenHotelDetail(id);
     if (rakutenHotelDetail) {
       console.log('楽天詳細APIでホテルが見つかりました:', rakutenHotelDetail.hotelBasicInfo?.hotelName);
-      return convertRakutenDetailToHotelDetail(rakutenHotelDetail);
+      return convertRakutenDetailToHotelDetail(rakutenHotelDetail, id);
     }
     
     // 詳細APIで見つからない場合は通常の検索APIから検索
@@ -360,7 +360,7 @@ export async function getHotelById(id: string): Promise<HotelDetail | null> {
       
       if (rakutenHotel) {
         console.log('楽天APIでホテルが見つかりました:', rakutenHotel.hotelName);
-        return convertRakutenToHotelDetail(rakutenHotel);
+        return convertRakutenToHotelDetail(rakutenHotel, id);
       }
     }
     
@@ -434,7 +434,7 @@ function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): HotelDetail 
 }
 
 // 楽天APIデータを詳細ページ用に変換
-function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel): HotelDetail {
+function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel, requestedId?: string): HotelDetail {
   const baseHotel: Hotel = {
     id: parseInt(rakutenHotel.hotelNo) || 1,
     name: rakutenHotel.hotelName,
@@ -474,12 +474,13 @@ function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel): HotelDetail {
   }
   
   // 画像がない場合はホテルIDに基づいて画像を生成
+  const imageGenerationId = requestedId || rakutenHotel.hotelNo;
   if (images.length === 0) {
-    const generatedImages = generateHotelImages(rakutenHotel.hotelNo);
+    const generatedImages = generateHotelImages(imageGenerationId);
     images.push(...generatedImages);
   } else if (images.length < 4) {
     // 画像が4枚未満の場合、ホテルIDに基づいて追加画像を生成
-    const generatedImages = generateHotelImages(rakutenHotel.hotelNo);
+    const generatedImages = generateHotelImages(imageGenerationId);
     const additionalImages = generatedImages.filter(img => !images.includes(img));
     
     for (const img of additionalImages) {
@@ -517,7 +518,7 @@ function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel): HotelDetail {
 }
 
 // 楽天詳細APIのデータを詳細ページ用に変換（新規追加）
-function convertRakutenDetailToHotelDetail(rakutenDetail: any): HotelDetail {
+function convertRakutenDetailToHotelDetail(rakutenDetail: any, requestedId?: string): HotelDetail {
   const basicInfo = rakutenDetail.hotelBasicInfo;
   const detailInfo = rakutenDetail.hotelDetailInfo;
   const facilitiesInfo = rakutenDetail.hotelFacilitiesInfo;
@@ -564,12 +565,13 @@ function convertRakutenDetailToHotelDetail(rakutenDetail: any): HotelDetail {
   // （楽天APIの仕様により追加の画像フィールドがある場合）
   
   // 画像がない場合はホテルIDに基づいて画像を生成
+  const imageGenerationId = requestedId || basicInfo.hotelNo;
   if (images.length === 0) {
-    const generatedImages = generateHotelImages(basicInfo.hotelNo);
+    const generatedImages = generateHotelImages(imageGenerationId);
     images.push(...generatedImages);
   } else if (images.length < 4) {
     // 画像が4枚未満の場合、ホテルIDに基づいて追加画像を生成
-    const generatedImages = generateHotelImages(basicInfo.hotelNo);
+    const generatedImages = generateHotelImages(imageGenerationId);
     const additionalImages = generatedImages.filter(img => !images.includes(img));
     
     for (const img of additionalImages) {
