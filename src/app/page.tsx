@@ -4,22 +4,58 @@ import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, MapPin, Hotel, House, Tent, Waves, Dog, Bone, Utensils, Heart, Play, ParkingCircle } from 'lucide-react';
 import { useFavorites } from './context/FavoritesContext';
+import type { DetailFilters } from '@/lib/hotelService';
 import Link from 'next/link';
 
 function HomeContent() {
   const router = useRouter();
   const { favoritesCount } = useFavorites();
+  
+  // 都道府県リスト
+  const prefectures = [
+    '全国',
+    '北海道',
+    '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+    '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+    '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県',
+    '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
+    '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+    '徳島県', '香川県', '愛媛県', '高知県',
+    '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+  ];
+
+  // 詳細条件の状態
+  const [detailFilters, setDetailFilters] = useState({
+    dogRun: false,
+    largeDog: false,
+    roomDining: false,
+    hotSpring: false,
+    parking: false,
+    multipleDogs: false
+  });
+
   const [searchParams, setSearchParams] = useState({
     area: '全国',
     dogSize: '指定なし'
   });
 
+  // 詳細条件のトグル
+  const toggleDetailFilter = (filterKey: keyof typeof detailFilters) => {
+    setDetailFilters(prev => ({
+      ...prev,
+      [filterKey]: !prev[filterKey]
+    }));
+  };
+
   const handleSearch = () => {
-    console.log('検索実行:', searchParams);
+    console.log('検索実行:', searchParams, detailFilters);
     // 検索結果ページに遷移（パラメータ付き）
     const queryParams = new URLSearchParams({
       area: searchParams.area,
       dogSize: searchParams.dogSize,
+      ...Object.fromEntries(
+        Object.entries(detailFilters).filter(([_, value]) => value)
+      )
     });
     router.push(`/search?${queryParams.toString()}`);
   };
@@ -103,15 +139,9 @@ function HomeContent() {
                   value={searchParams.area}
                   onChange={(e) => setSearchParams({...searchParams, area: e.target.value})}
                 >
-                  <option>全国</option>
-                  <option>北海道</option>
-                  <option>関東</option>
-                  <option>関西</option>
-                  <option>東北</option>
-                  <option>中部</option>
-                  <option>中国</option>
-                  <option>四国</option>
-                  <option>九州</option>
+                  {prefectures.map((area) => (
+                    <option key={area} value={area}>{area}</option>
+                  ))}
                 </select>
               </div>
               
@@ -144,32 +174,73 @@ function HomeContent() {
 
         {/* 詳細検索オプション */}
         <div className="bg-gray-50 p-3">
-          <div className="max-w-7xl mx-auto flex justify-center space-x-6 text-sm">
-            <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
-              <Bone className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+          <div className="max-w-7xl mx-auto flex justify-center space-x-4 text-sm flex-wrap gap-2">
+            <button
+              onClick={() => toggleDetailFilter('dogRun')}
+              className={`flex items-center px-3 py-2 rounded-full transition-all duration-300 ${
+                detailFilters.dogRun
+                  ? 'bg-[#FF5A5F] text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+              }`}
+            >
+              <Bone className="w-4 h-4 mr-2" />
               ドッグラン
-            </div>
-            <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
-              <Dog className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+            </button>
+            <button
+              onClick={() => toggleDetailFilter('largeDog')}
+              className={`flex items-center px-3 py-2 rounded-full transition-all duration-300 ${
+                detailFilters.largeDog
+                  ? 'bg-[#FF5A5F] text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+              }`}
+            >
+              <Dog className="w-4 h-4 mr-2" />
               大型犬OK
-            </div>
-            <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
-              <Utensils className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+            </button>
+            <button
+              onClick={() => toggleDetailFilter('roomDining')}
+              className={`flex items-center px-3 py-2 rounded-full transition-all duration-300 ${
+                detailFilters.roomDining
+                  ? 'bg-[#FF5A5F] text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+              }`}
+            >
+              <Utensils className="w-4 h-4 mr-2" />
               部屋食あり
-              </div>
-            <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
-              <Waves className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+            </button>
+            <button
+              onClick={() => toggleDetailFilter('hotSpring')}
+              className={`flex items-center px-3 py-2 rounded-full transition-all duration-300 ${
+                detailFilters.hotSpring
+                  ? 'bg-[#FF5A5F] text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+              }`}
+            >
+              <Waves className="w-4 h-4 mr-2" />
               温泉
-              </div>
-            <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
-              <ParkingCircle className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+            </button>
+            <button
+              onClick={() => toggleDetailFilter('parking')}
+              className={`flex items-center px-3 py-2 rounded-full transition-all duration-300 ${
+                detailFilters.parking
+                  ? 'bg-[#FF5A5F] text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+              }`}
+            >
+              <ParkingCircle className="w-4 h-4 mr-2" />
               駐車場あり
-              </div>
-            <div className="flex items-center cursor-pointer hover:text-[#FF5A5F] transition-colors">
-              <Heart className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+            </button>
+            <button
+              onClick={() => toggleDetailFilter('multipleDogs')}
+              className={`flex items-center px-3 py-2 rounded-full transition-all duration-300 ${
+                detailFilters.multipleDogs
+                  ? 'bg-[#FF5A5F] text-white shadow-md'
+                  : 'bg-white text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+              }`}
+            >
+              <Heart className="w-4 h-4 mr-2" />
               複数頭OK
-            </div>
-            <a className="text-[#FF5A5F] font-bold cursor-pointer hover:underline">+ 詳細条件</a>
+            </button>
             </div>
           </div>
 

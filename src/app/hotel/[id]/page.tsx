@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Camera, Dog, Home, Info, CalendarCheck, MapPin, Phone, Car, CreditCard, Weight, Gift, Utensils, Building, Bed, Bath, UtensilsCrossed } from 'lucide-react';
+import { Heart, ArrowLeft, Camera, Dog, Home, Info, CalendarCheck, MapPin, Phone, Car, CreditCard, Weight, Gift, Utensils, Building, Bed, Bath, UtensilsCrossed, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useFavorites } from '../../context/FavoritesContext';
 import Link from 'next/link';
 import { HotelDetail } from '@/lib/hotelService';
@@ -22,6 +22,7 @@ function HotelDetailContent() {
   const [hotel, setHotel] = useState<HotelDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   
   const paramId = Array.isArray(params.id) ? params.id[0] : params.id;
   
@@ -173,34 +174,49 @@ function HotelDetailContent() {
             {/* メイン写真と基本情報 */}
             <div className="p-6">
               <div className="flex gap-6 mb-8">
-                {/* メインビジュアル */}
+                {/* 画像エリア */}
                 <div className="flex gap-4 w-1/2">
+                  {/* メイン画像 */}
                   <div className="relative">
                     <img
                       src={hotel.images[selectedImageIndex]}
                       alt={hotel.name}
                       className="w-80 h-80 object-cover rounded-xl"
                     />
-                    <div className="absolute bottom-3 right-3 bg-black bg-opacity-60 text-white text-sm px-3 py-2 rounded-full flex items-center cursor-pointer hover:bg-opacity-80 transition-colors">
+                    <div className="absolute bottom-3 right-3 bg-black bg-opacity-60 text-white text-sm px-3 py-2 rounded-full flex items-center cursor-pointer hover:bg-opacity-80 transition-colors"
+                         onClick={() => setIsImageModalOpen(true)}>
                       <Camera className="w-4 h-4 mr-2" />
-                      写真をもっと見る
+                      写真 {hotel.images.length}枚
                     </div>
                   </div>
                   
                   {/* サムネイル */}
                   <div className="grid grid-cols-2 gap-3 h-80">
                     {hotel.images.slice(0, 4).map((image, index) => (
-                      <img
-                        key={index}
-                        src={image}
-                        alt={`${hotel.name} 写真${index + 1}`}
-                        className={`w-36 h-36 object-cover rounded-lg cursor-pointer transition-all duration-200 ${
-                          selectedImageIndex === index 
-                            ? 'border-2 border-[#FF5A5F] transform scale-105' 
-                            : 'border-2 border-transparent hover:transform hover:scale-105'
-                        }`}
-                        onClick={() => setSelectedImageIndex(index)}
-                      />
+                      <div key={index} className="relative">
+                        <img
+                          src={image}
+                          alt={`${hotel.name} 写真${index + 1}`}
+                          className={`w-36 h-36 object-cover rounded-lg cursor-pointer transition-all duration-200 ${
+                            selectedImageIndex === index 
+                              ? 'border-2 border-[#FF5A5F] transform scale-105' 
+                              : 'border-2 border-transparent hover:transform hover:scale-105'
+                          }`}
+                          onClick={() => setSelectedImageIndex(index)}
+                        />
+                        {/* 4枚目で残り画像がある場合の表示 */}
+                        {index === 3 && hotel.images.length > 4 && (
+                          <div 
+                            className="absolute inset-0 bg-black bg-opacity-60 rounded-lg flex items-center justify-center cursor-pointer hover:bg-opacity-70 transition-colors"
+                            onClick={() => setIsImageModalOpen(true)}
+                          >
+                            <div className="text-white text-center">
+                              <Camera className="w-6 h-6 mx-auto mb-1" />
+                              <span className="text-sm font-medium">+{hotel.images.length - 4}枚</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -262,144 +278,215 @@ function HotelDetailContent() {
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* 犬対応情報 */}
-              <div className="mb-8">
-                <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-xl border border-[#E8D5B7] flex items-center mb-4">
-                  <Dog className="w-6 h-6 mr-3 text-[#8B7355]" />
-                  <h2 className="text-xl font-bold">犬対応情報</h2>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="flex flex-wrap gap-2">
-                    {hotel.dogFeatures.filter(feature => feature.available).map((feature, index) => {
-                      // アイコンを名前に基づいて決定
-                      const getIcon = (featureName: string) => {
-                        if (featureName.includes('温泉')) return Bath;
-                        if (featureName.includes('駐車場')) return Car;
-                        if (featureName.includes('ごはん') || featureName.includes('メニュー')) return UtensilsCrossed;
-                        return Dog; // デフォルトは犬アイコン
-                      };
-                      
-                      const IconComponent = getIcon(feature.name);
-                      
-                      return (
-                        <span
-                          key={index}
-                          className="bg-[#FFF0F0] text-[#FF5A5F] border border-[#FFE4E4] rounded-full px-4 py-2 text-sm font-medium flex items-center"
-                        >
-                          <IconComponent className="w-4 h-4 mr-2" />
-                          {feature.name}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
+            {/* 犬対応情報 */}
+            <div className="mb-8">
+              <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-xl border border-[#E8D5B7] flex items-center mb-4">
+                <Dog className="w-6 h-6 mr-3 text-[#8B7355]" />
+                <h2 className="text-xl font-bold">犬対応情報</h2>
               </div>
-
-              {/* ペット宿泊情報 */}
-              <div className="mb-8">
-                <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-xl border border-[#E8D5B7] flex items-center mb-4">
-                  <Dog className="w-6 h-6 mr-3 text-[#8B7355]" />
-                  <h2 className="text-xl font-bold">ペット宿泊情報</h2>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-white rounded-lg p-4">
-                      <h4 className="font-bold text-gray-700 mb-2 text-sm flex items-center">
-                        <Weight className="w-4 h-4 mr-2 text-[#FF5A5F]" />
-                        宿泊可能サイズ
-                      </h4>
-                      <p className="text-sm text-gray-600">{hotel.petInfo.sizes}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-4">
-                      <h4 className="font-bold text-gray-700 mb-2 text-sm flex items-center">
-                        <Dog className="w-4 h-4 mr-2 text-[#FF5A5F]" />
-                        宿泊可能頭数
-                      </h4>
-                      <p className="text-sm text-gray-600">{hotel.petInfo.maxPets}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-4">
-                      <h4 className="font-bold text-gray-700 mb-2 text-sm flex items-center">
-                        <span className="text-[#FF5A5F] mr-2">¥</span>
-                        ペット宿泊料金
-                      </h4>
-                      <p className="text-sm text-gray-600">{hotel.petInfo.petFee}</p>
-                    </div>
-                    <div className="bg-white rounded-lg p-4">
-                      <h4 className="font-bold text-gray-700 mb-2 text-sm flex items-center">
-                        <Gift className="w-4 h-4 mr-2 text-[#FF5A5F]" />
-                        わんちゃん用アメニティ
-                      </h4>
-                      <p className="text-sm text-gray-600">{hotel.petInfo.amenities}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* 追加情報・注意事項 */}
-              {hotel.notes && (
-                <div className="mb-8">
-                  <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-xl border border-[#E8D5B7] flex items-center mb-4">
-                    <Info className="w-6 h-6 mr-3 text-[#8B7355]" />
-                    <h2 className="text-xl font-bold">注意事項・その他</h2>
-                  </div>
-                  <div className="bg-gray-50 rounded-xl p-4">
-                    <p className="text-sm text-gray-700">{hotel.notes}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* 宿泊予約サイト */}
-              <div className="bg-[#F9F6F2] rounded-xl p-6 border border-[#F0E8D8]">
-                <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-xl border border-[#E8D5B7] flex items-center mb-6">
-                  <CalendarCheck className="w-6 h-6 mr-3 text-[#8B7355]" />
-                  <h2 className="text-xl font-bold">宿泊予約</h2>
-                </div>
-                
-                <div className="grid grid-cols-1 gap-4">
-                  {hotel.website && (
-                    <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-                      <div className="flex items-center">
-                        <div className="bg-gray-100 rounded-lg px-4 py-2 mr-4 text-sm font-bold text-gray-700 min-w-[100px] text-center">
-                          公式サイト
-                        </div>
-                        <div>
-                          <p className="font-bold text-base">公式予約</p>
-                          <p className="text-sm text-gray-600">最新情報・最安値保証</p>
-                        </div>
-                      </div>
-                      <a
-                        href={hotel.website}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center"
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="flex flex-wrap gap-2">
+                  {hotel.dogFeatures.filter(feature => feature.available).map((feature, index) => {
+                    // アイコンを名前に基づいて決定
+                    const getIcon = (featureName: string) => {
+                      if (featureName.includes('温泉')) return Bath;
+                      if (featureName.includes('駐車場')) return Car;
+                      if (featureName.includes('ごはん') || featureName.includes('メニュー')) return UtensilsCrossed;
+                      return Dog; // デフォルトは犬アイコン
+                    };
+                    
+                    const IconComponent = getIcon(feature.name);
+                    
+                    return (
+                      <span
+                        key={index}
+                        className="bg-[#FFF0F0] text-[#FF5A5F] border border-[#FFE4E4] rounded-full px-4 py-2 text-sm font-medium flex items-center"
                       >
-                        <Dog className="w-4 h-4 mr-1" />
-                        公式へ
-                      </a>
-                    </div>
-                  )}
-                  
+                        <IconComponent className="w-4 h-4 mr-2" />
+                        {feature.name}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* ペット宿泊情報 */}
+            <div className="mb-8">
+              <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-xl border border-[#E8D5B7] flex items-center mb-4">
+                <Dog className="w-6 h-6 mr-3 text-[#8B7355]" />
+                <h2 className="text-xl font-bold">ペット宿泊情報</h2>
+              </div>
+              <div className="bg-gray-50 rounded-xl p-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white rounded-lg p-4">
+                    <h4 className="font-bold text-gray-700 mb-2 text-sm flex items-center">
+                      <Weight className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+                      宿泊可能サイズ
+                    </h4>
+                    <p className="text-sm text-gray-600">{hotel.petInfo.sizes}</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4">
+                    <h4 className="font-bold text-gray-700 mb-2 text-sm flex items-center">
+                      <Dog className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+                      宿泊可能頭数
+                    </h4>
+                    <p className="text-sm text-gray-600">{hotel.petInfo.maxPets}</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4">
+                    <h4 className="font-bold text-gray-700 mb-2 text-sm flex items-center">
+                      <span className="text-[#FF5A5F] mr-2">¥</span>
+                      ペット宿泊料金
+                    </h4>
+                    <p className="text-sm text-gray-600">{hotel.petInfo.petFee}</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4">
+                    <h4 className="font-bold text-gray-700 mb-2 text-sm flex items-center">
+                      <Gift className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+                      わんちゃん用アメニティ
+                    </h4>
+                    <p className="text-sm text-gray-600">{hotel.petInfo.amenities}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 追加情報・注意事項 */}
+            {hotel.notes && (
+              <div className="mb-8">
+                <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-xl border border-[#E8D5B7] flex items-center mb-4">
+                  <Info className="w-6 h-6 mr-3 text-[#8B7355]" />
+                  <h2 className="text-xl font-bold">注意事項・その他</h2>
+                </div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-sm text-gray-700">{hotel.notes}</p>
+                </div>
+              </div>
+            )}
+
+            {/* 宿泊予約サイト */}
+            <div className="bg-[#F9F6F2] rounded-xl p-6 border border-[#F0E8D8]">
+              <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-xl border border-[#E8D5B7] flex items-center mb-6">
+                <CalendarCheck className="w-6 h-6 mr-3 text-[#8B7355]" />
+                <h2 className="text-xl font-bold">宿泊予約</h2>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-4">
+                {hotel.website && (
                   <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:shadow-md hover:-translate-y-1 transition-all duration-300">
                     <div className="flex items-center">
                       <div className="bg-gray-100 rounded-lg px-4 py-2 mr-4 text-sm font-bold text-gray-700 min-w-[100px] text-center">
-                        楽天トラベル
+                        公式サイト
                       </div>
                       <div>
-                        <p className="font-bold text-base">¥{hotel.price.toLocaleString()}〜</p>
-                        <p className="text-sm text-gray-600">（税込）/泊</p>
+                        <p className="font-bold text-base">公式予約</p>
+                        <p className="text-sm text-gray-600">最新情報・最安値保証</p>
                       </div>
                     </div>
-                    <button className="bg-[#FF5A5F] hover:bg-[#FF385C] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center">
+                    <a
+                      href={hotel.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center"
+                    >
                       <Dog className="w-4 h-4 mr-1" />
-                      予約へ
-                    </button>
+                      公式へ
+                    </a>
                   </div>
+                )}
+                
+                <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                  <div className="flex items-center">
+                    <div className="bg-gray-100 rounded-lg px-4 py-2 mr-4 text-sm font-bold text-gray-700 min-w-[100px] text-center">
+                      楽天トラベル
+                    </div>
+                    <div>
+                      <p className="font-bold text-base">¥{hotel.price.toLocaleString()}〜</p>
+                      <p className="text-sm text-gray-600">（税込）/泊</p>
+                    </div>
+                  </div>
+                  <button className="bg-[#FF5A5F] hover:bg-[#FF385C] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center">
+                    <Dog className="w-4 h-4 mr-1" />
+                    予約へ
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </main>
+
+        {/* 画像モーダル */}
+        {isImageModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4">
+            <div className="relative max-w-6xl max-h-full bg-white rounded-xl overflow-hidden">
+              {/* モーダルヘッダー */}
+              <div className="flex items-center justify-between p-4 border-b">
+                <h3 className="text-lg font-bold">{hotel.name} - 写真ギャラリー</h3>
+                <button
+                  onClick={() => setIsImageModalOpen(false)}
+                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              {/* 画像表示エリア */}
+              <div className="p-4">
+                <div className="relative mb-4">
+                  <img
+                    src={hotel.images[selectedImageIndex]}
+                    alt={`${hotel.name} 写真${selectedImageIndex + 1}`}
+                    className="w-full max-h-96 object-contain rounded-lg"
+                  />
+                  
+                  {/* 前の画像ボタン */}
+                  {hotel.images.length > 1 && selectedImageIndex > 0 && (
+                    <button
+                      onClick={() => setSelectedImageIndex(selectedImageIndex - 1)}
+                      className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 text-white p-2 rounded-full hover:bg-opacity-80 transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                  )}
+                  
+                  {/* 次の画像ボタン */}
+                  {hotel.images.length > 1 && selectedImageIndex < hotel.images.length - 1 && (
+                    <button
+                      onClick={() => setSelectedImageIndex(selectedImageIndex + 1)}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 text-white p-2 rounded-full hover:bg-opacity-80 transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  )}
+                  
+                  {/* 画像番号表示 */}
+                  <div className="absolute bottom-2 right-2 bg-black bg-opacity-60 text-white text-sm px-3 py-1 rounded-full">
+                    {selectedImageIndex + 1} / {hotel.images.length}
+                  </div>
+                </div>
+                
+                {/* サムネイル一覧 */}
+                <div className="grid grid-cols-6 gap-2 max-h-32 overflow-y-auto">
+                  {hotel.images.map((image, index) => (
+                    <img
+                      key={index}
+                      src={image}
+                      alt={`${hotel.name} サムネイル${index + 1}`}
+                      className={`w-full h-16 object-cover rounded cursor-pointer transition-all duration-200 ${
+                        selectedImageIndex === index 
+                          ? 'border-2 border-[#FF5A5F] transform scale-105' 
+                          : 'border border-gray-200 hover:transform hover:scale-105 hover:border-[#FF5A5F]'
+                      }`}
+                      onClick={() => setSelectedImageIndex(index)}
+                    />
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* フッター */}
         <footer className="bg-gray-800 text-white mt-16 rounded-t-xl">

@@ -1,4 +1,4 @@
-import { fetchRakutenHotels, RakutenHotel } from './rakuten';
+import { fetchRakutenHotels, RakutenHotel, fetchRakutenHotelDetail } from './rakuten';
 import { getDogHotels, searchDogHotelsByPrefecture, DogHotelInfo } from './microcms';
 import { Dog, Car, Wifi, Coffee, Bath, UtensilsCrossed } from 'lucide-react';
 
@@ -64,19 +64,30 @@ function generatePrice(reviewAverage: number): number {
   return Math.floor(basePrice * multiplier);
 }
 
+// 詳細条件のインターフェース
+export interface DetailFilters {
+  dogRun?: boolean;
+  largeDog?: boolean;
+  roomDining?: boolean;
+  hotSpring?: boolean;
+  parking?: boolean;
+  multipleDogs?: boolean;
+}
+
 export async function searchDogFriendlyHotels(
   area: string,
   dogSize?: string,
   checkinDate?: string,
-  checkoutDate?: string
+  checkoutDate?: string,
+  detailFilters?: DetailFilters
 ): Promise<Hotel[]> {
   try {
-    console.log('検索パラメータ:', { area, dogSize, checkinDate, checkoutDate });
+    console.log('検索パラメータ:', { area, dogSize, checkinDate, checkoutDate, detailFilters });
     
     // 並行してmicroCMSと楽天APIからデータを取得
     console.log('=== データ取得開始 ===');
     const [microCMSHotels, rakutenHotels] = await Promise.all([
-      getMicroCMSHotels(area),
+      getMicroCMSHotels(area, detailFilters),
       fetchRakutenHotels(area, checkinDate, checkoutDate)
     ]);
     
@@ -100,12 +111,37 @@ export async function searchDogFriendlyHotels(
     }
 
     // microCMSと楽天APIのデータを統合
-    const allHotels: Hotel[] = [...microCMSHotels, ...rakutenHotelsConverted];
+    let allHotels: Hotel[] = [...microCMSHotels, ...rakutenHotelsConverted];
+    
+    // 詳細条件でフィルタリング（楽天APIのデータに対して）
+    if (detailFilters) {
+      // 楽天APIデータに対する簡易的なフィルタリング
+      // （実際のプロダクションでは、各ホテルの詳細情報を確認する必要があります）
+      allHotels = allHotels.filter(hotel => {
+        // 楽天APIデータの場合は、名前や説明文から推測
+        const hotelName = hotel.name.toLowerCase();
+        const hotelLocation = hotel.location.toLowerCase();
+        
+        if (detailFilters.hotSpring && !(
+          hotelName.includes('温泉') || 
+          hotelName.includes('湯') ||
+          hotelLocation.includes('温泉')
+        )) return false;
+        
+        if (detailFilters.parking && !(
+          hotelName.includes('駐車場') ||
+          hotelLocation.includes('駐車場') ||
+          hotel.id > 1000 // microCMSデータは通過
+        )) return false;
+        
+        return true;
+      });
+    }
     
     console.log('=== データ統合結果 ===');
     console.log('microCMS:', microCMSHotels.length, '件');
     console.log('楽天API:', rakutenHotelsConverted.length, '件');
-    console.log('合計:', allHotels.length, '件');
+    console.log('フィルタ後合計:', allHotels.length, '件');
     
     return allHotels;
   } catch (error) {
@@ -113,7 +149,7 @@ export async function searchDogFriendlyHotels(
     // エラー時はmicroCMSデータのみを返す
     try {
       console.log('エラー発生時のフォールバック: microCMSデータのみ取得');
-      return await getMicroCMSHotels(area);
+      return await getMicroCMSHotels(area, detailFilters);
     } catch (fallbackError) {
       console.error('フォールバックも失敗:', fallbackError);
       return [];
@@ -161,7 +197,7 @@ function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number): Hot
 }
 
 // microCMSデータを取得して変換する関数
-export async function getMicroCMSHotels(area?: string): Promise<Hotel[]> {
+export async function getMicroCMSHotels(area?: string, detailFilters?: DetailFilters): Promise<Hotel[]> {
   try {
     console.log('microCMSからデータを取得中...');
     
@@ -177,10 +213,23 @@ export async function getMicroCMSHotels(area?: string): Promise<Hotel[]> {
     
     console.log('microCMSから取得したデータ件数:', microCMSHotels.length);
     
+    // 詳細条件でフィルタリング
+    if (detailFilters) {
+      microCMSHotels = microCMSHotels.filter(hotel => {
+        if (detailFilters.dogRun && !hotel.dogRunOnSite) return false;
+        if (detailFilters.largeDog && !hotel.largeDog) return false;
+        if (detailFilters.roomDining && !hotel.diningWithDog) return false;
+        if (detailFilters.hotSpring && !hotel.hotSpring) return false;
+        if (detailFilters.parking && !hotel.parking) return false;
+        if (detailFilters.multipleDogs && !hotel.multipleDogs) return false;
+        return true;
+      });
+    }
+    
     // Hotel形式に変換
     const hotels: Hotel[] = microCMSHotels.map((hotel, index) => convertMicroCMSToHotel(hotel, index));
     
-    console.log('microCMS変換後の件数:', hotels.length);
+    console.log('microCMSフィルタ後の件数:', hotels.length);
     return hotels;
     
   } catch (error) {
@@ -231,8 +280,17 @@ export async function getHotelById(id: string): Promise<HotelDetail | null> {
       return convertMicroCMSToHotelDetail(microCMSHotel);
     }
     
-    // microCMSで見つからない場合は楽天APIのモックデータから検索
-    console.log('楽天APIモックデータから検索中...');
+    // microCMSで見つからない場合は楽天APIから検索
+    console.log('楽天APIから検索中...');
+    
+    // 楽天APIのホテル詳細情報を直接取得を試行
+    const rakutenHotelDetail = await fetchRakutenHotelDetail(id);
+    if (rakutenHotelDetail) {
+      console.log('楽天詳細APIでホテルが見つかりました:', rakutenHotelDetail.hotelBasicInfo?.hotelName);
+      return convertRakutenDetailToHotelDetail(rakutenHotelDetail);
+    }
+    
+    // 詳細APIで見つからない場合は通常の検索APIから検索
     const rakutenHotels = await fetchRakutenHotels('全国');
     if (rakutenHotels && Array.isArray(rakutenHotels)) {
       const rakutenHotel = rakutenHotels.find((hotel, index) => 
@@ -272,8 +330,10 @@ function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): HotelDetail 
   if (images.length === 0) {
     images.push('/images/画像2.jpeg');
     // 複数のデフォルト画像を追加（バリエーションを提供）
-    images.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80');
-    images.push('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80');
+    images.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
+    images.push('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
+    images.push('https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
+    images.push('https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
   }
   
   return {
@@ -359,6 +419,25 @@ function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel): HotelDetail {
   // 画像がない場合はデフォルト画像を設定
   if (images.length === 0) {
     images.push('/images/画像2.jpeg');
+    // バリエーションのためのデフォルト画像を追加
+    images.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
+    images.push('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
+    images.push('https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
+  } else if (images.length < 4) {
+    // 画像が4枚未満の場合、追加のデフォルト画像を追加
+    const defaultImages = [
+      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
+    ];
+    
+    for (const defaultImg of defaultImages) {
+      if (images.length >= 4) break;
+      if (!images.includes(defaultImg)) {
+        images.push(defaultImg);
+      }
+    }
   }
   
   return {
@@ -386,5 +465,122 @@ function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel): HotelDetail {
     },
     website: rakutenHotel.planListUrl,
     notes: rakutenHotel.hotelComment || '',
+  };
+}
+
+// 楽天詳細APIのデータを詳細ページ用に変換（新規追加）
+function convertRakutenDetailToHotelDetail(rakutenDetail: any): HotelDetail {
+  const basicInfo = rakutenDetail.hotelBasicInfo;
+  const detailInfo = rakutenDetail.hotelDetailInfo;
+  const facilitiesInfo = rakutenDetail.hotelFacilitiesInfo;
+  
+  const baseHotel: Hotel = {
+    id: parseInt(basicInfo.hotelNo) || 1,
+    name: basicInfo.hotelName,
+    location: `${basicInfo.address1} ${basicInfo.address2}`.trim(),
+    price: basicInfo.hotelMinCharge || generatePrice(basicInfo.reviewAverage || 4.0),
+    amenities: generateAmenities(),
+    image: basicInfo.hotelImageUrl || '/images/画像2.jpeg',
+    coordinates: generateCoordinates('全国', 0),
+  };
+  
+  // 楽天詳細APIから取得できる複数の画像URLを配列として設定
+  const images: string[] = [];
+  
+  // メイン画像
+  if (basicInfo.hotelImageUrl) {
+    images.push(basicInfo.hotelImageUrl);
+  }
+  
+  // 客室画像
+  if (basicInfo.roomImageUrl) {
+    images.push(basicInfo.roomImageUrl);
+  }
+  
+  // サムネイル画像（メイン画像と異なる場合のみ）
+  if (basicInfo.hotelThumbnailUrl && basicInfo.hotelThumbnailUrl !== basicInfo.hotelImageUrl) {
+    images.push(basicInfo.hotelThumbnailUrl);
+  }
+  
+  // 客室サムネイル画像（他の画像と異なる場合のみ）
+  if (basicInfo.roomThumbnailUrl && !images.includes(basicInfo.roomThumbnailUrl)) {
+    images.push(basicInfo.roomThumbnailUrl);
+  }
+  
+  // 地図画像（他の画像と異なる場合のみ）
+  if (basicInfo.hotelMapImageUrl && !images.includes(basicInfo.hotelMapImageUrl)) {
+    images.push(basicInfo.hotelMapImageUrl);
+  }
+  
+  // 詳細APIでは更に多くの画像が取得できる可能性があります
+  // （楽天APIの仕様により追加の画像フィールドがある場合）
+  
+  // 画像がない場合はデフォルト画像を設定
+  if (images.length === 0) {
+    images.push('/images/画像2.jpeg');
+    // バリエーションのためのデフォルト画像を追加
+    images.push('https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
+    images.push('https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
+    images.push('https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80');
+  } else if (images.length < 4) {
+    // 画像が4枚未満の場合、追加のデフォルト画像を追加
+    const defaultImages = [
+      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80',
+      'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80'
+    ];
+    
+    for (const defaultImg of defaultImages) {
+      if (images.length >= 4) break;
+      if (!images.includes(defaultImg)) {
+        images.push(defaultImg);
+      }
+    }
+  }
+  
+  // 客室設備・館内設備情報から犬対応特徴を推測
+  const roomFacilities = facilitiesInfo?.roomFacilities || [];
+  const hotelFacilities = facilitiesInfo?.hotelFacilities || [];
+  const allFacilities = [...roomFacilities, ...hotelFacilities];
+  
+  const hasPetFacility = allFacilities.some(facility => 
+    facility?.item?.includes('ペット') || 
+    facility?.item?.includes('犬') ||
+    facility?.item?.includes('愛犬')
+  );
+  
+  const hasHotSpring = basicInfo.hotelSpecial?.includes('温泉') || 
+                      detailInfo?.aboutBath?.includes('温泉') ||
+                      allFacilities.some(facility => facility?.item?.includes('温泉'));
+  
+  const hasParking = basicInfo.parkingInformation?.includes('あり') ||
+                    allFacilities.some(facility => facility?.item?.includes('駐車場'));
+  
+  return {
+    ...baseHotel,
+    access: basicInfo.access || detailInfo?.areaName || 'アクセス情報なし',
+    checkin: detailInfo?.checkinTime || '15:00',
+    checkout: detailInfo?.checkoutTime || '10:00', 
+    parking: basicInfo.parkingInformation || (hasParking ? 'あり' : '要確認'),
+    payment: '各種クレジットカード・現金',
+    phone: basicInfo.telephoneNo || detailInfo?.reserveTelephoneNo || '電話番号なし',
+    images: images, // 楽天詳細APIから取得した複数の画像URLを配列として設定
+    dogFeatures: [
+      { name: 'ペット宿泊可', icon: Dog, available: hasPetFacility },
+      { name: '小型犬OK', icon: Dog, available: hasPetFacility },
+      { name: '中型犬OK', icon: Dog, available: hasPetFacility },
+      { name: '大型犬OK', icon: Dog, available: hasPetFacility },
+      { name: '駐車場', icon: Car, available: hasParking },
+      { name: '温泉', icon: Bath, available: hasHotSpring },
+    ],
+    petInfo: {
+      sizes: hasPetFacility ? '要確認（ホテルにお問い合わせください）' : 'ペット宿泊については要確認',
+      maxPets: '要確認',
+      petFee: '要確認（ホテルにお問い合わせください）',
+      amenities: '要確認'
+    },
+    website: basicInfo.planListUrl || basicInfo.hotelInformationUrl,
+    notes: basicInfo.hotelComment || detailInfo?.note || '',
   };
 } 

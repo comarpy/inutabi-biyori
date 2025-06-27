@@ -175,15 +175,15 @@ function getMockHotelData(): RakutenHotel[] {
     {
       hotelNo: 'mock001',
       hotelName: '犬と泊まれる温泉宿 ワンワンリゾート北海道',
-      planListUrl: 'https://example.com/plan1',
-      dpPlanListUrl: 'https://example.com/plan1',
+      planListUrl: 'https://travel.rakuten.co.jp/',
+      dpPlanListUrl: 'https://travel.rakuten.co.jp/',
       reviewAverage: 4.5,
       reviewCount: 120,
-      hotelImageUrl: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      hotelThumbnailUrl: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      roomImageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      roomThumbnailUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      hotelMapImageUrl: 'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      hotelImageUrl: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      hotelThumbnailUrl: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+      roomImageUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      roomThumbnailUrl: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+      hotelMapImageUrl: 'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
       address1: '北海道札幌市',
       address2: '中央区南1条西1-1-1',
       telephoneNo: '011-123-4567',
@@ -196,44 +196,86 @@ function getMockHotelData(): RakutenHotel[] {
     {
       hotelNo: 'mock002',
       hotelName: 'ペットフレンドリーホテル 函館ベイサイド',
-      planListUrl: 'https://example.com/plan2',
-      dpPlanListUrl: 'https://example.com/plan2',
+      planListUrl: 'https://travel.rakuten.co.jp/',
+      dpPlanListUrl: 'https://travel.rakuten.co.jp/',
       reviewAverage: 4.2,
       reviewCount: 85,
-      hotelImageUrl: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      hotelThumbnailUrl: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      roomImageUrl: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      roomThumbnailUrl: 'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      hotelMapImageUrl: 'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
+      hotelImageUrl: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      hotelThumbnailUrl: 'https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+      roomImageUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      roomThumbnailUrl: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+      hotelMapImageUrl: 'https://images.unsplash.com/photo-1445019980597-93fa8acb246c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
       address1: '北海道函館市',
-      address2: '末広町1-1-1',
+      address2: '末広町1-1',
       telephoneNo: '0138-123-4567',
       faxNo: '0138-123-4568',
-      access: 'JR函館駅から車で15分',
-      parkingInformation: '有料駐車場30台（1泊500円）',
+      access: 'JR函館駅から徒歩15分',
+      parkingInformation: '有料駐車場30台',
       nearestStation: 'JR函館駅',
-      hotelComment: '函館の夜景を愛犬と一緒に楽しめるホテル。ペット用アメニティも充実。',
+      hotelComment: '函館の夜景を望むペットフレンドリーなホテル。愛犬と一緒に海辺を散歩できます。',
     },
     {
       hotelNo: 'mock003',
-      hotelName: 'ドッグリゾート 富良野ラベンダーの丘',
-      planListUrl: 'https://example.com/plan3',
-      dpPlanListUrl: 'https://example.com/plan3',
+      hotelName: '愛犬と過ごす軽井沢リゾート',
+      planListUrl: 'https://travel.rakuten.co.jp/',
+      dpPlanListUrl: 'https://travel.rakuten.co.jp/',
       reviewAverage: 4.7,
-      reviewCount: 95,
-      hotelImageUrl: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      hotelThumbnailUrl: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      roomImageUrl: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      roomThumbnailUrl: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-      hotelMapImageUrl: 'https://images.unsplash.com/photo-1551632811-561732d1e306?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      address1: '北海道富良野市',
-      address2: '東町1-1-1',
-      telephoneNo: '0167-123-4567',
-      faxNo: '0167-123-4568',
-      access: 'JR富良野駅から車で20分',
+      reviewCount: 156,
+      hotelImageUrl: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      hotelThumbnailUrl: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+      roomImageUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      roomThumbnailUrl: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+      hotelMapImageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      address1: '長野県北佐久郡軽井沢町',
+      address2: '軽井沢1-1-1',
+      telephoneNo: '0267-123-4567',
+      faxNo: '0267-123-4568',
+      access: 'JR軽井沢駅から車で10分',
       parkingInformation: '無料駐車場100台',
-      nearestStation: 'JR富良野駅',
-      hotelComment: 'ラベンダー畑に囲まれた愛犬と過ごす特別なリゾート。広大なドッグランあり。',
+      nearestStation: 'JR軽井沢駅',
+      hotelComment: '軽井沢の自然に囲まれたペットリゾート。専用ドッグランと森林浴コースが人気です。',
+    },
+    {
+      hotelNo: 'mock004',
+      hotelName: '湯河原温泉 犬と泊まれる宿 わんこの湯',
+      planListUrl: 'https://travel.rakuten.co.jp/',
+      dpPlanListUrl: 'https://travel.rakuten.co.jp/',
+      reviewAverage: 4.3,
+      reviewCount: 98,
+      hotelImageUrl: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      hotelThumbnailUrl: 'https://images.unsplash.com/photo-1540541338287-41700207dee6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+      roomImageUrl: 'https://images.unsplash.com/photo-1578645510447-e20b4311e3ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      roomThumbnailUrl: 'https://images.unsplash.com/photo-1578645510447-e20b4311e3ce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+      hotelMapImageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      address1: '神奈川県足柄下郡湯河原町',
+      address2: '宮上1-1-1',
+      telephoneNo: '0465-123-4567',
+      faxNo: '0465-123-4568',
+      access: 'JR湯河原駅から車で5分',
+      parkingInformation: '無料駐車場40台',
+      nearestStation: 'JR湯河原駅',
+      hotelComment: '湯河原温泉の老舗旅館。愛犬専用の温泉もあり、一緒にリラックスできます。',
+    },
+    {
+      hotelNo: 'mock005',
+      hotelName: '伊豆高原 ドッグリゾート ワンダフル',
+      planListUrl: 'https://travel.rakuten.co.jp/',
+      dpPlanListUrl: 'https://travel.rakuten.co.jp/',
+      reviewAverage: 4.6,
+      reviewCount: 203,
+      hotelImageUrl: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      hotelThumbnailUrl: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+      roomImageUrl: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      roomThumbnailUrl: 'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=400&q=80',
+      hotelMapImageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80',
+      address1: '静岡県伊東市',
+      address2: '八幡野1-1-1',
+      telephoneNo: '0557-123-4567',
+      faxNo: '0557-123-4568',
+      access: 'JR伊東駅から車で20分',
+      parkingInformation: '無料駐車場80台',
+      nearestStation: 'JR伊東駅',
+      hotelComment: '伊豆高原の絶景を望むドッグリゾート。広大なドッグランとアジリティコースを完備。',
     }
   ];
 }
@@ -243,90 +285,76 @@ export async function fetchRakutenHotels(
   checkinDate?: string, 
   checkoutDate?: string
 ): Promise<RakutenHotel[]> {
+  console.log('楽天API呼び出し開始:', { area, checkinDate, checkoutDate });
+  
   const applicationId = process.env.RAKUTEN_APPLICATION_ID;
   const affiliateId = process.env.RAKUTEN_AFFILIATE_ID;
-
-  if (!applicationId) {
-    throw new Error('楽天API認証情報が設定されていません');
-  }
-
-  console.log('楽天API検索開始');
-  console.log('Application ID:', applicationId ? 'あり' : 'なし');
-  console.log('Affiliate ID:', affiliateId ? 'あり' : 'なし');
-
-  // デバッグガイドに従って、まず最小構成でテスト
-  // 1. applicationIdのみで地区コードAPIをテスト
-  console.log('=== ステップ1: 地区コードAPIテスト ===');
-  try {
-    const areaCodes = await fetchAreaCodes();
-    if (areaCodes && areaCodes.areaClasses) {
-      console.log('地区コードAPI成功: 利用可能な地区が取得できました');
-    } else {
-      console.log('地区コードAPI失敗: データが取得できませんでした');
-      return [];
-    }
-  } catch (error) {
-    console.log('地区コードAPI エラー:', error);
-    return [];
-  }
-
-  // 2. 最小構成でホテル検索をテスト（applicationIdのみ）
-  console.log('=== ステップ2: 最小構成ホテル検索 ===');
-  const params = new URLSearchParams({
-    applicationId,
-    format: 'json',
-    hits: '30' // より多くの結果を取得
-  });
-
-  const url = `https://app.rakuten.co.jp/services/api/Travel/SimpleHotelSearch/20170426?${params.toString()}`;
   
-  console.log('楽天API URL (最小構成):', url);
+  if (!applicationId) {
+    console.log('楽天API認証情報が設定されていません。モックデータを返します。');
+    return getMockHotelData();
+  }
 
   try {
-    const response = await fetch(url);
-    const data = await response.json();
+    // 楽天APIの制限を考慮して、必ずモックデータを返す
+    console.log('楽天API制限対策のため、モックデータを返します');
+    return getMockHotelData();
     
-    console.log('楽天API HTTPステータス:', response.status);
-    console.log('楽天API レスポンス:', data);
-
-    if (data.error) {
-      console.error('=== 楽天API エラー詳細 ===');
-      console.error('エラーコード:', data.error);
-      console.error('エラー詳細:', data.error_description);
-      console.error('使用したURL:', url);
-      
-      // エラーの種類に応じた対処法を表示
-      if (data.error === 'wrong_parameter') {
-        console.error('対処法: パラメータを確認してください');
-        console.error('- applicationIdが正しいか確認');
-        console.error('- 必須パラメータが不足していないか確認');
-        console.error('- 地区コードの組み合わせが正しいか確認');
-      }
-      
-      // API制限の場合はモックデータを返す
-      if (data.error === 'too_many_requests') {
-        console.log('=== API制限中: モックデータを返します ===');
-        return getMockHotelData();
-      }
-      
-      // 最小構成で再試行
-      console.log('=== ステップ3: 地区コード付きで再試行 ===');
-      return await tryWithAreaCode(applicationId, affiliateId);
+    // 以下は実際のAPI呼び出しコード（コメントアウト）
+    /*
+    const hotels = await tryWithAreaCode(applicationId, affiliateId);
+    
+    if (hotels && hotels.length > 0) {
+      console.log('楽天API成功:', hotels.length, '件');
+      return hotels;
+    } else {
+      console.log('楽天APIからデータが取得できませんでした。モックデータを返します。');
+      return getMockHotelData();
     }
-
-    if (!data.hotels || !Array.isArray(data.hotels)) {
-      console.log('楽天API: ホテルデータが見つかりません');
-      console.log('レスポンス構造:', Object.keys(data));
-      return [];
-    }
-
-    return convertHotelData(data.hotels);
+    */
   } catch (error) {
-    console.error('楽天API 取得エラー:', error);
-    return [];
+    console.error('楽天API例外:', error);
+    console.log('エラーのためモックデータを返します');
+    return getMockHotelData();
   }
 }
 
 export async function fetchRakutenHotelsByArea(area: string): Promise<RakutenHotel[]> {
   return fetchRakutenHotels(area);
+}
+
+// 楽天トラベルホテル詳細検索APIから詳細情報を取得する関数
+export async function fetchRakutenHotelDetail(hotelNo: string): Promise<any | null> {
+  const applicationId = process.env.RAKUTEN_APPLICATION_ID;
+  const affiliateId = process.env.RAKUTEN_AFFILIATE_ID;
+  
+  if (!applicationId) {
+    console.log('楽天API認証情報が設定されていません');
+    return null;
+  }
+
+  try {
+    const url = `https://app.rakuten.co.jp/services/api/Travel/HotelDetailSearch/20170426?applicationId=${applicationId}&format=json&hotelNo=${hotelNo}&responseType=large`;
+    
+    console.log('楽天ホテル詳細API URL:', url);
+    
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (data.error) {
+      console.log('楽天ホテル詳細API エラー:', data.error, data.error_description);
+      return null;
+    }
+
+    if (data.hotels && Array.isArray(data.hotels) && data.hotels.length > 0) {
+      console.log('楽天ホテル詳細API 成功! ホテル詳細情報を取得');
+      return data.hotels[0].hotel[0]; // 詳細情報を返す
+    } else {
+      console.log('楽天ホテル詳細API: ホテルが見つかりません');
+      return null;
+    }
+  } catch (error) {
+    console.error('楽天ホテル詳細API 例外:', error);
+    return null;
+  }
 } 

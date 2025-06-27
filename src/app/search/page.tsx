@@ -7,6 +7,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useFavorites } from '../context/FavoritesContext';
 import type { Hotel } from '../context/FavoritesContext';
+import type { DetailFilters } from '@/lib/hotelService';
 
 // 地図コンポーネントを動的にインポート（SSRを無効化）
 const HotelMap = dynamic(() => import('./components/HotelMap'), {
@@ -26,10 +27,41 @@ function SearchContent() {
   const searchParams = useSearchParams();
   const { addToFavorites, removeFromFavorites, isFavorite, favoritesCount } = useFavorites();
   
+  // 都道府県リスト
+  const prefectures = [
+    '全国',
+    '北海道',
+    '青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県',
+    '茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県',
+    '新潟県', '富山県', '石川県', '福井県', '山梨県', '長野県', '岐阜県', '静岡県', '愛知県',
+    '三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県',
+    '鳥取県', '島根県', '岡山県', '広島県', '山口県',
+    '徳島県', '香川県', '愛媛県', '高知県',
+    '福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県'
+  ];
+
+  // 詳細条件の状態
+  const [detailFilters, setDetailFilters] = useState({
+    dogRun: searchParams.get('dogRun') === 'true',
+    largeDog: searchParams.get('largeDog') === 'true',
+    roomDining: searchParams.get('roomDining') === 'true',
+    hotSpring: searchParams.get('hotSpring') === 'true',
+    parking: searchParams.get('parking') === 'true',
+    multipleDogs: searchParams.get('multipleDogs') === 'true'
+  });
+  
   const [searchFilters, setSearchFilters] = useState({
     area: searchParams.get('area') || '全国',
     dogSize: searchParams.get('dogSize') || '指定なし'
   });
+
+  // 詳細条件のトグル
+  const toggleDetailFilter = (filterKey: keyof typeof detailFilters) => {
+    setDetailFilters(prev => ({
+      ...prev,
+      [filterKey]: !prev[filterKey]
+    }));
+  };
 
   const [hotels, setHotels] = useState<Hotel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,7 +76,16 @@ function SearchContent() {
     setError(null);
     
     try {
-      const response = await fetch(`/api/search-hotels?area=${encodeURIComponent(searchFilters.area)}&dogSize=${encodeURIComponent(searchFilters.dogSize)}`);
+      // 詳細条件をクエリパラメータに追加
+      const queryParams = new URLSearchParams({
+        area: searchFilters.area,
+        dogSize: searchFilters.dogSize,
+        ...Object.fromEntries(
+          Object.entries(detailFilters).filter(([_, value]) => value)
+        )
+      });
+      
+      const response = await fetch(`/api/search-hotels?${queryParams.toString()}`);
       const data = await response.json();
       
       console.log('APIレスポンス:', data);
@@ -173,15 +214,11 @@ function SearchContent() {
                       value={searchFilters.area}
                       onChange={(e) => setSearchFilters({...searchFilters, area: e.target.value})}
                     >
-                      <option>全国</option>
-                      <option>北海道</option>
-                      <option>関東</option>
-                      <option>関西</option>
-                      <option>東北</option>
-                      <option>中部</option>
-                      <option>中国</option>
-                      <option>四国</option>
-                      <option>九州</option>
+                      {prefectures.map((prefecture) => (
+                        <option key={prefecture} value={prefecture}>
+                          {prefecture}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -198,6 +235,80 @@ function SearchContent() {
                     </select>
                   </div>
                 </div>
+                
+                {/* 詳細条件 */}
+                <div className="mb-4">
+                  <label className="block text-sm text-gray-600 mb-2">詳細条件</label>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => toggleDetailFilter('dogRun')}
+                      className={`flex items-center px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                        detailFilters.dogRun
+                          ? 'bg-[#FF5A5F] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+                      }`}
+                    >
+                      <Bone className="w-4 h-4 mr-1" />
+                      ドッグラン
+                    </button>
+                    <button
+                      onClick={() => toggleDetailFilter('largeDog')}
+                      className={`flex items-center px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                        detailFilters.largeDog
+                          ? 'bg-[#FF5A5F] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+                      }`}
+                    >
+                      <Dog className="w-4 h-4 mr-1" />
+                      大型犬OK
+                    </button>
+                    <button
+                      onClick={() => toggleDetailFilter('roomDining')}
+                      className={`flex items-center px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                        detailFilters.roomDining
+                          ? 'bg-[#FF5A5F] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+                      }`}
+                    >
+                      <Utensils className="w-4 h-4 mr-1" />
+                      部屋食あり
+                    </button>
+                    <button
+                      onClick={() => toggleDetailFilter('hotSpring')}
+                      className={`flex items-center px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                        detailFilters.hotSpring
+                          ? 'bg-[#FF5A5F] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+                      }`}
+                    >
+                      <Waves className="w-4 h-4 mr-1" />
+                      温泉
+                    </button>
+                    <button
+                      onClick={() => toggleDetailFilter('parking')}
+                      className={`flex items-center px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                        detailFilters.parking
+                          ? 'bg-[#FF5A5F] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+                      }`}
+                    >
+                      <ParkingCircle className="w-4 h-4 mr-1" />
+                      駐車場あり
+                    </button>
+                    <button
+                      onClick={() => toggleDetailFilter('multipleDogs')}
+                      className={`flex items-center px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                        detailFilters.multipleDogs
+                          ? 'bg-[#FF5A5F] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+                      }`}
+                    >
+                      <Heart className="w-4 h-4 mr-1" />
+                      複数頭OK
+                    </button>
+                  </div>
+                </div>
+                
                 <div className="flex justify-center">
                   <button 
                     onClick={handleSearch}
