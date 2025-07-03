@@ -18,6 +18,7 @@ export interface RakutenHotel {
   parkingInformation: string;
   nearestStation: string;
   hotelComment: string;
+  hotelMinCharge?: number; // 最低料金
 }
 
 // 楽天トラベル地区コードAPIから取得した正しい地区コード
@@ -165,6 +166,7 @@ function convertHotelData(hotels: any[]): RakutenHotel[] {
     parkingInformation: hotel.hotel?.[0]?.hotelBasicInfo?.parkingInformation || '',
     nearestStation: hotel.hotel?.[0]?.hotelBasicInfo?.nearestStation || '',
     hotelComment: hotel.hotel?.[0]?.hotelBasicInfo?.hotelComment || '',
+    hotelMinCharge: hotel.hotel?.[0]?.hotelBasicInfo?.hotelMinCharge || undefined,
   }));
 }
 
@@ -192,6 +194,7 @@ function getMockHotelData(): RakutenHotel[] {
       parkingInformation: '無料駐車場50台',
       nearestStation: 'JR札幌駅',
       hotelComment: '愛犬と一緒に楽しめる温泉リゾートホテルです。ドッグランや犬用温泉も完備。',
+      hotelMinCharge: 15800, // 実際の価格例
     },
     {
       hotelNo: 'mock002',
@@ -213,6 +216,7 @@ function getMockHotelData(): RakutenHotel[] {
       parkingInformation: '有料駐車場30台',
       nearestStation: 'JR函館駅',
       hotelComment: '函館の夜景を望むペットフレンドリーなホテル。愛犬と一緒に海辺を散歩できます。',
+      hotelMinCharge: 12500, // 実際の価格例
     },
     {
       hotelNo: 'mock003',
@@ -234,6 +238,7 @@ function getMockHotelData(): RakutenHotel[] {
       parkingInformation: '無料駐車場100台',
       nearestStation: 'JR軽井沢駅',
       hotelComment: '軽井沢の自然に囲まれたペットリゾート。専用ドッグランと森林浴コースが人気です。',
+      hotelMinCharge: 22400, // 実際の価格例
     },
     {
       hotelNo: 'mock004',
@@ -255,6 +260,7 @@ function getMockHotelData(): RakutenHotel[] {
       parkingInformation: '無料駐車場40台',
       nearestStation: 'JR湯河原駅',
       hotelComment: '湯河原温泉の老舗旅館。愛犬専用の温泉もあり、一緒にリラックスできます。',
+      hotelMinCharge: 18900, // 実際の価格例
     },
     {
       hotelNo: 'mock005',
@@ -276,6 +282,7 @@ function getMockHotelData(): RakutenHotel[] {
       parkingInformation: '無料駐車場80台',
       nearestStation: 'JR伊東駅',
       hotelComment: '伊豆高原の絶景を望むドッグリゾート。広大なドッグランとアジリティコースを完備。',
+      hotelMinCharge: 25300, // 実際の価格例
     }
   ];
 }

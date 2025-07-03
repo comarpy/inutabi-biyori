@@ -57,8 +57,14 @@ function generateAmenities(): any[] {
   return [Dog, Car, Wifi, Coffee, Bath, UtensilsCrossed];
 }
 
-// 価格を生成する関数
-function generatePrice(reviewAverage: number): number {
+// 価格を生成する関数（楽天APIから実際の価格を取得）
+function generatePrice(reviewAverage: number, hotelMinCharge?: number): number {
+  // 楽天APIから実際の価格が取得できる場合はそれを使用
+  if (hotelMinCharge && hotelMinCharge > 0) {
+    return hotelMinCharge;
+  }
+  
+  // 実際の価格が取得できない場合は、レビュー評価に基づいて生成
   const basePrice = 8000;
   const multiplier = reviewAverage > 4 ? 1.5 : reviewAverage > 3 ? 1.2 : 1.0;
   return Math.floor(basePrice * multiplier);
@@ -166,7 +172,7 @@ export async function searchDogFriendlyHotels(
         id: parseInt(hotel.hotelNo) || index + 1,
         name: hotel.hotelName,
         location: `${hotel.address1} ${hotel.address2}`.trim() || '場所情報なし',
-        price: generatePrice(hotel.reviewAverage),
+        price: generatePrice(hotel.reviewAverage, hotel.hotelMinCharge),
         amenities: generateAmenities(),
         image: hotel.hotelImageUrl || hotel.hotelThumbnailUrl || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
         coordinates: generateCoordinates(area, index),
@@ -443,7 +449,7 @@ function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel, requestedId?: s
     id: parseInt(rakutenHotel.hotelNo) || 1,
     name: rakutenHotel.hotelName,
     location: `${rakutenHotel.address1} ${rakutenHotel.address2}`.trim(),
-    price: generatePrice(rakutenHotel.reviewAverage),
+    price: generatePrice(rakutenHotel.reviewAverage, rakutenHotel.hotelMinCharge),
     amenities: generateAmenities(),
     image: rakutenHotel.hotelImageUrl || '/images/画像2.jpeg',
     coordinates: generateCoordinates('全国', 0),
@@ -531,7 +537,7 @@ function convertRakutenDetailToHotelDetail(rakutenDetail: any, requestedId?: str
     id: parseInt(basicInfo.hotelNo) || 1,
     name: basicInfo.hotelName,
     location: `${basicInfo.address1} ${basicInfo.address2}`.trim(),
-    price: basicInfo.hotelMinCharge || generatePrice(basicInfo.reviewAverage || 4.0),
+    price: generatePrice(basicInfo.reviewAverage || 4.0, basicInfo.hotelMinCharge),
     amenities: generateAmenities(),
     image: basicInfo.hotelImageUrl || '/images/画像2.jpeg',
     coordinates: generateCoordinates('全国', 0),
