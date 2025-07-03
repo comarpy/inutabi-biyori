@@ -91,7 +91,7 @@ export default function ContactPage() {
           <div className="mb-6">
             <p className="font-medium mb-2">よくある質問で解決しない場合は、こちらからお問い合わせください。</p>
             <p className="font-medium mb-2">掲載希望の宿泊施設様や企業様は、下記よりお願いいたします。</p>
-            <Link href="/contact" className="flex items-center text-red-500 hover:text-red-600 font-medium mb-4">
+            <Link href="/business-contact" className="flex items-center text-red-500 hover:text-red-600 font-medium mb-4">
               <BuildingOfficeIcon className="w-4 h-4 mr-2" />
               宿泊施設・企業様向けお問い合わせはこちら
             </Link>
