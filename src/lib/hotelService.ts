@@ -228,8 +228,8 @@ export async function searchDogFriendlyHotels(
   }
 }
 
-// microCMSのデータをHotel形式に変換する関数
-function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number): Hotel {
+// microCMSのデータをHotel形式に変換する関数（楽天APIから価格を検索）
+async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number, rakutenHotels?: RakutenHotel[]): Promise<Hotel> {
   // 犬のサイズに基づいてアメニティを生成
   const amenities = [];
   if (microCMSHotel.smallDog || microCMSHotel.mediumDog || microCMSHotel.largeDog) amenities.push(Dog);
@@ -239,17 +239,56 @@ function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number): Hot
   if (microCMSHotel.dogRunOnSite) amenities.push(Coffee); // ドッグランはCoffeeアイコンで代用
   amenities.push(Wifi); // 基本的にWifiは利用可能と仮定
   
-  // 料金を生成（基本料金として設定）
-  const basePrice = 15000; // 基本料金
-  const dogFeeText = microCMSHotel.smallDogFee || microCMSHotel.mediumDogFee || microCMSHotel.largeDogFee;
-  let price = basePrice;
+  // 楽天APIから価格を検索
+  let price = 15000; // デフォルト基本料金
+  let rakutenPrice: number | undefined;
   
-  // 犬の料金から追加料金を抽出（簡易的な処理）
-  if (dogFeeText) {
-    const priceMatch = dogFeeText.match(/(\d+)/);
-    if (priceMatch) {
-      price += parseInt(priceMatch[1]);
+  if (rakutenHotels && Array.isArray(rakutenHotels)) {
+    // ホテル名で楽天APIのデータから検索
+    const matchedRakutenHotel = rakutenHotels.find(rakutenHotel => {
+      const microCMSName = microCMSHotel.hotelName.toLowerCase().replace(/\s+/g, '');
+      const rakutenName = rakutenHotel.hotelName.toLowerCase().replace(/\s+/g, '');
+      
+      // 完全一致
+      if (microCMSName === rakutenName) return true;
+      
+      // 部分一致（どちらかが他方を含む）
+      if (microCMSName.includes(rakutenName) || rakutenName.includes(microCMSName)) return true;
+      
+      // 住所での一致確認
+      const microCMSAddress = microCMSHotel.address.toLowerCase().replace(/\s+/g, '');
+      const rakutenAddress = `${rakutenHotel.address1}${rakutenHotel.address2}`.toLowerCase().replace(/\s+/g, '');
+      
+      if (microCMSAddress && rakutenAddress && (
+        microCMSAddress.includes(rakutenAddress.substring(0, 10)) || 
+        rakutenAddress.includes(microCMSAddress.substring(0, 10))
+      )) return true;
+      
+      return false;
+    });
+    
+    if (matchedRakutenHotel) {
+      console.log(`楽天APIでマッチしたホテル: ${microCMSHotel.hotelName} -> ${matchedRakutenHotel.hotelName}`);
+      rakutenPrice = generatePrice(matchedRakutenHotel.reviewAverage, matchedRakutenHotel.hotelMinCharge);
     }
+  }
+  
+  // 楽天APIから価格が取得できた場合はそれを使用、できなかった場合はmicroCMSの料金計算
+  if (rakutenPrice) {
+    price = rakutenPrice;
+    console.log(`${microCMSHotel.hotelName}: 楽天API価格 ¥${price.toLocaleString()}`);
+  } else {
+    // microCMSの料金計算（従来通り）
+    const dogFeeText = microCMSHotel.smallDogFee || microCMSHotel.mediumDogFee || microCMSHotel.largeDogFee;
+    
+    // 犬の料金から追加料金を抽出（簡易的な処理）
+    if (dogFeeText) {
+      const priceMatch = dogFeeText.match(/(\d+)/);
+      if (priceMatch) {
+        price += parseInt(priceMatch[1]);
+      }
+    }
+    console.log(`${microCMSHotel.hotelName}: microCMS計算価格 ¥${price.toLocaleString()}`);
   }
 
   // IDを数値に変換（microCMSのIDは文字列なので）
@@ -297,8 +336,14 @@ export async function getMicroCMSHotels(area?: string, detailFilters?: DetailFil
       });
     }
     
-    // Hotel形式に変換
-    const hotels: Hotel[] = microCMSHotels.map((hotel, index) => convertMicroCMSToHotel(hotel, index));
+    // 楽天APIから価格データを取得（価格マッチング用）
+    console.log('楽天APIから価格データを取得中...');
+    const rakutenHotels = await fetchRakutenHotels(area || '全国');
+    
+    // Hotel形式に変換（非同期処理）
+    const hotels: Hotel[] = await Promise.all(
+      microCMSHotels.map((hotel, index) => convertMicroCMSToHotel(hotel, index, rakutenHotels))
+    );
     
     console.log('microCMSフィルタ後の件数:', hotels.length);
     return hotels;
@@ -348,7 +393,7 @@ export async function getHotelById(id: string): Promise<HotelDetail | null> {
     
     if (microCMSHotel) {
       console.log('microCMSでホテルが見つかりました:', microCMSHotel.hotelName);
-      return convertMicroCMSToHotelDetail(microCMSHotel);
+      return await convertMicroCMSToHotelDetail(microCMSHotel);
     }
     
     // microCMSで見つからない場合は楽天APIから検索
@@ -384,8 +429,10 @@ export async function getHotelById(id: string): Promise<HotelDetail | null> {
 }
 
 // microCMSデータを詳細ページ用に変換
-function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): HotelDetail {
-  const baseHotel = convertMicroCMSToHotel(microCMSHotel, 0);
+async function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): Promise<HotelDetail> {
+  // 楽天APIから価格データを取得
+  const rakutenHotels = await fetchRakutenHotels('全国');
+  const baseHotel = await convertMicroCMSToHotel(microCMSHotel, 0, rakutenHotels);
   
   // microCMSから画像を取得（将来的に画像フィールドが追加される可能性に対応）
   const images: string[] = [];
