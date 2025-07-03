@@ -241,7 +241,7 @@ export default function ContactPage() {
                   宿泊施設向け
                 </div>
                 <ul className="space-y-2 text-sm">
-                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を掲載する</Link></li>
+                  <li><Link href="/business-contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を掲載する</Link></li>
                   <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">管理画面</Link></li>
                 </ul>
               </div>

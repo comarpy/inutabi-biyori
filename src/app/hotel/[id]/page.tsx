@@ -137,10 +137,10 @@ function HotelDetailContent() {
                 <Heart className="w-4 h-4 mr-1" />
                 お気に入り
               </Link>
-              <a className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
+              <Link href="/business-contact" className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
                 <Dog className="w-4 h-4 mr-1" />
                 宿を掲載する
-              </a>
+              </Link>
               <a className="text-sm hover:text-gray-200 cursor-pointer">ログイン</a>
             </nav>
           </div>
@@ -531,9 +531,9 @@ function HotelDetailContent() {
                   SNSでフォロー
                 </h3>
                 <div className="flex space-x-4 text-xl">
-                  <div className="cursor-pointer hover:text-[#FF5A5F]">📷</div>
-                  <div className="cursor-pointer hover:text-[#FF5A5F]">📘</div>
-                  <div className="cursor-pointer hover:text-[#FF5A5F]">🐦</div>
+                  <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">📷</a>
+                  <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">📘</a>
+                  <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">🐦</a>
                   <div className="cursor-pointer hover:text-[#FF5A5F]">💬</div>
                 </div>
               </div>

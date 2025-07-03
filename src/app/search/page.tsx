@@ -183,10 +183,10 @@ function SearchContent() {
               <Link href="/contact" className="text-sm hover:text-gray-200 cursor-pointer">
                 お問い合わせ
               </Link>
-              <a className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
+              <Link href="/business-contact" className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
                 <Heart className="w-4 h-4 mr-1" />
                 宿を掲載する
-              </a>
+              </Link>
               <a className="text-sm hover:text-gray-200 cursor-pointer">ログイン</a>
             </nav>
           </div>
@@ -551,13 +551,13 @@ function SearchContent() {
                       SNSでフォロー
                     </h5>
                     <div className="flex space-x-3 text-base">
-                      <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-600 transition-colors">
+                      <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-600 transition-colors">
                         <span className="text-xs font-bold">I</span>
                       </a>
-                      <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors">
+                      <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors">
                         <span className="text-xs font-bold">F</span>
                       </a>
-                      <a href="https://www.twitter.com" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-500 transition-colors">
+                      <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-500 transition-colors">
                         <span className="text-xs font-bold">T</span>
                       </a>
                       <a href="https://line.me" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors">

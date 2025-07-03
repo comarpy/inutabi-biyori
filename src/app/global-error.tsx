@@ -161,9 +161,9 @@ export default function GlobalError({
                     SNSでフォロー
                   </h3>
                   <div className="flex space-x-4 text-xl">
-                    <Link href="#" className="text-pink-400 hover:text-pink-300 transition-colors">📷</Link>
-                    <Link href="#" className="text-blue-500 hover:text-blue-400 transition-colors">📘</Link>
-                    <Link href="#" className="text-blue-400 hover:text-blue-300 transition-colors">🐦</Link>
+                    <Link href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300 transition-colors">📷</Link>
+                    <Link href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors">📘</Link>
+                    <Link href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">🐦</Link>
                     <Link href="#" className="text-green-500 hover:text-green-400 transition-colors">💬</Link>
                   </div>
                 </div>
