@@ -75,6 +75,15 @@ export default function BusinessContactPage() {
           <div className="mb-6">
             <p className="font-medium mb-2">「犬旅びより」への掲載をご希望の宿泊施設様、提携をご検討の企業様は、以下のフォームよりお問い合わせください。</p>
             <p className="font-medium mb-2">担当者より3営業日以内にご連絡いたします。</p>
+            
+            {/* Link to general contact */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mt-4">
+              <p className="text-sm text-gray-600 mb-2">一般的なお問い合わせの場合は：</p>
+              <Link href="/contact" className="flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm transition-colors">
+                <Mail className="w-4 h-4 mr-2" />
+                一般お問い合わせフォームはこちら
+              </Link>
+            </div>
           </div>
 
           {/* お問い合わせフォーム */}

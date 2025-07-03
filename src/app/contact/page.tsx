@@ -91,10 +91,18 @@ export default function ContactPage() {
           <div className="mb-6">
             <p className="font-medium mb-2">よくある質問で解決しない場合は、こちらからお問い合わせください。</p>
             <p className="font-medium mb-2">掲載希望の宿泊施設様や企業様は、下記よりお願いいたします。</p>
-            <Link href="/business-contact" className="flex items-center text-red-500 hover:text-red-600 font-medium mb-4">
-              <BuildingOfficeIcon className="w-4 h-4 mr-2" />
-              宿泊施設・企業様向けお問い合わせはこちら
-            </Link>
+            
+            {/* Business Contact Link - Enhanced Visibility */}
+            <div className="bg-gradient-to-r from-[#FF5A5F]/10 to-[#FF385C]/10 border border-[#FF5A5F]/30 rounded-lg p-4 mb-4">
+              <Link href="/business-contact" className="flex items-center text-[#FF5A5F] hover:text-[#FF385C] font-semibold text-lg transition-colors duration-300">
+                <BuildingOfficeIcon className="w-6 h-6 mr-3" />
+                <span>宿泊施設・企業様向けお問い合わせはこちら</span>
+                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </Link>
+              <p className="text-sm text-gray-600 mt-2 ml-9">掲載・提携に関するご相談はこちらからお願いいたします</p>
+            </div>
           </div>
 
           {/* Contact Form */}
