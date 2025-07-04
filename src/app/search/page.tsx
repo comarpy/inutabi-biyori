@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { MapPin, House, Waves, Dog, Bone, Utensils, Car, Heart, Play, ParkingCircle, ArrowLeft, ArrowRight, Map, SortAsc, Wifi, Camera, Laptop, Battery, ShoppingBag, Tv, GlassWater, TreePine, List, AlertCircle, Instagram, Facebook, Twitter, MessageCircle } from 'lucide-react';
+import { MapPin, House, Waves, Dog, Bone, Utensils, Car, Heart, Play, ParkingCircle, ArrowLeft, ArrowRight, Map, SortAsc, Wifi, Camera, Laptop, Battery, ShoppingBag, Tv, GlassWater, TreePine, List, AlertCircle, Instagram, Facebook, X, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useFavorites } from '../context/FavoritesContext';
@@ -557,9 +557,9 @@ function SearchContent() {
                       <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors">
                         <Facebook className="w-4 h-4" />
                       </a>
-                      <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
-                        <Twitter className="w-4 h-4" />
-                      </a>
+                                             <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
+                         <X className="w-4 h-4" />
+                       </a>
                       <a href="#" className="text-green-500 hover:text-green-400 transition-colors">
                         <MessageCircle className="w-4 h-4" />
                       </a>

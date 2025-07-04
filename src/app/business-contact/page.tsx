@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Dog, Building, Mail, Phone, MessageSquare, Heart, Info, Instagram, Facebook, Twitter, MessageCircle } from 'lucide-react';
+import { Dog, Building, Mail, Phone, MessageSquare, Heart, Info, Instagram, Facebook, X, MessageCircle } from 'lucide-react';
 
 export default function BusinessContactPage() {
   const [isAgreed, setIsAgreed] = useState(false);
@@ -230,9 +230,9 @@ export default function BusinessContactPage() {
                 <Link href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors">
                   <Facebook className="w-6 h-6" />
                 </Link>
-                <Link href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
-                  <Twitter className="w-6 h-6" />
-                </Link>
+                                  <Link href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
+                    <X className="w-6 h-6" />
+                  </Link>
                 <Link href="#" className="text-green-500 hover:text-green-400 transition-colors">
                   <MessageCircle className="w-6 h-6" />
                 </Link>

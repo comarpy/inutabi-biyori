@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Camera, Dog, Home, Info, CalendarCheck, MapPin, Phone, Car, CreditCard, Weight, Gift, Utensils, Building, Bed, Bath, UtensilsCrossed, X, ChevronLeft, ChevronRight, Instagram, Facebook, Twitter, MessageCircle } from 'lucide-react';
+import { Heart, ArrowLeft, Camera, Dog, Home, Info, CalendarCheck, MapPin, Phone, Car, CreditCard, Weight, Gift, Utensils, Building, Bed, Bath, UtensilsCrossed, X, ChevronLeft, ChevronRight, Instagram, Facebook, MessageCircle } from 'lucide-react';
 import { useFavorites } from '../../context/FavoritesContext';
 import Link from 'next/link';
 import { HotelDetail } from '@/lib/hotelService';
@@ -538,7 +538,7 @@ function HotelDetailContent() {
                     <Facebook className="w-6 h-6" />
                   </a>
                   <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">
-                    <Twitter className="w-6 h-6" />
+                    <X className="w-6 h-6" />
                   </a>
                   <div className="cursor-pointer hover:text-[#FF5A5F]">
                     <MessageCircle className="w-6 h-6" />
