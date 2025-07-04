@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
-import { Search, MapPin, Hotel, House, Tent, Waves, Dog, Bone, Utensils, Heart, Play, ParkingCircle } from 'lucide-react';
+import { Search, MapPin, Hotel, House, Tent, Waves, Dog, Bone, Utensils, Heart, Play, ParkingCircle, Instagram, Facebook, Twitter } from 'lucide-react';
 import { useFavorites } from './context/FavoritesContext';
 import type { DetailFilters } from '@/lib/hotelService';
 import Link from 'next/link';
@@ -353,13 +353,13 @@ function HomeContent() {
                 </p>
                 <div className="flex space-x-3">
                   <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
-                    <span className="text-xs text-white font-bold">F</span>
+                    <Facebook className="w-4 h-4 text-white" />
                   </a>
                   <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
-                    <span className="text-xs text-white font-bold">T</span>
+                    <Twitter className="w-4 h-4 text-white" />
                   </a>
                   <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
-                    <span className="text-xs text-white font-bold">I</span>
+                    <Instagram className="w-4 h-4 text-white" />
                   </a>
             </div>
           </div>
