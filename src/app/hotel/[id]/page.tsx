@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Camera, Dog, Home, Info, CalendarCheck, MapPin, Phone, Car, CreditCard, Weight, Gift, Utensils, Building, Bed, Bath, UtensilsCrossed, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Heart, ArrowLeft, Camera, Dog, Home, Info, CalendarCheck, MapPin, Phone, Car, CreditCard, Weight, Gift, Utensils, Building, Bed, Bath, UtensilsCrossed, X, ChevronLeft, ChevronRight, Instagram, Facebook, Twitter, MessageCircle } from 'lucide-react';
 import { useFavorites } from '../../context/FavoritesContext';
 import Link from 'next/link';
 import { HotelDetail } from '@/lib/hotelService';
@@ -531,10 +531,18 @@ function HotelDetailContent() {
                   SNSでフォロー
                 </h3>
                 <div className="flex space-x-4 text-xl">
-                  <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">📷</a>
-                  <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">📘</a>
-                  <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">🐦</a>
-                  <div className="cursor-pointer hover:text-[#FF5A5F]">💬</div>
+                  <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">
+                    <Instagram className="w-6 h-6" />
+                  </a>
+                  <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">
+                    <Facebook className="w-6 h-6" />
+                  </a>
+                  <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">
+                    <Twitter className="w-6 h-6" />
+                  </a>
+                  <div className="cursor-pointer hover:text-[#FF5A5F]">
+                    <MessageCircle className="w-6 h-6" />
+                  </div>
                 </div>
               </div>
             </div>

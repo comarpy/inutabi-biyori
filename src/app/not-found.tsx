@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Dog, Home, AlertTriangle, Heart, Info, Building } from 'lucide-react';
+import { Dog, Home, Search, Heart, Info, Building, Instagram, Facebook, Twitter, MessageCircle, AlertTriangle } from 'lucide-react';
 
 export default function NotFound() {
   return (
@@ -122,15 +122,23 @@ export default function NotFound() {
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold mb-4 flex items-center">
-                    <Heart className="w-5 h-5 mr-2 text-[#FF5A5F]" />
+                  <h3 className="font-bold mb-4 flex items-center">
+                    <Heart className="w-5 h-5 mr-2 text-pink-400" />
                     SNSでフォロー
                   </h3>
                   <div className="flex space-x-4 text-xl">
-                    <Link href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300 transition-colors">📷</Link>
-                    <Link href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors">📘</Link>
-                    <Link href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">🐦</Link>
-                    <Link href="#" className="text-green-500 hover:text-green-400 transition-colors">💬</Link>
+                    <Link href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-300 transition-colors">
+                      <Instagram className="w-6 h-6" />
+                    </Link>
+                    <Link href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors">
+                      <Facebook className="w-6 h-6" />
+                    </Link>
+                    <Link href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
+                      <Twitter className="w-6 h-6" />
+                    </Link>
+                    <Link href="#" className="text-green-500 hover:text-green-400 transition-colors">
+                      <MessageCircle className="w-6 h-6" />
+                    </Link>
                   </div>
                 </div>
               </div>

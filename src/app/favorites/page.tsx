@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, MapPin, Dog, Bone, Heart, X } from 'lucide-react';
+import { Search, MapPin, Dog, Bone, Heart, X, Instagram, Facebook, Twitter, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useFavorites } from '../context/FavoritesContext';
 
@@ -239,17 +239,17 @@ export default function FavoritesPage() {
                       SNSでフォロー
                     </h5>
                     <div className="flex space-x-3 text-base">
-                      <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-pink-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-pink-600 transition-colors">
-                        <span className="text-xs font-bold">I</span>
+                      <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-300 transition-colors">
+                        <Instagram className="w-4 h-4" />
                       </a>
-                      <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-600 transition-colors">
-                        <span className="text-xs font-bold">F</span>
+                      <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors">
+                        <Facebook className="w-4 h-4" />
                       </a>
-                      <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-blue-400 rounded-full flex items-center justify-center cursor-pointer hover:bg-blue-500 transition-colors">
-                        <span className="text-xs font-bold">T</span>
+                      <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
+                        <Twitter className="w-4 h-4" />
                       </a>
-                      <a href="https://line.me" target="_blank" rel="noopener noreferrer" className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-green-600 transition-colors">
-                        <span className="text-xs font-bold">L</span>
+                      <a href="#" className="text-green-500 hover:text-green-400 transition-colors">
+                        <MessageCircle className="w-4 h-4" />
                       </a>
                     </div>
                   </div>

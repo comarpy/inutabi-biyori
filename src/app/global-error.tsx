@@ -1,7 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
-import { Dog, Home, AlertCircle, Heart, Info, Building } from 'lucide-react';
+import { Dog, AlertTriangle, RefreshCw, Home, Heart, Info, Building, Instagram, Facebook, Twitter, MessageCircle } from 'lucide-react';
 
 export default function GlobalError({
   error,
@@ -52,7 +53,7 @@ export default function GlobalError({
             {/* コンテンツ部分 */}
             <div className="bg-white p-8 mb-4 text-center rounded-lg shadow-lg">
               <h2 className="text-3xl font-bold mb-6 text-[#FF5A5F] flex items-center justify-center">
-                <AlertCircle className="w-8 h-8 mr-3" />
+                <AlertTriangle className="w-8 h-8 mr-3" />
                 サーバーエラーが発生しました
               </h2>
               
@@ -74,7 +75,7 @@ export default function GlobalError({
                   onClick={reset}
                   className="bg-[#FF5A5F] hover:bg-[#FF385C] text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg inline-flex items-center"
                 >
-                  <AlertCircle className="w-5 h-5 mr-2" />
+                  <RefreshCw className="w-5 h-5 mr-2" />
                   再試行
                 </button>
                 <Link 
@@ -156,15 +157,23 @@ export default function GlobalError({
                 </div>
 
                 <div>
-                  <h3 className="text-lg font-semibold mb-4 flex items-center">
-                    <Heart className="w-5 h-5 mr-2 text-[#FF5A5F]" />
+                  <h3 className="font-bold mb-4 flex items-center">
+                    <Heart className="w-5 h-5 mr-2 text-pink-400" />
                     SNSでフォロー
                   </h3>
                   <div className="flex space-x-4 text-xl">
-                    <Link href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="text-pink-400 hover:text-pink-300 transition-colors">📷</Link>
-                    <Link href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors">📘</Link>
-                    <Link href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">🐦</Link>
-                    <Link href="#" className="text-green-500 hover:text-green-400 transition-colors">💬</Link>
+                    <Link href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-300 transition-colors">
+                      <Instagram className="w-6 h-6" />
+                    </Link>
+                    <Link href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors">
+                      <Facebook className="w-6 h-6" />
+                    </Link>
+                    <Link href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
+                      <Twitter className="w-6 h-6" />
+                    </Link>
+                    <Link href="#" className="text-green-500 hover:text-green-400 transition-colors">
+                      <MessageCircle className="w-6 h-6" />
+                    </Link>
                   </div>
                 </div>
               </div>
