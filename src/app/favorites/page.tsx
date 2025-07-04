@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, MapPin, Dog, Bone, Heart, X, Instagram, Facebook, Twitter, MessageCircle } from 'lucide-react';
+import { Search, MapPin, Dog, Bone, Heart, X, Instagram, Facebook, MessageCircle } from 'lucide-react';
+import { XIcon } from '../../components/XIcon';
 import Link from 'next/link';
 import { useFavorites } from '../context/FavoritesContext';
 
@@ -245,9 +246,9 @@ export default function FavoritesPage() {
                       <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors">
                         <Facebook className="w-4 h-4" />
                       </a>
-                                             <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
-                         <Twitter className="w-4 h-4" />
-                       </a>
+                                                                   <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
+                        <XIcon size={16} />
+                      </a>
                       <a href="#" className="text-green-500 hover:text-green-400 transition-colors">
                         <MessageCircle className="w-4 h-4" />
                       </a>

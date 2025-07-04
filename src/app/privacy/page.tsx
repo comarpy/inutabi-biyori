@@ -13,7 +13,8 @@ import {
   EnvelopeIcon,
   HeartIcon
 } from '@heroicons/react/24/outline';
-import { Instagram, Facebook, Twitter, MessageCircle } from 'lucide-react';
+import { Instagram, Facebook, MessageCircle } from 'lucide-react';
+import { XIcon } from '../../components/XIcon';
 
 export default function PrivacyPolicyPage() {
   return (
@@ -264,7 +265,7 @@ export default function PrivacyPolicyPage() {
                     <Facebook className="w-4 h-4 text-white" />
                   </a>
                   <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
-                    <Twitter className="w-4 h-4 text-white" />
+                    <XIcon size={16} className="text-white" />
                   </a>
                   <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
                     <Instagram className="w-4 h-4 text-white" />
