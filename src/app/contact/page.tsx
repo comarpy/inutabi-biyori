@@ -8,6 +8,7 @@ import {
   BuildingOfficeIcon,
   HeartIcon 
 } from '@heroicons/react/24/outline';
+import { Instagram, Facebook, Twitter, MessageCircle } from 'lucide-react';
 
 export default function ContactPage() {
   const [isAgreed, setIsAgreed] = useState(false);
@@ -212,13 +213,13 @@ export default function ContactPage() {
                 </p>
                 <div className="flex space-x-3">
                   <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
-                    <span className="text-xs text-white font-bold">F</span>
+                    <Facebook className="w-4 h-4 text-white" />
                   </a>
                   <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
-                    <span className="text-xs text-white font-bold">T</span>
+                    <Twitter className="w-4 h-4 text-white" />
                   </a>
                   <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
-                    <span className="text-xs text-white font-bold">I</span>
+                    <Instagram className="w-4 h-4 text-white" />
                   </a>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Dog, Home, Search, Heart, Info, Building, Instagram, Facebook, X, MessageCircle, AlertTriangle } from 'lucide-react';
+import { Dog, Home, Search, Heart, Info, Building, Instagram, Facebook, Twitter, MessageCircle, AlertTriangle } from 'lucide-react';
 
 export default function NotFound() {
   return (
@@ -134,7 +134,7 @@ export default function NotFound() {
                       <Facebook className="w-6 h-6" />
                     </Link>
                                          <Link href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
-                       <X className="w-6 h-6" />
+                       <Twitter className="w-6 h-6" />
                      </Link>
                     <Link href="#" className="text-green-500 hover:text-green-400 transition-colors">
                       <MessageCircle className="w-6 h-6" />
