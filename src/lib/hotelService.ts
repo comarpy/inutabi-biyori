@@ -169,7 +169,7 @@ export async function searchDogFriendlyHotels(
     if (rakutenHotels && Array.isArray(rakutenHotels)) {
       console.log('楽天APIから取得したデータ件数:', rakutenHotels.length);
       rakutenHotelsConverted = rakutenHotels.map((hotel: RakutenHotel, index: number) => ({
-        id: parseInt(hotel.hotelNo) || index + 1,
+        id: parseInt(hotel.hotelNo) || (50000 + index), // 50000番台を楽天API用に予約
         name: hotel.hotelName,
         location: `${hotel.address1} ${hotel.address2}`.trim() || '場所情報なし',
         price: generatePrice(hotel.reviewAverage, hotel.hotelMinCharge),
@@ -293,7 +293,7 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
 
   // IDを数値に変換（microCMSのIDは文字列なので）
   const numericId = microCMSHotel.id.replace(/\D/g, '');
-  const id = numericId ? parseInt(numericId) : index + 1000; // 楽天APIのIDと重複しないよう1000から開始
+  const id = numericId ? parseInt(numericId) : index + 10000; // 楽天APIのIDと重複しないよう10000から開始
 
   return {
     id: id,
@@ -388,7 +388,7 @@ export async function getHotelById(id: string): Promise<HotelDetail | null> {
     const microCMSHotel = microCMSHotels.find(hotel => {
       const numericId = hotel.id.replace(/\D/g, '');
       const hotelId = numericId ? parseInt(numericId) : 0;
-      return hotelId.toString() === id || (hotelId + 1000).toString() === id;
+      return hotelId.toString() === id || (hotelId + 10000).toString() === id;
     });
     
     if (microCMSHotel) {

@@ -4,13 +4,12 @@ import { useState, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, MapPin, Hotel, House, Tent, Waves, Dog, Bone, Utensils, Heart, Play, ParkingCircle, Instagram, Facebook } from 'lucide-react';
 import { XIcon } from '../components/XIcon';
-import { useFavorites } from './context/FavoritesContext';
+
 import type { DetailFilters } from '@/lib/hotelService';
 import Link from 'next/link';
 
 function HomeContent() {
   const router = useRouter();
-  const { favoritesCount } = useFavorites();
   
   // 都道府県リスト
   const prefectures = [
@@ -88,21 +87,19 @@ function HomeContent() {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center">
               <Dog className="w-6 h-6 mr-2" />
-              <span className="font-bold text-lg">犬旅びより</span>
+              <div className="flex flex-col">
+                <span className="font-bold text-lg">犬旅びより</span>
+                <span className="text-xs opacity-90">- 愛犬と泊まれる宿が見つかる、旅の検索サイト</span>
+              </div>
             </div>
             <nav className="flex items-center space-x-4">
-              <Link href="/favorites" className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
-                <Heart className="w-4 h-4 mr-1" />
-                お気に入り ({favoritesCount})
-              </Link>
               <Link href="/contact" className="text-sm hover:text-gray-200 cursor-pointer">
                 お問い合わせ
               </Link>
-              <a className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
-                <Heart className="w-4 h-4 mr-1" />
+              <Link href="/business-contact" className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
+                <Dog className="w-4 h-4 mr-1" />
                 宿を掲載する
-              </a>
-              <a className="text-sm hover:text-gray-200 cursor-pointer">ログイン</a>
+              </Link>
             </nav>
           </div>
         </header>
@@ -372,7 +369,7 @@ function HomeContent() {
                 </div>
                 <ul className="space-y-2 text-sm">
                   <li><Link href="/search" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を探す</Link></li>
-                  <li><Link href="/favorites" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お気に入り</Link></li>
+
                   <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">予約履歴</Link></li>
                 </ul>
               </div>

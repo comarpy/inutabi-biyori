@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { FavoritesProvider } from './context/FavoritesContext';
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Inutabi-biyori - 愛犬と泊まれる宿が見つかる、旅の検索サイト",
+  title: "犬旅びより - 愛犬と泊まれる宿が見つかる、旅の検索サイト",
   description: "愛犬との最高の旅を、ここから。犬と一緒に泊まれる宿・ホテルを簡単検索。",
+  icons: {
+    icon: '/dog-icon.svg',
+    shortcut: '/dog-icon.svg',
+    apple: '/dog-icon.svg',
+  },
 };
 
 export default function RootLayout({
@@ -28,9 +33,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <FavoritesProvider>
         {children}
-        </FavoritesProvider>
       </body>
     </html>
   );

@@ -12,6 +12,27 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    // エラーをログに記録
+    console.error('Global error:', error);
+  }, [error]);
+
+  const handleRetry = () => {
+    console.log('Retry button clicked');
+    try {
+      reset();
+    } catch (err) {
+      console.error('Reset failed:', err);
+      // リセットが失敗した場合はページをリロード
+      window.location.reload();
+    }
+  };
+
+  const handleGoHome = () => {
+    console.log('Go home button clicked');
+    window.location.href = '/';
+  };
+
   return (
     <html lang="ja">
       <head>
@@ -19,6 +40,10 @@ export default function GlobalError({
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>犬旅びより - 500 Internal Server Error</title>
         <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet" />
+        <style>{`
+          body { margin: 0; padding: 0; }
+          .btn-hover:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        `}</style>
       </head>
       <body className="font-sans bg-[#FAF6F1] text-[#484848] relative">
         <div className="w-full max-w-7xl mx-auto min-h-screen relative overflow-visible">
@@ -73,27 +98,36 @@ export default function GlobalError({
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-8 mb-6">
                 <button
-                  onClick={reset}
-                  className="bg-[#FF5A5F] hover:bg-[#FF385C] text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg inline-flex items-center"
+                  onClick={handleRetry}
+                  className="bg-[#FF5A5F] hover:bg-[#FF385C] text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 btn-hover inline-flex items-center cursor-pointer"
+                  type="button"
                 >
                   <RefreshCw className="w-5 h-5 mr-2" />
                   再試行
                 </button>
-                <Link 
-                  href="/" 
-                  className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 hover:transform hover:-translate-y-1 hover:shadow-lg inline-flex items-center"
+                <button
+                  onClick={handleGoHome}
+                  className="bg-gray-600 hover:bg-gray-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-300 btn-hover inline-flex items-center cursor-pointer"
+                  type="button"
                 >
                   <Home className="w-5 h-5 mr-2" />
                   トップページに戻る
-                </Link>
+                </button>
               </div>
               
               <div className="mt-6 text-gray-600">
                 <p>
                   エラーが続く場合は、
-                  <Link href="/contact" className="text-[#FF5A5F] hover:underline ml-1">
+                  <a 
+                    href="/contact" 
+                    className="text-[#FF5A5F] hover:underline ml-1 cursor-pointer"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.location.href = '/contact';
+                    }}
+                  >
                     お問い合わせ
-                  </Link>
+                  </a>
                   からご連絡ください。
                 </p>
               </div>
@@ -127,9 +161,9 @@ export default function GlobalError({
                     サービスについて
                   </h3>
                   <ul className="space-y-2 text-sm text-gray-300">
-                    <li><Link href="#" className="hover:text-white transition-colors">ご利用ガイド</Link></li>
-                    <li><Link href="#" className="hover:text-white transition-colors">よくある質問</Link></li>
-                    <li><Link href="/contact" className="hover:text-white transition-colors">お問い合わせ</Link></li>
+                    <li><a href="#" className="hover:text-white transition-colors cursor-pointer">ご利用ガイド</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors cursor-pointer">よくある質問</a></li>
+                    <li><a href="/contact" className="hover:text-white transition-colors cursor-pointer">お問い合わせ</a></li>
                   </ul>
                 </div>
 
@@ -139,9 +173,9 @@ export default function GlobalError({
                     利用規約
                   </h3>
                   <ul className="space-y-2 text-sm text-gray-300">
-                    <li><Link href="/terms" className="hover:text-white transition-colors">利用規約</Link></li>
-                    <li><Link href="/privacy" className="hover:text-white transition-colors">プライバシーポリシー</Link></li>
-                    <li><Link href="#" className="hover:text-white transition-colors">特定商取引法</Link></li>
+                    <li><a href="/terms" className="hover:text-white transition-colors cursor-pointer">利用規約</a></li>
+                    <li><a href="/privacy" className="hover:text-white transition-colors cursor-pointer">プライバシーポリシー</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors cursor-pointer">特定商取引法</a></li>
                   </ul>
                 </div>
 
@@ -151,9 +185,9 @@ export default function GlobalError({
                     運営会社
                   </h3>
                   <ul className="space-y-2 text-sm text-gray-300">
-                    <li><Link href="#" className="hover:text-white transition-colors">会社概要</Link></li>
-                    <li><Link href="#" className="hover:text-white transition-colors">採用情報</Link></li>
-                    <li><Link href="#" className="hover:text-white transition-colors">パートナー募集</Link></li>
+                    <li><a href="#" className="hover:text-white transition-colors cursor-pointer">会社概要</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors cursor-pointer">採用情報</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors cursor-pointer">パートナー募集</a></li>
                   </ul>
                 </div>
 
@@ -163,18 +197,18 @@ export default function GlobalError({
                     SNSでフォロー
                   </h3>
                   <div className="flex space-x-4 text-xl">
-                    <Link href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-300 transition-colors">
+                    <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-300 transition-colors cursor-pointer">
                       <Instagram className="w-6 h-6" />
-                    </Link>
-                    <Link href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors">
+                    </a>
+                    <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors cursor-pointer">
                       <Facebook className="w-6 h-6" />
-                    </Link>
-                                         <Link href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
-                       <XIcon size={24} />
-                     </Link>
-                    <Link href="#" className="text-green-500 hover:text-green-400 transition-colors">
+                    </a>
+                    <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer">
+                      <XIcon size={24} />
+                    </a>
+                    <a href="#" className="text-green-500 hover:text-green-400 transition-colors cursor-pointer">
                       <MessageCircle className="w-6 h-6" />
-                    </Link>
+                    </a>
                   </div>
                 </div>
               </div>

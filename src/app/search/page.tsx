@@ -6,8 +6,16 @@ import { MapPin, House, Waves, Dog, Bone, Utensils, Car, Heart, Play, ParkingCir
 import { XIcon } from '../../components/XIcon';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { useFavorites } from '../context/FavoritesContext';
-import type { Hotel } from '../context/FavoritesContext';
+// Hotel型を定義
+interface Hotel {
+  id: number;
+  name: string;
+  location: string;
+  price: number;
+  amenities: string[];
+  image: string;
+  coordinates: [number, number];
+}
 import type { DetailFilters } from '@/lib/hotelService';
 
 // 地図コンポーネントを動的にインポート（SSRを無効化）
@@ -26,7 +34,6 @@ const HotelMap = dynamic(() => import('./components/HotelMap'), {
 function SearchContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { addToFavorites, removeFromFavorites, isFavorite, favoritesCount } = useFavorites();
   
   // 都道府県リスト
   const prefectures = [
@@ -133,14 +140,7 @@ function SearchContent() {
     router.push(`/hotel/${hotel.id}`);
   };
 
-  const handleFavoriteToggle = (hotel: Hotel, e: React.MouseEvent | React.TouchEvent) => {
-    e.stopPropagation();
-    if (isFavorite(hotel.id)) {
-      removeFromFavorites(hotel.id);
-    } else {
-      addToFavorites(hotel);
-    }
-  };
+
 
   const activeFilters = [
     { icon: MapPin, label: searchFilters.area },
@@ -174,21 +174,19 @@ function SearchContent() {
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <Link href="/" className="flex items-center hover:opacity-80">
               <Dog className="w-6 h-6 mr-2" />
-              <span className="font-bold text-lg">Inutabi-biyori</span>
+              <div className="flex flex-col">
+                <span className="font-bold text-lg">犬旅びより</span>
+                <span className="text-xs opacity-90">- 愛犬と泊まれる宿が見つかる、旅の検索サイト</span>
+              </div>
             </Link>
             <nav className="flex items-center space-x-4">
-              <Link href="/favorites" className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
-                <Heart className="w-4 h-4 mr-1" />
-                お気に入り ({favoritesCount})
-              </Link>
               <Link href="/contact" className="text-sm hover:text-gray-200 cursor-pointer">
                 お問い合わせ
               </Link>
               <Link href="/business-contact" className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
-                <Heart className="w-4 h-4 mr-1" />
+                <Dog className="w-4 h-4 mr-1" />
                 宿を掲載する
               </Link>
-              <a className="text-sm hover:text-gray-200 cursor-pointer">ログイン</a>
             </nav>
           </div>
         </header>
@@ -414,23 +412,13 @@ function SearchContent() {
                 <>
                   {/* 宿泊施設一覧 */}
                   <div className="grid grid-cols-3 gap-4 mb-6">
-                    {hotels && hotels.map((hotel) => (
+                    {hotels && hotels.map((hotel, hotelIndex) => (
                       <div 
-                        key={hotel.id}
+                        key={`hotel-${hotel.id}-${hotelIndex}`}
                         className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-gray-100 relative"
                         onClick={() => handleHotelSelect(hotel)}
                       >
-                        {/* お気に入りボタン */}
-                        <button
-                          onClick={(e) => handleFavoriteToggle(hotel, e)}
-                          className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center shadow-md transition-all duration-300 ${
-                            isFavorite(hotel.id)
-                              ? 'bg-[#FF5A5F] text-white hover:bg-[#FF385C]'
-                              : 'bg-white bg-opacity-90 text-gray-600 hover:bg-red-50 hover:text-[#FF5A5F]'
-                          }`}
-                        >
-                          <Heart className={`w-4 h-4 ${isFavorite(hotel.id) ? 'fill-white' : ''}`} />
-                        </button>
+
 
                         <div className="flex gap-3 mb-3">
                           <div className="w-[120px] h-[120px] rounded-lg overflow-hidden flex-shrink-0">
@@ -444,20 +432,14 @@ function SearchContent() {
                             <h3 className="font-bold text-lg mb-1">{hotel.name}</h3>
                             <p className="text-sm text-gray-600 mb-2">{hotel.location}</p>
                                                         <div className="flex mb-2">
-                              {hotel.amenities && hotel.amenities.map((IconComponent, index) => {
-                                // IconComponentがReactコンポーネントかどうかチェック
-                                if (typeof IconComponent === 'function') {
-                                  return (
-                                    <div
-                                      key={index}
-                                      className="bg-[#FFF0F0] text-[#FF5A5F] rounded-full w-6 h-6 flex items-center justify-center mr-1"
-                                    >
-                                      <IconComponent className="w-3 h-3" />
-                                    </div>
-                                  );
-                                }
-                                return null;
-                              })}
+                              {hotel.amenities && hotel.amenities.map((amenity, amenityIndex) => (
+                                <div
+                                  key={`amenity-${hotelIndex}-${amenityIndex}`}
+                                  className="bg-[#FFF0F0] text-[#FF5A5F] rounded-full px-2 py-1 text-xs mr-1"
+                                >
+                                  {amenity}
+                                </div>
+                              ))}
                             </div>
                             <div className="flex justify-between items-center">
                               <span className="font-bold text-[#FF5A5F]">¥{hotel.price.toLocaleString()}〜</span>

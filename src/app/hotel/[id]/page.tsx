@@ -4,7 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Heart, ArrowLeft, Camera, Dog, Home, Info, CalendarCheck, MapPin, Phone, Car, CreditCard, Weight, Gift, Utensils, Building, Bed, Bath, UtensilsCrossed, X, ChevronLeft, ChevronRight, Instagram, Facebook, MessageCircle } from 'lucide-react';
 import { XIcon } from '../../../components/XIcon';
-import { useFavorites } from '../../context/FavoritesContext';
+
 import Link from 'next/link';
 import { HotelDetail } from '@/lib/hotelService';
 
@@ -18,7 +18,7 @@ interface BookingSite {
 function HotelDetailContent() {
   const params = useParams();
   const router = useRouter();
-  const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
+
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [hotel, setHotel] = useState<HotelDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -80,23 +80,7 @@ function HotelDetailContent() {
     );
   }
 
-  const isHotelFavorite = isFavorite(hotel.id);
 
-  const handleFavoriteToggle = () => {
-    if (isHotelFavorite) {
-      removeFromFavorites(hotel.id);
-    } else {
-      addToFavorites({
-        id: hotel.id,
-        name: hotel.name,
-        location: hotel.location,
-        price: hotel.price,
-        amenities: [],
-        image: hotel.images[0],
-        coordinates: [35.6762, 139.7647] as [number, number]
-      });
-    }
-  };
 
   return (
     <div className="min-h-screen bg-[#FDF8F3]">
@@ -131,18 +115,19 @@ function HotelDetailContent() {
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <Dog className="w-6 h-6 mr-2" />
-              <span className="font-bold text-lg">犬と泊まれる宿</span>
+              <div className="flex flex-col">
+                <span className="font-bold text-lg">犬旅びより</span>
+                <span className="text-xs opacity-90">- 愛犬と泊まれる宿が見つかる、旅の検索サイト</span>
+              </div>
             </div>
             <nav className="flex items-center space-x-4">
-              <Link href="/favorites" className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
-                <Heart className="w-4 h-4 mr-1" />
-                お気に入り
+              <Link href="/contact" className="text-sm hover:text-gray-200 cursor-pointer">
+                お問い合わせ
               </Link>
               <Link href="/business-contact" className="text-sm hover:text-gray-200 cursor-pointer flex items-center">
                 <Dog className="w-4 h-4 mr-1" />
                 宿を掲載する
               </Link>
-              <a className="text-sm hover:text-gray-200 cursor-pointer">ログイン</a>
             </nav>
           </div>
         </header>
@@ -159,16 +144,7 @@ function HotelDetailContent() {
                     {hotel.name}
                   </h1>
                 </div>
-                <button
-                  onClick={handleFavoriteToggle}
-                  className={`p-3 rounded-full transition-colors ${
-                    isHotelFavorite 
-                      ? 'bg-[#FF5A5F] text-white' 
-                      : 'bg-gray-200 text-gray-600 hover:bg-gray-300'
-                  }`}
-                >
-                  <Heart className={`w-6 h-6 ${isHotelFavorite ? 'fill-current' : ''}`} />
-                </button>
+
               </div>
             </div>
 
