@@ -85,19 +85,7 @@ export default function NotFound() {
 
             {/* フッター */}
             <footer className="bg-gray-800 text-white p-8 rounded-b-lg">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4 flex items-center">
-                    <Dog className="w-5 h-5 mr-2 text-[#FF5A5F]" />
-                    サービスについて
-                  </h3>
-                  <ul className="space-y-2 text-sm text-gray-300">
-                    <li><Link href="#" className="hover:text-white transition-colors">ご利用ガイド</Link></li>
-                    <li><Link href="#" className="hover:text-white transition-colors">よくある質問</Link></li>
-                    <li><Link href="/contact" className="hover:text-white transition-colors">お問い合わせ</Link></li>
-                  </ul>
-                </div>
-
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-4 flex items-center">
                     <Info className="w-5 h-5 mr-2 text-[#FF5A5F]" />

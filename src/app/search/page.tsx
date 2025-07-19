@@ -494,18 +494,7 @@ function SearchContent() {
 
               {/* フッター */}
               <footer className="bg-gray-800 text-white p-4 text-xs rounded-lg">
-                <div className="grid grid-cols-4 gap-4 mb-4">
-                  <div>
-                    <h5 className="font-bold mb-2 flex items-center">
-                      <Heart className="w-3 h-3 mr-1" />
-                      サービスについて
-                    </h5>
-                    <ul className="space-y-1 text-gray-300">
-                      <li><Link href="/" className="hover:text-white cursor-pointer">ホーム</Link></li>
-                      <li><Link href="/search" className="hover:text-white cursor-pointer">宿を探す</Link></li>
-                      <li><Link href="/contact" className="hover:text-white cursor-pointer">お問い合わせ</Link></li>
-                    </ul>
-                  </div>
+                <div className="grid grid-cols-3 gap-4 mb-4">
                   <div>
                     <h5 className="font-bold mb-2 flex items-center">
                       <Bone className="w-3 h-3 mr-1" />

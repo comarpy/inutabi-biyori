@@ -154,19 +154,7 @@ export default function GlobalError({
 
             {/* フッター */}
             <footer className="bg-gray-800 text-white p-8 rounded-b-lg">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div>
-                  <h3 className="text-lg font-semibold mb-4 flex items-center">
-                    <Dog className="w-5 h-5 mr-2 text-[#FF5A5F]" />
-                    サービスについて
-                  </h3>
-                  <ul className="space-y-2 text-sm text-gray-300">
-                    <li><a href="#" className="hover:text-white transition-colors cursor-pointer">ご利用ガイド</a></li>
-                    <li><a href="#" className="hover:text-white transition-colors cursor-pointer">よくある質問</a></li>
-                    <li><a href="/contact" className="hover:text-white transition-colors cursor-pointer">お問い合わせ</a></li>
-                  </ul>
-                </div>
-
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-4 flex items-center">
                     <Info className="w-5 h-5 mr-2 text-[#FF5A5F]" />
