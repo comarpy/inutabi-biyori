@@ -551,7 +551,7 @@ function SearchContent() {
                 </div>
                 <div className="text-center text-gray-400 flex items-center justify-center">
                   <Heart className="w-3 h-3 mr-1" />
-                  © 2024 犬旅びより All Rights Reserved.
+                  © 2025 犬旅びより All Rights Reserved.
                 </div>
               </footer>
             </div>

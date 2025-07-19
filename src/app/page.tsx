@@ -400,7 +400,7 @@ function HomeContent() {
             </div>
             
             <div className="border-t border-gray-600 mt-8 pt-8 text-center text-sm text-gray-300">
-              <p>&copy; 2024 犬旅びより. All rights reserved.</p>
+              <p>© 2025 犬旅びより All Rights Reserved.</p>
             </div>
             </div>
           </footer>

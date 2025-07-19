@@ -527,7 +527,7 @@ function HotelDetailContent() {
             <div className="border-t border-gray-600 mt-8 pt-8 text-center text-sm text-gray-300">
               <p className="flex items-center justify-center">
                 <Dog className="w-4 h-4 mr-2" />
-                © 2024 犬と泊まれる宿 All Rights Reserved.
+                © 2025 犬旅びより All Rights Reserved.
               </p>
             </div>
           </div>
