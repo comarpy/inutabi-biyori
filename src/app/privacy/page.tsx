@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Dog } from 'lucide-react';
 import { 
   ShieldCheckIcon,
   ClipboardDocumentListIcon,
@@ -35,11 +36,7 @@ export default function PrivacyPolicyPage() {
         <div className="bg-gradient-to-br from-[#FF5A5F] to-[#FF385C] text-white p-3 rounded-t-lg mb-3 flex items-center justify-between">
           <div className="flex items-center">
             <div className="bg-[#FAF6F1] p-2.5 rounded-full mr-3 w-[70px] h-[70px] flex items-center justify-center">
-              <img 
-                src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=50&h=50&fit=crop&crop=center" 
-                className="rounded-full w-[50px] h-[50px] object-cover" 
-                alt="犬旅びより"
-              />
+              <Dog className="w-8 h-8 text-[#FF5A5F]" />
             </div>
             <h2 className="text-xl font-bold">Inutabi-biyori- 愛犬と泊まれる宿が見つかる、旅の検索サイト</h2>
           </div>
@@ -275,7 +272,6 @@ export default function PrivacyPolicyPage() {
 
               <div>
                 <div className="flex items-center font-bold mb-4 text-white">
-                  <HeartIcon className="w-4 h-4 mr-2 text-[#FF5A5F]" />
                   サービス
                 </div>
                 <ul className="space-y-2 text-sm">

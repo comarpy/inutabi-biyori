@@ -436,7 +436,6 @@ function HomeContent() {
 
               <div>
                 <div className="flex items-center font-bold mb-4 text-white">
-                  <Search className="w-4 h-4 mr-2 text-[#FF5A5F]" />
                   サービス
                 </div>
                 <ul className="space-y-2 text-sm">

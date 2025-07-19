@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { Dog } from 'lucide-react';
 import { 
   QuestionMarkCircleIcon, 
   EnvelopeIcon, 
@@ -55,11 +56,7 @@ export default function ContactPage() {
         <div className="bg-gradient-to-br from-[#FF5A5F] to-[#FF385C] text-white p-4 rounded-t-lg mb-4 flex items-center justify-between">
           <div className="flex items-center">
             <div className="bg-[#FAF6F1] p-2 rounded-full mr-3 w-[60px] h-[60px] flex items-center justify-center">
-              <img 
-                src="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=45&h=45&fit=crop&crop=center" 
-                className="rounded-full w-[45px] h-[45px] object-cover" 
-                alt="犬旅びより"
-              />
+              <Dog className="w-7 h-7 text-[#FF5A5F]" />
             </div>
             <h2 className="text-xl font-bold">Inutabi-biyori- 愛犬と泊まれる宿が見つかる、旅の検索サイト</h2>
           </div>
@@ -227,7 +224,6 @@ export default function ContactPage() {
 
               <div>
                 <div className="flex items-center font-bold mb-4 text-white">
-                  <HeartIcon className="w-4 h-4 mr-2 text-[#FF5A5F]" />
                   サービス
                 </div>
                 <ul className="space-y-2 text-sm">
