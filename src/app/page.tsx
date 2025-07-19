@@ -412,12 +412,37 @@ function HomeContent() {
         {/* フッター */}
         <footer className="bg-[#3A3A3A] text-white mt-16 rounded-b-xl">
           <div className="max-w-7xl mx-auto px-4 py-12">
-            <div className="grid grid-cols-4 gap-8">
+            <div className="grid grid-cols-3 gap-8">
+              <div>
+                <div className="flex items-center font-bold mb-4 text-white">
+                  <Hotel className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+                  宿泊施設向け
+                </div>
+                <ul className="space-y-2 text-sm">
+                  <li><Link href="/business-contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を掲載する</Link></li>
+                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">管理画面</Link></li>
+                </ul>
+              </div>
+
+              
+              <div>
+                <div className="flex items-center font-bold mb-4 text-white">
+                  <Heart className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+                  サポート
+                </div>
+                <ul className="space-y-2 text-sm">
+                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">よくある質問</Link></li>
+                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お問い合わせ</Link></li>
+                  <li><Link href="/terms" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">利用規約</Link></li>
+                  <li><Link href="/privacy" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">プライバシーポリシー</Link></li>
+                </ul>
+              </div>
+
               <div>
                 <div className="flex items-center mb-4">
                   <Dog className="w-6 h-6 mr-2 text-[#FF5A5F]" />
-                  <h3 className="font-bold text-white">Inutabi-biyori</h3>
-                  </div>
+                  <h3 className="font-bold text-white">SNS</h3>
+                </div>
                 <p className="text-sm text-gray-300 mb-4">
                   愛犬との素敵な旅行をサポートします
                 </p>
@@ -431,40 +456,7 @@ function HomeContent() {
                   <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
                     <Instagram className="w-4 h-4 text-white" />
                   </a>
-            </div>
-          </div>
-
-              <div>
-                <div className="flex items-center font-bold mb-4 text-white">
-                  サービス
                 </div>
-                <ul className="space-y-2 text-sm">
-                  {/* 機能未実装のため一時的に非表示 */}
-                </ul>
-              </div>
-              
-              <div>
-                <div className="flex items-center font-bold mb-4 text-white">
-                  <Hotel className="w-4 h-4 mr-2 text-[#FF5A5F]" />
-                  宿泊施設向け
-                </div>
-                <ul className="space-y-2 text-sm">
-                  <li><Link href="/business-contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を掲載する</Link></li>
-                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">管理画面</Link></li>
-                </ul>
-              </div>
-              
-              <div>
-                <div className="flex items-center font-bold mb-4 text-white">
-                  <Heart className="w-4 h-4 mr-2 text-[#FF5A5F]" />
-                  サポート
-                </div>
-                <ul className="space-y-2 text-sm">
-                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">よくある質問</Link></li>
-                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お問い合わせ</Link></li>
-                  <li><Link href="/terms" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">利用規約</Link></li>
-                  <li><Link href="/privacy" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">プライバシーポリシー</Link></li>
-                </ul>
               </div>
             </div>
             

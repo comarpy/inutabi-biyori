@@ -204,7 +204,7 @@ export default function TermsOfServicePage() {
         {/* Footer */}
         <footer className="bg-[#3A3A3A] text-white mt-16 rounded-b-xl">
           <div className="max-w-7xl mx-auto px-4 py-12">
-            <div className="grid grid-cols-4 gap-8">
+            <div className="grid grid-cols-3 gap-8">
               <div>
                 <div className="flex items-center mb-4">
                   <HeartIcon className="w-6 h-6 mr-2 text-[#FF5A5F]" />
