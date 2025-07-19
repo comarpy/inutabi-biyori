@@ -16,7 +16,13 @@ export async function GET(request: NextRequest) {
       roomDining: searchParams.get('roomDining') === 'true',
       hotSpring: searchParams.get('hotSpring') === 'true',
       parking: searchParams.get('parking') === 'true',
-      multipleDogs: searchParams.get('multipleDogs') === 'true'
+      multipleDogs: searchParams.get('multipleDogs') === 'true',
+      petAmenities: searchParams.get('petAmenities') === 'true',
+      dogMenu: searchParams.get('dogMenu') === 'true',
+      privateBath: searchParams.get('privateBath') === 'true',
+      roomDogRun: searchParams.get('roomDogRun') === 'true',
+      grooming: searchParams.get('grooming') === 'true',
+      leashFree: searchParams.get('leashFree') === 'true'
     };
 
     console.log('検索パラメータ:', { area, dogSize, checkinDate, checkoutDate, detailFilters });

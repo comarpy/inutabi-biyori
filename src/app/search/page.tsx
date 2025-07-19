@@ -55,7 +55,13 @@ function SearchContent() {
     roomDining: searchParams.get('roomDining') === 'true',
     hotSpring: searchParams.get('hotSpring') === 'true',
     parking: searchParams.get('parking') === 'true',
-    multipleDogs: searchParams.get('multipleDogs') === 'true'
+    multipleDogs: searchParams.get('multipleDogs') === 'true',
+    petAmenities: searchParams.get('petAmenities') === 'true',
+    dogMenu: searchParams.get('dogMenu') === 'true',
+    privateBath: searchParams.get('privateBath') === 'true',
+    roomDogRun: searchParams.get('roomDogRun') === 'true',
+    grooming: searchParams.get('grooming') === 'true',
+    leashFree: searchParams.get('leashFree') === 'true'
   });
   
   const [searchFilters, setSearchFilters] = useState({
@@ -304,6 +310,72 @@ function SearchContent() {
                     >
                       <Heart className="w-4 h-4 mr-1" />
                       複数頭OK
+                    </button>
+                    <button
+                      onClick={() => toggleDetailFilter('petAmenities')}
+                      className={`flex items-center px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                        detailFilters.petAmenities
+                          ? 'bg-[#FF5A5F] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+                      }`}
+                    >
+                      <ShoppingBag className="w-4 h-4 mr-1" />
+                      ペット用品
+                    </button>
+                    <button
+                      onClick={() => toggleDetailFilter('dogMenu')}
+                      className={`flex items-center px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                        detailFilters.dogMenu
+                          ? 'bg-[#FF5A5F] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+                      }`}
+                    >
+                      <Bone className="w-4 h-4 mr-1" />
+                      犬用メニュー
+                    </button>
+                    <button
+                      onClick={() => toggleDetailFilter('privateBath')}
+                      className={`flex items-center px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                        detailFilters.privateBath
+                          ? 'bg-[#FF5A5F] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+                      }`}
+                    >
+                      <GlassWater className="w-4 h-4 mr-1" />
+                      貸切風呂
+                    </button>
+                    <button
+                      onClick={() => toggleDetailFilter('roomDogRun')}
+                      className={`flex items-center px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                        detailFilters.roomDogRun
+                          ? 'bg-[#FF5A5F] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+                      }`}
+                    >
+                      <TreePine className="w-4 h-4 mr-1" />
+                      客室ドッグラン
+                    </button>
+                    <button
+                      onClick={() => toggleDetailFilter('grooming')}
+                      className={`flex items-center px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                        detailFilters.grooming
+                          ? 'bg-[#FF5A5F] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+                      }`}
+                    >
+                      <Camera className="w-4 h-4 mr-1" />
+                      グルーミング
+                    </button>
+                    <button
+                      onClick={() => toggleDetailFilter('leashFree')}
+                      className={`flex items-center px-3 py-2 rounded-full text-sm transition-all duration-300 ${
+                        detailFilters.leashFree
+                          ? 'bg-[#FF5A5F] text-white shadow-md'
+                          : 'bg-gray-100 text-gray-700 hover:bg-[#FFF0F0] hover:text-[#FF5A5F] border border-gray-200'
+                      }`}
+                    >
+                      <Play className="w-4 h-4 mr-1" />
+                      室内ノーリード
                     </button>
                   </div>
                 </div>

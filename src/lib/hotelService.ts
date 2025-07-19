@@ -143,6 +143,12 @@ export interface DetailFilters {
   hotSpring?: boolean;
   parking?: boolean;
   multipleDogs?: boolean;
+  petAmenities?: boolean;
+  dogMenu?: boolean;
+  privateBath?: boolean;
+  roomDogRun?: boolean;
+  grooming?: boolean;
+  leashFree?: boolean;
 }
 
 export async function searchDogFriendlyHotels(
@@ -332,6 +338,12 @@ export async function getMicroCMSHotels(area?: string, detailFilters?: DetailFil
         if (detailFilters.hotSpring && !hotel.hotSpring) return false;
         if (detailFilters.parking && !hotel.parking) return false;
         if (detailFilters.multipleDogs && !hotel.multipleDogs) return false;
+        if (detailFilters.petAmenities && hotel.petAmenities === '無') return false;
+        if (detailFilters.dogMenu && !hotel.dogMenu) return false;
+        if (detailFilters.privateBath && !hotel.privateOnsenRoom) return false;
+        if (detailFilters.roomDogRun && !hotel.roomDogRun) return false;
+        if (detailFilters.grooming && !hotel.groomingRoom) return false;
+        if (detailFilters.leashFree && !hotel.leashFreeInside) return false;
         return true;
       });
     }
