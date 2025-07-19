@@ -275,9 +275,7 @@ export default function PrivacyPolicyPage() {
                   サービス
                 </div>
                 <ul className="space-y-2 text-sm">
-                  <li><Link href="/search" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を探す</Link></li>
-                  <li><Link href="/favorites" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お気に入り</Link></li>
-                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">予約履歴</Link></li>
+                  {/* 機能未実装のため一時的に非表示 */}
                 </ul>
               </div>
               
