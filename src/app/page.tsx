@@ -115,7 +115,7 @@ function HomeContent() {
 
         {/* ヒーローエリア */}
         <section 
-          className="h-[650px] bg-green-400 bg-cover bg-center bg-no-repeat relative flex flex-col justify-between items-center p-10"
+          className="h-[700px] bg-green-400 bg-cover bg-center bg-no-repeat relative flex flex-col justify-center items-center p-10"
           style={{
             backgroundImage: "url('/images/画像2.jpeg')",
             backgroundSize: 'cover',
@@ -125,7 +125,7 @@ function HomeContent() {
           <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
           
           {/* キャッチコピー */}
-          <div className="relative z-10 text-center">
+          <div className="relative z-10 text-center mb-8">
             <h1 
               className="text-5xl font-bold text-white mb-4"
               style={{
