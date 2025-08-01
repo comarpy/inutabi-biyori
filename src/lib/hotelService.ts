@@ -8,7 +8,7 @@ export interface Hotel {
   name: string;
   location: string;
   price: number;
-  amenities: any[]; // LucideIconの配列
+  amenities: string[]; // 文字列の配列
   image: string;
   coordinates: [number, number];
 }
@@ -236,14 +236,14 @@ export async function searchDogFriendlyHotels(
 
 // microCMSのデータをHotel形式に変換する関数（楽天APIから価格を検索）
 async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number, rakutenHotels?: RakutenHotel[]): Promise<Hotel> {
-  // 犬のサイズに基づいてアメニティを生成
-  const amenities = [];
-  if (microCMSHotel.smallDog || microCMSHotel.mediumDog || microCMSHotel.largeDog) amenities.push(Dog);
-  if (microCMSHotel.parking) amenities.push(Car);
-  if (microCMSHotel.hotSpring) amenities.push(Bath);
-  if (microCMSHotel.diningWithDog) amenities.push(UtensilsCrossed);
-  if (microCMSHotel.dogRunOnSite) amenities.push(Coffee); // ドッグランはCoffeeアイコンで代用
-  amenities.push(Wifi); // 基本的にWifiは利用可能と仮定
+  // 犬のサイズに基づいてアメニティを生成（文字列として）
+  const amenities: string[] = [];
+  if (microCMSHotel.smallDog || microCMSHotel.mediumDog || microCMSHotel.largeDog) amenities.push('ペット同伴可');
+  if (microCMSHotel.parking) amenities.push('駐車場');
+  if (microCMSHotel.hotSpring) amenities.push('温泉');
+  if (microCMSHotel.diningWithDog) amenities.push('ペット同伴食事');
+  if (microCMSHotel.dogRunOnSite) amenities.push('ドッグラン');
+  amenities.push('Wi-Fi'); // 基本的にWifiは利用可能と仮定
   
   // 楽天APIから価格を検索
   let price = 15000; // デフォルト基本料金
