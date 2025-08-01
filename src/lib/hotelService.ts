@@ -252,24 +252,37 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
   
   if (rakutenHotels && Array.isArray(rakutenHotels)) {
     console.log(`${microCMSHotel.hotelName}: 楽天APIホテル数 ${rakutenHotels.length}件でマッチング試行中`);
-    // ホテル名で楽天APIのデータから検索
+    // ホテル名で楽天APIのデータから検索（改善されたマッチングロジック）
     const matchedRakutenHotel = rakutenHotels.find(rakutenHotel => {
-      const microCMSName = microCMSHotel.hotelName.toLowerCase().replace(/\s+/g, '');
-      const rakutenName = rakutenHotel.hotelName.toLowerCase().replace(/\s+/g, '');
+      const microCMSName = microCMSHotel.hotelName.toLowerCase()
+        .replace(/\s+/g, '')
+        .replace(/[・・]/g, '')
+        .replace(/[（）()]/g, '')
+        .replace(/[ホテル|旅館|リゾート|温泉]/g, '');
+      const rakutenName = rakutenHotel.hotelName.toLowerCase()
+        .replace(/\s+/g, '')
+        .replace(/[・・]/g, '')
+        .replace(/[（）()]/g, '')
+        .replace(/[ホテル|旅館|リゾート|温泉]/g, '');
       
       // 完全一致
       if (microCMSName === rakutenName) return true;
       
-      // 部分一致（どちらかが他方を含む）
-      if (microCMSName.includes(rakutenName) || rakutenName.includes(microCMSName)) return true;
+      // 部分一致（より短い文字列での一致も含む）
+      if (microCMSName.length >= 3 && rakutenName.length >= 3) {
+        if (microCMSName.includes(rakutenName.substring(0, Math.min(rakutenName.length, 5))) || 
+            rakutenName.includes(microCMSName.substring(0, Math.min(microCMSName.length, 5)))) {
+          return true;
+        }
+      }
       
       // 住所での一致確認
       const microCMSAddress = microCMSHotel.address.toLowerCase().replace(/\s+/g, '');
       const rakutenAddress = `${rakutenHotel.address1}${rakutenHotel.address2}`.toLowerCase().replace(/\s+/g, '');
       
       if (microCMSAddress && rakutenAddress && (
-        microCMSAddress.includes(rakutenAddress.substring(0, 10)) || 
-        rakutenAddress.includes(microCMSAddress.substring(0, 10))
+        microCMSAddress.includes(rakutenAddress.substring(0, Math.min(rakutenAddress.length, 8))) || 
+        rakutenAddress.includes(microCMSAddress.substring(0, Math.min(microCMSAddress.length, 8)))
       )) return true;
       
       return false;

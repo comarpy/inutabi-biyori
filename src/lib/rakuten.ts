@@ -80,14 +80,25 @@ function getCheckoutDate(checkinDate: string): string {
 async function tryWithAreaCode(applicationId: string, affiliateId?: string): Promise<RakutenHotel[]> {
   console.log('地区コード付きで段階的に試行中...');
   
-  // 試行する地区コードの組み合わせ（シンプルなものから）
+  // 試行する地区コードの組み合わせ（より多くの地域をカバー）
   const areaCombinations = [
-    // 1. 大分類のみ
+    // 1. 大分類のみ（全国）
     { largeClassCode: 'japan' },
-    // 2. 大分類 + 中分類
+    // 2. 主要地域の中分類
     { largeClassCode: 'japan', middleClassCode: 'hokkaido' },
-    // 3. 大分類 + 中分類 + 小分類
-    { largeClassCode: 'japan', middleClassCode: 'hokkaido', smallClassCode: 'sapporo' }
+    { largeClassCode: 'japan', middleClassCode: 'tohoku' },
+    { largeClassCode: 'japan', middleClassCode: 'kanto' },
+    { largeClassCode: 'japan', middleClassCode: 'koshinetsu' },
+    { largeClassCode: 'japan', middleClassCode: 'tokai' },
+    { largeClassCode: 'japan', middleClassCode: 'kansai' },
+    { largeClassCode: 'japan', middleClassCode: 'chugoku' },
+    { largeClassCode: 'japan', middleClassCode: 'shikoku' },
+    { largeClassCode: 'japan', middleClassCode: 'kyushu' },
+    // 3. 人気都市の詳細
+    { largeClassCode: 'japan', middleClassCode: 'hokkaido', smallClassCode: 'sapporo' },
+    { largeClassCode: 'japan', middleClassCode: 'kanto', smallClassCode: 'tokyo' },
+    { largeClassCode: 'japan', middleClassCode: 'kansai', smallClassCode: 'kyoto' },
+    { largeClassCode: 'japan', middleClassCode: 'kansai', smallClassCode: 'osaka' }
   ];
 
   for (let i = 0; i < areaCombinations.length; i++) {
@@ -97,7 +108,7 @@ async function tryWithAreaCode(applicationId: string, affiliateId?: string): Pro
     const params = new URLSearchParams({
       applicationId,
       format: 'json',
-      hits: '30' // より多くの結果を取得
+      hits: '100' // より多くの結果を取得（最大100件）
     });
 
     // 地区コードを個別に追加
@@ -115,7 +126,14 @@ async function tryWithAreaCode(applicationId: string, affiliateId?: string): Pro
 
     try {
       const response = await fetch(url);
+      console.log(`試行 ${i + 1} HTTPステータス:`, response.status);
+      
       const data = await response.json();
+      console.log(`試行 ${i + 1} レスポンス概要:`, {
+        hasError: !!data.error,
+        hasHotels: !!(data.hotels && Array.isArray(data.hotels)),
+        hotelCount: data.hotels ? data.hotels.length : 0
+      });
 
       if (data.error) {
         console.log(`試行 ${i + 1} エラー:`, data.error, data.error_description);
@@ -131,9 +149,12 @@ async function tryWithAreaCode(applicationId: string, affiliateId?: string): Pro
 
       if (data.hotels && Array.isArray(data.hotels) && data.hotels.length > 0) {
         console.log(`試行 ${i + 1} 成功! ホテル数:`, data.hotels.length);
-        return convertHotelData(data.hotels);
+        const hotels = convertHotelData(data.hotels);
+        console.log(`変換後のホテル数:`, hotels.length);
+        console.log(`サンプルホテル:`, hotels[0]?.hotelName, hotels[0]?.hotelImageUrl);
+        return hotels;
       } else {
-        console.log(`試行 ${i + 1} ホテルなし`);
+        console.log(`試行 ${i + 1} ホテルなし - データ構造:`, Object.keys(data));
       }
     } catch (error) {
       console.log(`試行 ${i + 1} 例外:`, error);
