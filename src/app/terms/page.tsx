@@ -206,9 +206,34 @@ export default function TermsOfServicePage() {
           <div className="max-w-7xl mx-auto px-4 py-12">
             <div className="grid grid-cols-3 gap-8">
               <div>
+                <div className="flex items-center font-bold mb-4 text-white">
+                  <BuildingOfficeIcon className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+                  宿泊施設向け
+                </div>
+                <ul className="space-y-2 text-sm">
+                  <li><Link href="/business-contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を掲載する</Link></li>
+                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">管理画面</Link></li>
+                </ul>
+              </div>
+
+              
+              <div>
+                <div className="flex items-center font-bold mb-4 text-white">
+                  <HeartIcon className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+                  サポート
+                </div>
+                <ul className="space-y-2 text-sm">
+                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">よくある質問</Link></li>
+                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お問い合わせ</Link></li>
+                  <li><Link href="/terms" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">利用規約</Link></li>
+                  <li><Link href="/privacy" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">プライバシーポリシー</Link></li>
+                </ul>
+              </div>
+
+              <div>
                 <div className="flex items-center mb-4">
                   <HeartIcon className="w-6 h-6 mr-2 text-[#FF5A5F]" />
-                  <h3 className="font-bold text-white">犬旅びより</h3>
+                  <h3 className="font-bold text-white">SNS</h3>
                 </div>
                 <p className="text-sm text-gray-300 mb-4">
                   愛犬との素敵な旅行をサポートします
@@ -224,39 +249,6 @@ export default function TermsOfServicePage() {
                     <Instagram className="w-4 h-4 text-white" />
                   </a>
                 </div>
-              </div>
-
-              <div>
-                <div className="flex items-center font-bold mb-4 text-white">
-                  サービス
-                </div>
-                <ul className="space-y-2 text-sm">
-                  {/* 機能未実装のため一時的に非表示 */}
-                </ul>
-              </div>
-              
-              <div>
-                <div className="flex items-center font-bold mb-4 text-white">
-                  <BuildingOfficeIcon className="w-4 h-4 mr-2 text-[#FF5A5F]" />
-                  宿泊施設向け
-                </div>
-                <ul className="space-y-2 text-sm">
-                  <li><Link href="/business-contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を掲載する</Link></li>
-                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">管理画面</Link></li>
-                </ul>
-              </div>
-              
-              <div>
-                <div className="flex items-center font-bold mb-4 text-white">
-                  <HeartIcon className="w-4 h-4 mr-2 text-[#FF5A5F]" />
-                  サポート
-                </div>
-                <ul className="space-y-2 text-sm">
-                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">よくある質問</Link></li>
-                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お問い合わせ</Link></li>
-                  <li><Link href="/terms" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">利用規約</Link></li>
-                  <li><Link href="/privacy" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">プライバシーポリシー</Link></li>
-                </ul>
               </div>
             </div>
             
