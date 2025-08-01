@@ -6,16 +6,7 @@ import { MapPin, House, Waves, Dog, Bone, Utensils, Car, Heart, Play, ParkingCir
 import { XIcon } from '../../components/XIcon';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-// Hotel型を定義
-interface Hotel {
-  id: number;
-  name: string;
-  location: string;
-  price: number;
-  amenities: string[];
-  image: string;
-  coordinates: [number, number];
-}
+import { Hotel } from '../../lib/hotelService';
 import type { DetailFilters } from '@/lib/hotelService';
 
 // 地図コンポーネントを動的にインポート（SSRを無効化）
