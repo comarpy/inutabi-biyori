@@ -245,9 +245,10 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
   if (microCMSHotel.dogRunOnSite) amenities.push('ドッグラン');
   amenities.push('Wi-Fi'); // 基本的にWifiは利用可能と仮定
   
-  // 楽天APIから価格を検索
+  // 楽天APIから価格と画像を検索
   let price = 15000; // デフォルト基本料金
   let rakutenPrice: number | undefined;
+  let hotelImage = '/images/画像2.jpeg'; // デフォルト画像
   
   if (rakutenHotels && Array.isArray(rakutenHotels)) {
     // ホテル名で楽天APIのデータから検索
@@ -276,6 +277,21 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
     if (matchedRakutenHotel) {
       console.log(`楽天APIでマッチしたホテル: ${microCMSHotel.hotelName} -> ${matchedRakutenHotel.hotelName}`);
       rakutenPrice = generatePrice(matchedRakutenHotel.reviewAverage, matchedRakutenHotel.hotelMinCharge);
+      
+      // 楽天APIから画像を取得（優先順位: hotelImageUrl > hotelThumbnailUrl > roomImageUrl > roomThumbnailUrl）
+      if (matchedRakutenHotel.hotelImageUrl) {
+        hotelImage = matchedRakutenHotel.hotelImageUrl;
+        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelImageUrl)`);
+      } else if (matchedRakutenHotel.hotelThumbnailUrl) {
+        hotelImage = matchedRakutenHotel.hotelThumbnailUrl;
+        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelThumbnailUrl)`);
+      } else if (matchedRakutenHotel.roomImageUrl) {
+        hotelImage = matchedRakutenHotel.roomImageUrl;
+        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomImageUrl)`);
+      } else if (matchedRakutenHotel.roomThumbnailUrl) {
+        hotelImage = matchedRakutenHotel.roomThumbnailUrl;
+        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomThumbnailUrl)`);
+      }
     }
   }
   
@@ -307,7 +323,7 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
     location: `${microCMSHotel.prefecture} ${microCMSHotel.address}`,
     price: price,
     amenities: amenities,
-    image: '/images/画像2.jpeg', // デフォルト画像
+    image: hotelImage, // 楽天API画像またはデフォルト画像
     coordinates: generateCoordinates(microCMSHotel.prefecture, index),
   };
 }
