@@ -303,14 +303,9 @@ export async function fetchRakutenHotels(
   }
 
   try {
-    // 楽天APIの制限を考慮して、必ずモックデータを返す
-    console.log('楽天API制限対策のため、モックデータを返します');
-    const mockData = getMockHotelData();
-    console.log('モックデータの最初のホテル画像:', mockData[0]?.hotelImageUrl);
-    return mockData;
+    // 楽天APIを試行し、失敗した場合はモックデータを返す
+    console.log('楽天API呼び出しを試行中...');
     
-    // 以下は実際のAPI呼び出しコード（コメントアウト）
-    /*
     const hotels = await tryWithAreaCode(applicationId, affiliateId);
     
     if (hotels && hotels.length > 0) {
@@ -318,9 +313,10 @@ export async function fetchRakutenHotels(
       return hotels;
     } else {
       console.log('楽天APIからデータが取得できませんでした。モックデータを返します。');
-      return getMockHotelData();
+      const mockData = getMockHotelData();
+      console.log('モックデータの最初のホテル画像:', mockData[0]?.hotelImageUrl);
+      return mockData;
     }
-    */
   } catch (error) {
     console.error('楽天API例外:', error);
     console.log('エラーのためモックデータを返します');
