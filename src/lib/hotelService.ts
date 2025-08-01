@@ -251,6 +251,7 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
   let hotelImage = '/images/画像2.jpeg'; // デフォルト画像
   
   if (rakutenHotels && Array.isArray(rakutenHotels)) {
+    console.log(`${microCMSHotel.hotelName}: 楽天APIホテル数 ${rakutenHotels.length}件でマッチング試行中`);
     // ホテル名で楽天APIのデータから検索
     const matchedRakutenHotel = rakutenHotels.find(rakutenHotel => {
       const microCMSName = microCMSHotel.hotelName.toLowerCase().replace(/\s+/g, '');
@@ -276,22 +277,27 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
     
     if (matchedRakutenHotel) {
       console.log(`楽天APIでマッチしたホテル: ${microCMSHotel.hotelName} -> ${matchedRakutenHotel.hotelName}`);
+      console.log(`楽天ホテルの画像URL: hotelImageUrl=${matchedRakutenHotel.hotelImageUrl}, hotelThumbnailUrl=${matchedRakutenHotel.hotelThumbnailUrl}`);
       rakutenPrice = generatePrice(matchedRakutenHotel.reviewAverage, matchedRakutenHotel.hotelMinCharge);
       
       // 楽天APIから画像を取得（優先順位: hotelImageUrl > hotelThumbnailUrl > roomImageUrl > roomThumbnailUrl）
       if (matchedRakutenHotel.hotelImageUrl) {
         hotelImage = matchedRakutenHotel.hotelImageUrl;
-        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelImageUrl)`);
+        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelImageUrl) -> ${hotelImage}`);
       } else if (matchedRakutenHotel.hotelThumbnailUrl) {
         hotelImage = matchedRakutenHotel.hotelThumbnailUrl;
-        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelThumbnailUrl)`);
+        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelThumbnailUrl) -> ${hotelImage}`);
       } else if (matchedRakutenHotel.roomImageUrl) {
         hotelImage = matchedRakutenHotel.roomImageUrl;
-        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomImageUrl)`);
+        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomImageUrl) -> ${hotelImage}`);
       } else if (matchedRakutenHotel.roomThumbnailUrl) {
         hotelImage = matchedRakutenHotel.roomThumbnailUrl;
-        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomThumbnailUrl)`);
+        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomThumbnailUrl) -> ${hotelImage}`);
+      } else {
+        console.log(`${microCMSHotel.hotelName}: 楽天APIに画像がありません、デフォルト画像を使用`);
       }
+    } else {
+      console.log(`${microCMSHotel.hotelName}: 楽天APIでマッチするホテルが見つかりませんでした`);
     }
   }
   

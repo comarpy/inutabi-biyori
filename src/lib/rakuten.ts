@@ -176,7 +176,7 @@ function getMockHotelData(): RakutenHotel[] {
   return [
     {
       hotelNo: 'mock001',
-      hotelName: '犬と泊まれる温泉宿 ワンワンリゾート北海道',
+      hotelName: 'サロマ湖鶴雅リゾート',
       planListUrl: 'https://travel.rakuten.co.jp/',
       dpPlanListUrl: 'https://travel.rakuten.co.jp/',
       reviewAverage: 4.5,
@@ -198,7 +198,7 @@ function getMockHotelData(): RakutenHotel[] {
     },
     {
       hotelNo: 'mock002',
-      hotelName: 'ペットフレンドリーホテル 函館ベイサイド',
+      hotelName: '定山渓鶴雅リゾートスパ森の謌',
       planListUrl: 'https://travel.rakuten.co.jp/',
       dpPlanListUrl: 'https://travel.rakuten.co.jp/',
       reviewAverage: 4.2,
@@ -220,7 +220,7 @@ function getMockHotelData(): RakutenHotel[] {
     },
     {
       hotelNo: 'mock003',
-      hotelName: '愛犬と過ごす軽井沢リゾート',
+      hotelName: '第一滝本館',
       planListUrl: 'https://travel.rakuten.co.jp/',
       dpPlanListUrl: 'https://travel.rakuten.co.jp/',
       reviewAverage: 4.7,
@@ -305,7 +305,9 @@ export async function fetchRakutenHotels(
   try {
     // 楽天APIの制限を考慮して、必ずモックデータを返す
     console.log('楽天API制限対策のため、モックデータを返します');
-    return getMockHotelData();
+    const mockData = getMockHotelData();
+    console.log('モックデータの最初のホテル画像:', mockData[0]?.hotelImageUrl);
+    return mockData;
     
     // 以下は実際のAPI呼び出しコード（コメントアウト）
     /*
