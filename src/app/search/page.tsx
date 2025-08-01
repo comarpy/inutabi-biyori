@@ -494,14 +494,25 @@ function SearchContent() {
                             <h3 className="font-bold text-lg mb-1">{hotel.name}</h3>
                             <p className="text-sm text-gray-600 mb-2">{hotel.location}</p>
                                                         <div className="flex mb-2">
-                              {hotel.amenities && hotel.amenities.map((amenity, amenityIndex) => (
-                                <div
-                                  key={`amenity-${hotelIndex}-${amenityIndex}`}
-                                  className="bg-[#FFF0F0] text-[#FF5A5F] rounded-full px-2 py-1 text-xs mr-1"
-                                >
-                                  {amenity}
-                                </div>
-                              ))}
+                              {hotel.amenities && Array.isArray(hotel.amenities) && hotel.amenities.map((amenity, amenityIndex) => {
+                                // デバッグ: amenityの型を確認
+                                console.log('amenity:', amenity, 'type:', typeof amenity);
+                                
+                                // amenityが文字列でない場合はスキップ
+                                if (typeof amenity !== 'string') {
+                                  console.warn('amenityが文字列ではありません:', amenity);
+                                  return null;
+                                }
+                                
+                                return (
+                                  <div
+                                    key={`amenity-${hotelIndex}-${amenityIndex}`}
+                                    className="bg-[#FFF0F0] text-[#FF5A5F] rounded-full px-2 py-1 text-xs mr-1"
+                                  >
+                                    {amenity}
+                                  </div>
+                                );
+                              })}
                             </div>
                             <div className="flex justify-between items-center">
                               <span className="font-bold text-[#FF5A5F]">¥{hotel.price.toLocaleString()}〜</span>
