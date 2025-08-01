@@ -40,6 +40,9 @@ function HomeContent() {
     leashFree: false
   });
 
+  // 詳細フィルターの表示状態
+  const [showDetailFilters, setShowDetailFilters] = useState(false);
+
   const [searchParams, setSearchParams] = useState({
     area: '全国',
     dogSize: '指定なし'
@@ -134,7 +137,7 @@ function HomeContent() {
             </div>
 
           {/* 検索バー */}
-          <div className="relative z-10 w-full max-w-4xl bg-white bg-opacity-95 rounded-2xl p-6 backdrop-blur-sm shadow-xl">
+          <div className="relative z-10 w-full max-w-5xl bg-white bg-opacity-95 rounded-2xl p-6 backdrop-blur-sm shadow-xl">
             <div className="grid grid-cols-2 gap-6 mb-4">
               <div>
                 <label className="block text-sm text-gray-600 text-left mb-2">エリアを選択</label>
@@ -163,158 +166,178 @@ function HomeContent() {
                 </select>
               </div>
             </div>
+
+            {/* 詳細フィルター展開ボタン */}
+            <div className="mb-4">
+              <button
+                onClick={() => setShowDetailFilters(!showDetailFilters)}
+                className="w-full flex items-center justify-center py-2 px-4 text-sm text-gray-600 hover:text-[#FF5A5F] border border-gray-200 rounded-lg hover:border-[#FF5A5F] transition-all duration-300"
+              >
+                <span className="mr-2">詳細条件を指定</span>
+                <svg 
+                  className={`w-4 h-4 transition-transform duration-300 ${showDetailFilters ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+
+            {/* 詳細フィルター（折りたたみ式） */}
+            {showDetailFilters && (
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                <h4 className="text-sm font-semibold text-gray-700 mb-3">詳細条件</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  <label className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={detailFilters.dogRun}
+                      onChange={() => toggleDetailFilter('dogRun')}
+                      className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                    />
+                    <Bone className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="text-xs font-medium text-gray-700">ドッグラン</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={detailFilters.largeDog}
+                      onChange={() => toggleDetailFilter('largeDog')}
+                      className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                    />
+                    <Dog className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="text-xs font-medium text-gray-700">大型犬OK</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={detailFilters.roomDining}
+                      onChange={() => toggleDetailFilter('roomDining')}
+                      className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                    />
+                    <Utensils className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="text-xs font-medium text-gray-700">部屋食あり</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={detailFilters.hotSpring}
+                      onChange={() => toggleDetailFilter('hotSpring')}
+                      className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                    />
+                    <Waves className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="text-xs font-medium text-gray-700">温泉</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={detailFilters.parking}
+                      onChange={() => toggleDetailFilter('parking')}
+                      className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                    />
+                    <ParkingCircle className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="text-xs font-medium text-gray-700">駐車場あり</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={detailFilters.multipleDogs}
+                      onChange={() => toggleDetailFilter('multipleDogs')}
+                      className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                    />
+                    <Heart className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="text-xs font-medium text-gray-700">複数頭OK</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={detailFilters.petAmenities}
+                      onChange={() => toggleDetailFilter('petAmenities')}
+                      className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                    />
+                    <ShoppingBag className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="text-xs font-medium text-gray-700">ペット用品</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={detailFilters.dogMenu}
+                      onChange={() => toggleDetailFilter('dogMenu')}
+                      className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                    />
+                    <Bone className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="text-xs font-medium text-gray-700">犬用メニュー</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={detailFilters.privateBath}
+                      onChange={() => toggleDetailFilter('privateBath')}
+                      className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                    />
+                    <GlassWater className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="text-xs font-medium text-gray-700">貸切風呂</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={detailFilters.roomDogRun}
+                      onChange={() => toggleDetailFilter('roomDogRun')}
+                      className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                    />
+                    <TreePine className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="text-xs font-medium text-gray-700">客室ドッグラン</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={detailFilters.grooming}
+                      onChange={() => toggleDetailFilter('grooming')}
+                      className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                    />
+                    <Camera className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="text-xs font-medium text-gray-700">グルーミング</span>
+                  </label>
+
+                  <label className="flex items-center space-x-2 p-2 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={detailFilters.leashFree}
+                      onChange={() => toggleDetailFilter('leashFree')}
+                      className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                    />
+                    <Play className="w-4 h-4 text-[#FF5A5F]" />
+                    <span className="text-xs font-medium text-gray-700">室内ノーリード</span>
+                  </label>
+                </div>
+              </div>
+            )}
             
             <div className="flex justify-center">
               <button 
                 onClick={handleSearch}
-                className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white px-6 py-3 rounded-full font-semibold flex items-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+                className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white px-8 py-3 rounded-full font-semibold flex items-center hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
               >
                 <Search className="w-5 h-5 mr-2" />
                 この条件で検索
-                    </button>
+              </button>
             </div>
           </div>
         </section>
 
-        {/* 詳細検索オプション */}
-        <div className="bg-gray-50 p-4">
-          <div className="max-w-7xl mx-auto">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">詳細検索フィルター</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              <label className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={detailFilters.dogRun}
-                  onChange={() => toggleDetailFilter('dogRun')}
-                  className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                />
-                <Bone className="w-4 h-4 text-[#FF5A5F]" />
-                <span className="text-sm font-medium text-gray-700">ドッグラン</span>
-              </label>
 
-              <label className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={detailFilters.largeDog}
-                  onChange={() => toggleDetailFilter('largeDog')}
-                  className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                />
-                <Dog className="w-4 h-4 text-[#FF5A5F]" />
-                <span className="text-sm font-medium text-gray-700">大型犬OK</span>
-              </label>
-
-              <label className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={detailFilters.roomDining}
-                  onChange={() => toggleDetailFilter('roomDining')}
-                  className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                />
-                <Utensils className="w-4 h-4 text-[#FF5A5F]" />
-                <span className="text-sm font-medium text-gray-700">部屋食あり</span>
-              </label>
-
-              <label className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={detailFilters.hotSpring}
-                  onChange={() => toggleDetailFilter('hotSpring')}
-                  className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                />
-                <Waves className="w-4 h-4 text-[#FF5A5F]" />
-                <span className="text-sm font-medium text-gray-700">温泉</span>
-              </label>
-
-              <label className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={detailFilters.parking}
-                  onChange={() => toggleDetailFilter('parking')}
-                  className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                />
-                <ParkingCircle className="w-4 h-4 text-[#FF5A5F]" />
-                <span className="text-sm font-medium text-gray-700">駐車場あり</span>
-              </label>
-
-              <label className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={detailFilters.multipleDogs}
-                  onChange={() => toggleDetailFilter('multipleDogs')}
-                  className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                />
-                <Heart className="w-4 h-4 text-[#FF5A5F]" />
-                <span className="text-sm font-medium text-gray-700">複数頭OK</span>
-              </label>
-
-              <label className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={detailFilters.petAmenities}
-                  onChange={() => toggleDetailFilter('petAmenities')}
-                  className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                />
-                <ShoppingBag className="w-4 h-4 text-[#FF5A5F]" />
-                <span className="text-sm font-medium text-gray-700">ペット用品</span>
-              </label>
-
-              <label className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={detailFilters.dogMenu}
-                  onChange={() => toggleDetailFilter('dogMenu')}
-                  className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                />
-                <Bone className="w-4 h-4 text-[#FF5A5F]" />
-                <span className="text-sm font-medium text-gray-700">犬用メニュー</span>
-              </label>
-
-              <label className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={detailFilters.privateBath}
-                  onChange={() => toggleDetailFilter('privateBath')}
-                  className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                />
-                <GlassWater className="w-4 h-4 text-[#FF5A5F]" />
-                <span className="text-sm font-medium text-gray-700">貸切風呂</span>
-              </label>
-
-              <label className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={detailFilters.roomDogRun}
-                  onChange={() => toggleDetailFilter('roomDogRun')}
-                  className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                />
-                <TreePine className="w-4 h-4 text-[#FF5A5F]" />
-                <span className="text-sm font-medium text-gray-700">客室ドッグラン</span>
-              </label>
-
-              <label className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={detailFilters.grooming}
-                  onChange={() => toggleDetailFilter('grooming')}
-                  className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                />
-                <Camera className="w-4 h-4 text-[#FF5A5F]" />
-                <span className="text-sm font-medium text-gray-700">グルーミング</span>
-              </label>
-
-              <label className="flex items-center space-x-3 p-3 bg-white rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={detailFilters.leashFree}
-                  onChange={() => toggleDetailFilter('leashFree')}
-                  className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                />
-                <Play className="w-4 h-4 text-[#FF5A5F]" />
-                <span className="text-sm font-medium text-gray-700">室内ノーリード</span>
-              </label>
-            </div>
-          </div>
-        </div>
 
         {/* メインコンテンツ */}
         <main className="max-w-7xl mx-auto px-4 py-8">
