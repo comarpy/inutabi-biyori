@@ -5,7 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Heart, MapPin } from 'lucide-react';
-import { Hotel } from '../../context/FavoritesContext';
+import { Hotel } from '../../../lib/hotelService';
 
 // Leafletのデフォルトアイコンの問題を修正
 delete (L.Icon.Default.prototype as L.Icon & { _getIconUrl?: () => void })._getIconUrl;
