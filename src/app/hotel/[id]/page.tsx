@@ -475,9 +475,10 @@ function HotelDetailContent() {
                   利用規約
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-300">
-                  <li className="cursor-pointer hover:text-white">プライバシーポリシー</li>
-                  <li className="cursor-pointer hover:text-white">特定商取引法</li>
-                  <li className="cursor-pointer hover:text-white">キャンセルポリシー</li>
+                  <li><Link href="/faq" className="cursor-pointer hover:text-white">よくある質問</Link></li>
+                  <li><Link href="/privacy" className="cursor-pointer hover:text-white">プライバシーポリシー</Link></li>
+                  <li><Link href="/terms" className="cursor-pointer hover:text-white">利用規約</Link></li>
+                  <li><Link href="/contact" className="cursor-pointer hover:text-white">お問い合わせ</Link></li>
                 </ul>
               </div>
               <div>

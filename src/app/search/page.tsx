@@ -574,6 +574,7 @@ function SearchContent() {
                       利用規約
                     </h5>
                     <ul className="space-y-1 text-gray-300">
+                      <li><Link href="/faq" className="hover:text-white cursor-pointer">よくある質問</Link></li>
                       <li><Link href="/privacy" className="hover:text-white cursor-pointer">プライバシーポリシー</Link></li>
                       <li><Link href="/terms" className="hover:text-white cursor-pointer">利用規約</Link></li>
                       <li><Link href="/contact" className="hover:text-white cursor-pointer">お問い合わせ</Link></li>

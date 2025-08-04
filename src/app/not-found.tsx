@@ -92,9 +92,10 @@ export default function NotFound() {
                     利用規約
                   </h3>
                   <ul className="space-y-2 text-sm text-gray-300">
+                    <li><Link href="/faq" className="hover:text-white transition-colors">よくある質問</Link></li>
                     <li><Link href="/terms" className="hover:text-white transition-colors">利用規約</Link></li>
                     <li><Link href="/privacy" className="hover:text-white transition-colors">プライバシーポリシー</Link></li>
-                    <li><Link href="#" className="hover:text-white transition-colors">特定商取引法</Link></li>
+                    <li><Link href="/contact" className="hover:text-white transition-colors">お問い合わせ</Link></li>
                   </ul>
                 </div>
 
