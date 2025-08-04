@@ -10,11 +10,8 @@ export default function BusinessContactPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     companyName: '',
-    contactName: '',
     email: '',
     phone: '',
-    website: '',
-    businessType: '',
     message: ''
   });
 
@@ -40,11 +37,8 @@ export default function BusinessContactPage() {
         // フォームをリセット
         setFormData({
           companyName: '',
-          contactName: '',
           email: '',
           phone: '',
-          website: '',
-          businessType: '',
           message: ''
         });
         setIsAgreed(false);

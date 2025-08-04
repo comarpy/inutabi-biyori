@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     } = await request.json();
 
     // バリデーション
-    if (!companyName || !contactName || !email || !businessType || !message) {
+    if (!companyName || !email || !message) {
       return NextResponse.json(
         { error: '必須項目が入力されていません' },
         { status: 400 }
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const { data, error } = await resend.emails.send({
       from: 'onboarding@resend.dev', // Resendのテスト用認証済みドメイン
       to: ['support@comarpy.co.jp'], // 受信者アドレス（Resendアカウントのメール）
-      subject: `【ビジネスお問い合わせ】${companyName} - ${businessType}`,
+      subject: `【ビジネスお問い合わせ】${companyName}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #FF5A5F; border-bottom: 2px solid #FF5A5F; padding-bottom: 10px;">
@@ -52,24 +52,12 @@ export async function POST(request: NextRequest) {
                 <td style="padding: 8px 0;">${companyName}</td>
               </tr>
               <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #666;">担当者名:</td>
-                <td style="padding: 8px 0;">${contactName}</td>
-              </tr>
-              <tr>
                 <td style="padding: 8px 0; font-weight: bold; color: #666;">メールアドレス:</td>
                 <td style="padding: 8px 0;">${email}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; font-weight: bold; color: #666;">電話番号:</td>
                 <td style="padding: 8px 0;">${phone || '未入力'}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #666;">ウェブサイト:</td>
-                <td style="padding: 8px 0;">${website || '未入力'}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px 0; font-weight: bold; color: #666;">お問い合わせ種別:</td>
-                <td style="padding: 8px 0;">${businessType}</td>
               </tr>
             </table>
             
