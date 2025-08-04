@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// APIキーが設定されている場合のみResendを初期化
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,6 +13,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: '必須項目が入力されていません' },
         { status: 400 }
+      );
+    }
+
+    // Resendが初期化されていない場合はエラーを返す
+    if (!resend) {
+      return NextResponse.json(
+        { error: 'メール送信サービスが設定されていません' },
+        { status: 500 }
       );
     }
 
