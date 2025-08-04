@@ -90,9 +90,9 @@ ${message}
     });
 
     if (error) {
-      console.error('メール送信エラー:', error);
+      console.error('メール送信エラー詳細:', JSON.stringify(error, null, 2));
       return NextResponse.json(
-        { error: 'メールの送信に失敗しました' },
+        { error: `メールの送信に失敗しました: ${error.message || JSON.stringify(error)}` },
         { status: 500 }
       );
     }

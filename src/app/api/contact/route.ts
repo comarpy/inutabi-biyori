@@ -6,6 +6,9 @@ const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KE
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('API Key exists:', !!process.env.RESEND_API_KEY);
+    console.log('API Key prefix:', process.env.RESEND_API_KEY?.substring(0, 10));
+    
     const { name, email, subject, message } = await request.json();
 
     // バリデーション
@@ -70,9 +73,9 @@ ${message}
     });
 
     if (error) {
-      console.error('メール送信エラー:', error);
+      console.error('メール送信エラー詳細:', JSON.stringify(error, null, 2));
       return NextResponse.json(
-        { error: 'メールの送信に失敗しました' },
+        { error: `メールの送信に失敗しました: ${error.message || JSON.stringify(error)}` },
         { status: 500 }
       );
     }
