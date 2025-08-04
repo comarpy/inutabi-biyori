@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     // メール送信
     const { data, error } = await resend.emails.send({
       from: 'onboarding@resend.dev', // Resendのテスト用認証済みドメイン
-      to: ['contact@comarpy.co.jp'], // 受信者アドレス
+      to: ['support@comarpy.co.jp'], // 受信者アドレス（Resendアカウントのメール）
       subject: `【ビジネスお問い合わせ】${companyName} - ${businessType}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
