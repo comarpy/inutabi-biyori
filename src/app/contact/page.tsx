@@ -14,6 +14,7 @@ import { XIcon } from '../../components/XIcon';
 
 export default function ContactPage() {
   const [isAgreed, setIsAgreed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,13 +22,42 @@ export default function ContactPage() {
     message: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAgreed) return;
+    if (!isAgreed || isSubmitting) return;
     
-    // TODO: Implement form submission logic
-    console.log('Form submitted:', formData);
-    alert('お問い合わせを送信しました。ありがとうございます！');
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('お問い合わせを送信しました。ありがとうございます！');
+        // フォームをリセット
+        setFormData({
+          name: '',
+          email: '',
+          subject: '',
+          message: ''
+        });
+        setIsAgreed(false);
+      } else {
+        alert(`送信に失敗しました: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('送信エラー:', error);
+      alert('送信中にエラーが発生しました。しばらく時間をおいて再度お試しください。');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -183,15 +213,24 @@ export default function ContactPage() {
             <div className="text-center">
               <button 
                 type="submit"
-                disabled={!isAgreed}
+                disabled={!isAgreed || isSubmitting}
                 className={`px-6 py-3 rounded-md font-medium text-white transition-all duration-300 flex items-center justify-center mx-auto ${
-                  isAgreed 
+                  isAgreed && !isSubmitting
                     ? 'bg-gradient-to-br from-[#FF5A5F] to-[#FF385C] hover:from-[#FF7A7F] hover:to-[#FF587C] hover:-translate-y-0.5 hover:shadow-lg' 
                     : 'bg-gradient-to-br from-[#FF5A5F] to-[#FF385C] opacity-70 cursor-not-allowed'
                 }`}
               >
-                <HeartIcon className="w-4 h-4 mr-2" />
-                送信する
+                {isSubmitting ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    送信中...
+                  </>
+                ) : (
+                  <>
+                    <HeartIcon className="w-4 h-4 mr-2" />
+                    送信する
+                  </>
+                )}
               </button>
             </div>
           </form>

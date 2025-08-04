@@ -7,20 +7,56 @@ import { XIcon } from '../../components/XIcon';
 
 export default function BusinessContactPage() {
   const [isAgreed, setIsAgreed] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     companyName: '',
+    contactName: '',
     email: '',
     phone: '',
+    website: '',
+    businessType: '',
     message: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isAgreed) return;
+    if (!isAgreed || isSubmitting) return;
     
-    // TODO: Implement form submission logic
-    console.log('Business contact form submitted:', formData);
-    alert('お問い合わせを送信しました。3営業日以内にご連絡いたします。');
+    setIsSubmitting(true);
+    
+    try {
+      const response = await fetch('/api/business-contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert('お問い合わせを送信しました。3営業日以内にご連絡いたします。');
+        // フォームをリセット
+        setFormData({
+          companyName: '',
+          contactName: '',
+          email: '',
+          phone: '',
+          website: '',
+          businessType: '',
+          message: ''
+        });
+        setIsAgreed(false);
+      } else {
+        alert(`送信に失敗しました: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('送信エラー:', error);
+      alert('送信中にエラーが発生しました。しばらく時間をおいて再度お試しください。');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
