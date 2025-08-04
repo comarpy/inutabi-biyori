@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     // メール送信
     const { data, error } = await resend.emails.send({
-      from: 'noreply@inutabi-biyori.com', // 送信者アドレス（ドメイン認証が必要）
+      from: 'onboarding@resend.dev', // Resendのテスト用認証済みドメイン
       to: ['contact@comarpy.co.jp'], // 受信者アドレス
       subject: `【お問い合わせ】${subject}`,
       html: `
