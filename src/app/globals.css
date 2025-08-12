@@ -30,4 +30,76 @@ body {
   background-color: #FAF6F1;
   color: #484848;
 }
-/* 以下略（slide-container, hero-section …） */
+/* optgroupのスタイリング（楽天トラベル風） */
+optgroup {
+  font-weight: bold;
+  color: #FF5A5F;
+  background-color: #f8f9fa;
+  padding: 8px 0;
+  font-size: 14px;
+}
+
+optgroup option {
+  font-weight: normal;
+  color: #333;
+  padding-left: 16px;
+}
+
+/* セレクトボックスのoptionスタイリング */
+select option {
+  padding: 8px 12px;
+  font-size: 16px;
+}
+
+select optgroup {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e9ecef;
+}
+
+/* チェックボックスのカスタムスタイル */
+.form-checkbox {
+  appearance: none;
+  background-color: #fff;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  display: inline-block;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.form-checkbox:checked {
+  background-color: #FF5A5F;
+  border-color: #FF5A5F;
+}
+
+.form-checkbox:checked::before {
+  content: '✓';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.form-checkbox:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 90, 95, 0.1);
+}
+
+.form-checkbox:indeterminate {
+  background-color: #FF5A5F;
+  border-color: #FF5A5F;
+}
+
+.form-checkbox:indeterminate::before {
+  content: '–';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}

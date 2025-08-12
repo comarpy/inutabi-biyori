@@ -4,10 +4,9 @@ import { searchDogFriendlyHotels, type DetailFilters } from '@/lib/hotelService'
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const area = searchParams.get('area') || '全国';
-    const dogSize = searchParams.get('dogSize') || '指定なし';
-    const checkinDate = searchParams.get('checkinDate') || undefined;
-    const checkoutDate = searchParams.get('checkoutDate') || undefined;
+    const areas = searchParams.get('areas')?.split(',') || searchParams.get('area')?.split(',') || ['全国'];
+    const checkinDate = searchParams.get('checkinDate') || searchParams.get('checkIn') || undefined;
+    const checkoutDate = searchParams.get('checkoutDate') || searchParams.get('checkOut') || undefined;
     
     // 詳細条件を取得
     const detailFilters = {
@@ -25,9 +24,9 @@ export async function GET(request: NextRequest) {
       leashFree: searchParams.get('leashFree') === 'true'
     };
 
-    console.log('検索パラメータ:', { area, dogSize, checkinDate, checkoutDate, detailFilters });
+    console.log('検索パラメータ:', { areas, checkinDate, checkoutDate, detailFilters });
 
-    const hotels = await searchDogFriendlyHotels(area, dogSize, checkinDate, checkoutDate, detailFilters);
+    const hotels = await searchDogFriendlyHotels(areas, checkinDate, checkoutDate, detailFilters);
 
     console.log('検索結果:', hotels.length, '件');
 
