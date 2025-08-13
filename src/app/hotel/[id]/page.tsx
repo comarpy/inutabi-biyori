@@ -107,19 +107,13 @@ function HotelDetailContent() {
         {/* ヘッダー */}
         <header className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white p-3">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center">
-              <button 
-                onClick={() => router.back()}
-                className="mr-4 hover:bg-white hover:bg-opacity-20 p-2 rounded-full transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </button>
+            <Link href="/" className="flex items-center hover:opacity-80">
               <Dog className="w-6 h-6 mr-2" />
               <div className="flex flex-col">
                 <span className="font-bold text-lg">犬旅びより</span>
                 <span className="text-xs opacity-90">- 愛犬と泊まれる宿が見つかる、旅の検索サイト</span>
               </div>
-            </div>
+            </Link>
             <nav className="flex items-center space-x-4">
               <Link href="/contact" className="text-sm hover:text-gray-200 cursor-pointer">
                 お問い合わせ

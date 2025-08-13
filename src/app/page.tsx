@@ -80,6 +80,24 @@ function HomeContent() {
     }));
   };
 
+  // 詳細条件のクリア
+  const clearDetailFilters = () => {
+    setDetailFilters({
+      dogRun: false,
+      largeDog: false,
+      roomDining: false,
+      hotSpring: false,
+      parking: false,
+      multipleDogs: false,
+      petAmenities: false,
+      dogMenu: false,
+      privateBath: false,
+      roomDogRun: false,
+      grooming: false,
+      leashFree: false
+    });
+  };
+
   // エリア選択の処理
   const handleAreaToggle = (area: string) => {
     if (area === '全国') {
@@ -165,6 +183,8 @@ function HomeContent() {
     return `${month}/${day}(${weekday})`;
   };
 
+  const activeDetailCount = Object.values(detailFilters).filter(Boolean).length;
+
 
 
   return (
@@ -235,9 +255,9 @@ function HomeContent() {
             </div>
 
           {/* 検索バー - ヤフートラベル風シンプルデザイン */}
-          <div className="relative z-10 w-full max-w-6xl bg-white bg-opacity-98 rounded-2xl shadow-2xl overflow-hidden backdrop-blur-sm">
+          <div className="relative z-10 w-full max-w-5xl bg-white bg-opacity-98 rounded-2xl shadow-2xl overflow-visible backdrop-blur-sm">
             {/* 検索フォームヘッダー */}
-            <div className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white p-5">
+            <div className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white p-4 rounded-t-2xl">
               <h2 className="text-xl font-bold flex items-center justify-center">
                 <Dog className="w-6 h-6 mr-3" />
                 愛犬と泊まれる宿を検索
@@ -245,167 +265,161 @@ function HomeContent() {
             </div>
             
             {/* メイン検索フォーム */}
-            <div className="p-8 md:p-12">
-              {/* 検索項目を横並びに */}
-              <div className="space-y-8 mb-10">
-                {/* エリア選択と日付選択を横並びに */}
-                <div className="flex flex-col lg:flex-row gap-8 lg:items-start">
-                  {/* エリア選択（ドロップダウン形式） */}
-                  <div className="flex-1 text-center">
-                    <label className="block text-xl font-bold text-gray-800 mb-6 h-8 flex items-center justify-center">
-                      <MapPin className="w-5 h-5 inline mr-2 text-[#FF5A5F]" />
-                      どちらへ旅行されますか？
-                    </label>
-                  <div className="relative max-w-2xl mx-auto area-dropdown-container">
-                    <button
-                      type="button"
-                      onClick={() => setShowAreaDropdown(!showAreaDropdown)}
-                      className="w-full bg-white text-gray-800 border-3 border-gray-300 rounded-xl p-5 text-xl font-medium focus:ring-3 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] cursor-pointer hover:border-[#FF5A5F] transition-all duration-300 shadow-lg text-left flex items-center justify-between"
-                    >
-                      <span>
-                        {searchParams.areas.length > 0 && !searchParams.areas.includes('') ? searchParams.areas.join(', ') : '全国'}
-                      </span>
-                      <ChevronDown className={`w-6 h-6 text-gray-400 transition-transform duration-300 ${showAreaDropdown ? 'rotate-180' : ''}`} />
-                    </button>
-                    
-                    {/* ドロップダウンコンテンツ */}
-                    {showAreaDropdown && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white border-2 border-gray-300 rounded-xl shadow-2xl z-50 max-h-96 flex flex-col">
-                        <div className="flex-1 overflow-y-auto p-4">
-                          {/* 全国チェックボックス */}
-                          <div className="mb-4 pb-4 border-b border-gray-200">
-                            <label className="inline-flex items-center cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors w-full">
-                              <input
-                                type="checkbox"
-                                checked={searchParams.areas.includes('全国')}
-                                onChange={() => handleAreaToggle('全国')}
-                                className="form-checkbox h-5 w-5 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
-                              />
-                              <span className="ml-3 text-lg font-medium text-gray-800">全国</span>
-                            </label>
-                          </div>
-
-                          {/* 地方別チェックボックス */}
-                          <div className="space-y-3">
-                            {Object.entries(areaData).map(([region, prefectures]) => {
-                              if (region === '全国') return null;
-                              
-                              const currentAreas = searchParams.areas.filter(a => a !== '全国');
-                              const allSelected = prefectures.every((pref: string) => currentAreas.includes(pref));
-                              const someSelected = prefectures.some((pref: string) => currentAreas.includes(pref));
-                              
-                              return (
-                                <div key={region} className="border border-gray-100 rounded-lg p-3">
-                                  {/* 地方名（全選択ボタン） */}
-                                  <div className="mb-2">
-                                    <label className="inline-flex items-center cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-colors w-full">
-                                      <input
-                                        type="checkbox"
-                                        checked={allSelected}
-                                        ref={(el) => {
-                                          if (el) el.indeterminate = someSelected && !allSelected;
-                                        }}
-                                        onChange={() => handleRegionToggle(region)}
-                                        className="form-checkbox h-4 w-4 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
-                                      />
-                                      <span className="ml-2 text-sm font-bold text-[#FF5A5F]">{region}</span>
-                                    </label>
-                                  </div>
-                                  
-                                  {/* 都道府県リスト */}
-                                  <div className="grid grid-cols-2 gap-1 pl-4">
-                                    {prefectures.map((prefecture) => (
-                                      <label key={prefecture} className="inline-flex items-center cursor-pointer p-1 rounded hover:bg-gray-50 transition-colors">
+            <div className="p-6 md:p-8">
+              {/* 入力行（エリア + 日付 + ボタン） */}
+              <div className="mb-6">
+                <div className="flex flex-wrap items-center gap-4">
+                  {/* エリア */}
+                  <div className="flex-1 min-w-[220px]">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">エリア</label>
+                    <div className="relative area-dropdown-container">
+                      <button
+                        type="button"
+                        onClick={() => setShowAreaDropdown(!showAreaDropdown)}
+                        className="w-full h-14 px-4 text-base leading-6 rounded-2xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 text-gray-800 cursor-pointer hover:border-[#FF5A5F] transition-all duration-300 text-left flex items-center justify-between"
+                      >
+                        <span>
+                          {searchParams.areas.length > 0 && !searchParams.areas.includes('') ? searchParams.areas.join(', ') : '全国'}
+                        </span>
+                        <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${showAreaDropdown ? 'rotate-180' : ''}`} />
+                      </button>
+                      {showAreaDropdown && (
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[90vw] md:w-[48rem] max-w-[calc(100vw-2rem)] bg-white border-2 border-gray-300 rounded-xl shadow-2xl z-50 max-h-[32rem] flex flex-col">
+                          <div className="flex-1 overflow-y-auto p-5">
+                            <div className="mb-4 pb-4 border-b border-gray-200">
+                              <label className="inline-flex items-center cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors w-full">
+                                <input
+                                  type="checkbox"
+                                  checked={searchParams.areas.includes('全国')}
+                                  onChange={() => handleAreaToggle('全国')}
+                                  className="form-checkbox h-5 w-5 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
+                                />
+                                <span className="ml-3 text-base font-medium text-gray-800">全国</span>
+                              </label>
+                            </div>
+                            <div className="space-y-3">
+                              {Object.entries(areaData).map(([region, prefectures]) => {
+                                if (region === '全国') return null;
+                                const currentAreas = searchParams.areas.filter(a => a !== '全国');
+                                const allSelected = prefectures.every((pref: string) => currentAreas.includes(pref));
+                                const someSelected = prefectures.some((pref: string) => currentAreas.includes(pref));
+                                return (
+                                  <div key={region} className="border border-gray-100 rounded-lg p-3">
+                                    <div className="mb-2">
+                                      <label className="inline-flex items-center cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-colors w-full">
                                         <input
                                           type="checkbox"
-                                          checked={currentAreas.includes(prefecture)}
-                                          onChange={() => handleAreaToggle(prefecture)}
-                                          className="form-checkbox h-3 w-3 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
+                                          checked={allSelected}
+                                          ref={(el) => {
+                                            if (el) el.indeterminate = someSelected && !allSelected;
+                                          }}
+                                          onChange={() => handleRegionToggle(region)}
+                                          className="form-checkbox h-4 w-4 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
                                         />
-                                        <span className="ml-2 text-xs text-gray-700">{prefecture}</span>
+                                        <span className="ml-2 text-sm font-bold text-[#FF5A5F]">{region}</span>
                                       </label>
-                                    ))}
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 pl-4">
+                                      {prefectures.map((prefecture) => (
+                                        <label key={prefecture} className="inline-flex items-center cursor-pointer p-1 rounded hover:bg-gray-50 transition-colors">
+                                          <input
+                                            type="checkbox"
+                                            checked={currentAreas.includes(prefecture)}
+                                            onChange={() => handleAreaToggle(prefecture)}
+                                            className="form-checkbox h-3 w-3 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
+                                          />
+                                          <span className="ml-2 text-xs text-gray-700">{prefecture}</span>
+                                        </label>
+                                      ))}
+                                    </div>
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 bg-gray-50 px-5 py-4 border-t border-gray-200 rounded-b-xl">
+                            <div className="text-sm text-gray-600 mb-2 text-center">
+                              選択中: {searchParams.areas.length > 0 && !searchParams.areas.includes('') ? searchParams.areas.join(', ') : '全国'}
+                            </div>
+                            <button
+                              onClick={() => setShowAreaDropdown(false)}
+                              className="w-full px-6 py-3 bg-[#FF5A5F] text-white rounded-lg hover:bg-[#FF385C] transition-colors text-sm font-medium"
+                            >
+                              決定
+                            </button>
                           </div>
                         </div>
-                        
-                        {/* 固定フッター - 選択状態表示と決定ボタン */}
-                        <div className="flex-shrink-0 bg-gray-50 px-4 py-3 border-t border-gray-200 rounded-b-xl">
-                          <div className="text-sm text-gray-600 mb-2 text-center">
-                            選択中: {searchParams.areas.length > 0 && !searchParams.areas.includes('') ? searchParams.areas.join(', ') : '全国'}
-                          </div>
-                          <button
-                            onClick={() => setShowAreaDropdown(false)}
-                            className="w-full px-6 py-2 bg-[#FF5A5F] text-white rounded-lg hover:bg-[#FF385C] transition-colors text-sm font-medium"
-                          >
-                            決定
-                          </button>
-                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* チェックイン */}
+                  <div className="flex-1 min-w-[220px]">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">チェックイン</label>
+                    <input
+                      type="date"
+                      className="w-full h-14 px-4 text-base leading-6 rounded-2xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 appearance-none text-gray-800 hover:border-[#FF5A5F] transition-colors"
+                      value={searchParams.checkIn}
+                      onChange={(e) => setSearchParams({...searchParams, checkIn: e.target.value})}
+                      min={new Date().toISOString().split('T')[0]}
+                    />
+                    {searchParams.checkIn && (
+                      <div className="text-xs text-gray-500 mt-1 text-center">
+                        {formatDate(searchParams.checkIn)}
                       </div>
                     )}
                   </div>
+
+                  {/* チェックアウト */}
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-600 mb-2">チェックアウト</label>
+                    <input
+                      type="date"
+                      className="w-full h-14 px-4 text-base leading-6 rounded-2xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 appearance-none text-gray-800 hover:border-[#FF5A5F] transition-colors"
+                      value={searchParams.checkOut}
+                      onChange={(e) => setSearchParams({...searchParams, checkOut: e.target.value})}
+                      min={searchParams.checkIn || new Date().toISOString().split('T')[0]}
+                    />
+                    {searchParams.checkOut && (
+                      <div className="text-xs text-gray-500 mt-1 text-center">
+                        {formatDate(searchParams.checkOut)}
+                      </div>
+                    )}
                   </div>
 
-                  {/* 日付選択 */}
-                  <div className="flex-1 text-center">
-                    <label className="block text-xl font-bold text-gray-800 mb-6 h-8 flex items-center justify-center">
-                      <Calendar className="w-5 h-5 inline mr-2 text-[#FF5A5F]" />
-                      いつ頃ご宿泊予定ですか？
-                    </label>
-                  <div className="flex flex-col sm:flex-row justify-center gap-4 max-w-2xl mx-auto">
-                    {/* チェックイン */}
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-600 mb-2">チェックイン</label>
-                      <input
-                        type="date"
-                        className="w-full bg-white text-gray-800 border-2 border-gray-300 rounded-lg p-4 text-lg font-medium focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] hover:border-[#FF5A5F] transition-colors shadow-sm"
-                        value={searchParams.checkIn}
-                        onChange={(e) => setSearchParams({...searchParams, checkIn: e.target.value})}
-                        min={new Date().toISOString().split('T')[0]}
-                      />
-                      {searchParams.checkIn && (
-                        <div className="text-xs text-gray-500 mt-1 text-center">
-                          {formatDate(searchParams.checkIn)}
-                        </div>
-                      )}
-                    </div>
-                    {/* チェックアウト */}
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-600 mb-2">チェックアウト</label>
-                      <input
-                        type="date"
-                        className="w-full bg-white text-gray-800 border-2 border-gray-300 rounded-lg p-4 text-lg font-medium focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F] hover:border-[#FF5A5F] transition-colors shadow-sm"
-                        value={searchParams.checkOut}
-                        onChange={(e) => setSearchParams({...searchParams, checkOut: e.target.value})}
-                        min={searchParams.checkIn || new Date().toISOString().split('T')[0]}
-                      />
-                      {searchParams.checkOut && (
-                        <div className="text-xs text-gray-500 mt-1 text-center">
-                          {formatDate(searchParams.checkOut)}
-                        </div>
-                      )}
-                    </div>
+                  {/* 検索ボタン（行内右側） */}
+                  <div className="flex-none self-end mt-6 sm:mt-0">
+                    <button 
+                      onClick={handleSearch}
+                      className="h-14 px-6 text-base rounded-2xl bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white font-bold flex items-center justify-center hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 transform hover:scale-105 shadow-lg"
+                    >
+                      <Search className="w-5 h-5 mr-2" />
+                      宿を検索する
+                    </button>
                   </div>
-                  </div>
+
+                  {/* 検索ボタン（下段に移動のため削除） */}
                 </div>
               </div>
               
-              {/* 検索ボタン */}
-              <div className="mb-6 px-8">
+              {/* 詳細フィルター展開ボタン（下段・元検索位置） */}
+              <div className="mb-4 px-6">
                 <div className="text-center">
-                  <button 
-                    onClick={handleSearch}
-                    className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white px-20 py-5 rounded-full font-bold text-xl flex items-center mx-auto hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 transform hover:scale-110 shadow-lg"
+                  <button
+                    onClick={() => setShowDetailFilters(!showDetailFilters)}
+                    aria-expanded={showDetailFilters}
+                    className="inline-flex items-center h-12 px-5 text-sm font-medium text-gray-700 bg-white border border-gray-200 rounded-xl shadow-sm hover:border-[#FF5A5F] hover:text-[#FF5A5F] transition-all"
                   >
-                    <Search className="w-7 h-7 mr-3" />
-                    宿を検索する
+                    <Bone className="w-4 h-4 mr-2" />
+                    詳細条件{showDetailFilters ? '（閉じる）' : ''}
                   </button>
                 </div>
-                
-                {/* 検索条件サマリー */}
+              </div>
+
+              
+
+              {/* 検索条件サマリー */}
+              <div className="mb-4 px-6">
                 <div className="mt-4 text-center">
                   <div className="text-sm text-gray-600 flex flex-wrap justify-center gap-3">
                     <span className="bg-white px-4 py-2 rounded-full border border-gray-300 shadow-sm font-medium">
@@ -417,29 +431,10 @@ function HomeContent() {
                       </span>
                     )}
                   </div>
-              </div>
-            </div>
-
-            {/* 詳細フィルター展開ボタン */}
-              <div className="mb-6 border-t border-gray-100 pt-8 px-8">
-                <div className="text-center">
-              <button
-                onClick={() => setShowDetailFilters(!showDetailFilters)}
-                    className="inline-flex items-center justify-center py-4 px-8 text-lg font-medium text-gray-600 hover:text-[#FF5A5F] border-2 border-gray-300 rounded-full hover:border-[#FF5A5F] transition-all duration-300 bg-gray-50 hover:bg-white hover:shadow-lg"
-              >
-                    <Bone className="w-5 h-5 mr-2" />
-                    <span className="mr-2">詳細条件を指定する</span>
-                <svg 
-                      className={`w-5 h-5 transition-transform duration-300 ${showDetailFilters ? 'rotate-180' : ''}`}
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
                 </div>
               </div>
+
+            
             </div>
 
             {/* 詳細フィルター（折りたたみ式） */}
@@ -593,97 +588,7 @@ function HomeContent() {
 
         {/* メインコンテンツ */}
         <main className="max-w-7xl mx-auto px-4 py-8">
-          {/* エリアから探す */}
-          <section className="mb-12 p-3">
-            <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-t-xl border border-[#E8D5B7] flex items-center shadow-md">
-              <Heart className="w-6 h-6 mr-3 text-[#8B7355]" />
-              <h2 className="text-xl font-bold">エリアから探す</h2>
-                  </div>
-            <div className="bg-white p-6 rounded-b-xl shadow-lg border border-t-0 border-[#E8D5B7]">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h4 className="font-bold mb-3 text-base">人気エリア</h4>
-                  <div className="flex flex-wrap">
-                    {['北海道', '東京', '箱根', '伊豆', '軽井沢', '京都'].map((area) => (
-                      <span 
-                        key={area}
-                        className="inline-flex items-center bg-[#F3F3F3] text-[#484848] rounded-full px-4 py-2 mr-2 mb-2 text-sm font-medium cursor-pointer transition-all duration-300 hover:bg-[#FF5A5F] hover:text-white hover:-translate-y-1 shadow-sm hover:shadow-md"
-                      >
-                        <MapPin className="w-4 h-4 mr-2" />
-                        {area}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="font-bold mb-3 text-base">宿タイプで探す</h4>
-                  <div className="flex flex-wrap">
-                    {[
-                      {name: 'ホテル', icon: Hotel},
-                      {name: '旅館', icon: House},
-                      {name: 'コテージ', icon: Tent},
-                      {name: '温泉宿', icon: Waves}
-                    ].map(({name, icon: Icon}) => (
-                      <span 
-                        key={name}
-                        className="inline-flex items-center bg-[#F3F3F3] text-[#484848] rounded-full px-4 py-2 mr-2 mb-2 text-sm font-medium cursor-pointer transition-all duration-300 hover:bg-[#FF5A5F] hover:text-white hover:-translate-y-1 shadow-sm hover:shadow-md"
-                      >
-                        <Icon className="w-4 h-4 mr-2" />
-                        {name}
-                      </span>
-              ))}
-            </div>
-                </div>
-              </div>
-                </div>
-          </section>
-
-          {/* 特集記事 */}
-          <section className="p-3">
-            <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-t-xl border border-[#E8D5B7] flex items-center justify-between shadow-md">
-              <div className="flex items-center">
-                <Dog className="w-6 h-6 mr-3 text-[#8B7355]" />
-                <h2 className="text-xl font-bold">特集記事</h2>
-              </div>
-              <div className="ml-auto">
-                <a className="text-gray-600 text-sm font-normal hover:text-gray-800 cursor-pointer">
-                  もっと見る →
-                </a>
-              </div>
-            </div>
-            <div className="bg-white p-6 rounded-b-xl shadow-lg border border-t-0 border-[#E8D5B7]">
-              <div className="grid grid-cols-3 gap-3">
-                {[
-                  {
-                    icon: Play,
-                    title: '広々ドッグラン付き',
-                    description: '愛犬と思いっきり遊べる宿'
-                  },
-                  {
-                    icon: Dog,
-                    title: '大型犬歓迎の宿',
-                    description: '大きなワンちゃんもゆったり'
-                  },
-                  {
-                    icon: Utensils,
-                    title: '一緒に食事できる',
-                    description: '愛犬と同じ部屋で食事を'
-                  }
-                ].map(({icon: Icon, title, description}) => (
-                  <div 
-                    key={title}
-                    className="bg-white border-2 border-[#F0F0F0] rounded-lg p-3 flex items-center hover:shadow-md transition-shadow cursor-pointer"
-                  >
-                    <Icon className="w-8 h-8 mr-3 text-[#FF5A5F]" />
-                    <div>
-                      <h4 className="font-bold text-sm mb-1">{title}</h4>
-                      <p className="text-xs text-gray-600">{description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </section>
+          {/* 余白のみ（不要セクション削除） */}
         </main>
 
         {/* フッター */}

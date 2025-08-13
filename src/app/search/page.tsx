@@ -2,7 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { MapPin, House, Waves, Dog, Bone, Utensils, Car, Heart, Play, ParkingCircle, ArrowLeft, ArrowRight, Map, SortAsc, Wifi, Camera, Laptop, Battery, ShoppingBag, Tv, GlassWater, TreePine, List, AlertCircle, Instagram, Facebook, MessageCircle } from 'lucide-react';
+import { MapPin, House, Waves, Dog, Bone, Utensils, Car, Heart, Play, ParkingCircle, ArrowLeft, ArrowRight, Map, SortAsc, Wifi, Camera, Laptop, Battery, ShoppingBag, Tv, GlassWater, TreePine, List, AlertCircle, Instagram, Facebook, MessageCircle, ChevronDown } from 'lucide-react';
 import { XIcon } from '../../components/XIcon';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
@@ -65,6 +65,41 @@ function SearchContent() {
     checkIn: searchParams.get('checkIn') || '',
     checkOut: searchParams.get('checkOut') || ''
   });
+
+  // エリア選択ドロップダウン
+  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
+
+  // エリア選択の処理（ホーム画面と同等の挙動）
+  const handleAreaToggle = (area: string) => {
+    if (area === '全国') {
+      setSearchFilters(prev => ({ ...prev, areas: ['全国'] }));
+      return;
+    }
+    setSearchFilters(prev => {
+      const currentAreas = prev.areas.filter(a => a !== '全国');
+      const isSelected = currentAreas.includes(area);
+      if (isSelected) {
+        const newAreas = currentAreas.filter(a => a !== area);
+        return { ...prev, areas: newAreas.length === 0 ? ['全国'] : newAreas };
+      }
+      return { ...prev, areas: [...currentAreas, area] };
+    });
+  };
+
+  // 地方全選択の処理
+  const handleRegionToggle = (region: string) => {
+    const prefectures = areaData[region as keyof typeof areaData];
+    if (!prefectures) return;
+    const currentAreas = searchFilters.areas.filter(a => a !== '全国');
+    const allSelected = prefectures.every((pref: string) => currentAreas.includes(pref));
+    if (allSelected) {
+      const newAreas = currentAreas.filter(a => !prefectures.includes(a));
+      setSearchFilters(prev => ({ ...prev, areas: newAreas.length === 0 ? ['全国'] : newAreas }));
+    } else {
+      const newAreas = [...new Set([...currentAreas, ...prefectures])];
+      setSearchFilters(prev => ({ ...prev, areas: newAreas }));
+    }
+  };
 
   // 詳細条件のトグル
   const toggleDetailFilter = (filterKey: keyof typeof detailFilters) => {
@@ -208,39 +243,120 @@ function SearchContent() {
 
               {/* 再検索フォーム */}
               <div className="bg-white bg-opacity-95 rounded-xl shadow-lg p-4 mb-4 border border-gray-100">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                  <div>
+                <div className="flex flex-wrap items-center gap-4 mb-3">
+                  <div className="flex-1">
                     <label className="block text-sm text-gray-600 mb-2">選択中のエリア</label>
-                    <div className="w-full bg-gray-100 border border-gray-200 rounded-lg p-3 text-base min-h-[48px] flex items-center">
-                      <span className="text-gray-700">
-                        {searchFilters.areas.length > 0 ? searchFilters.areas.join(', ') : '全国'}
-                      </span>
+                    <div className="relative area-dropdown-container">
+                      <button
+                        type="button"
+                        onClick={() => setShowAreaDropdown(prev => !prev)}
+                        className="w-full h-14 px-4 text-base leading-6 rounded-2xl border border-gray-200 bg-white shadow-sm text-gray-800 cursor-pointer hover:border-[#FF5A5F] transition-all duration-300 text-left flex items-center justify-between"
+                      >
+                        <span>
+                          {searchFilters.areas.length > 0 ? searchFilters.areas.join(', ') : '全国'}
+                        </span>
+                        <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${showAreaDropdown ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {showAreaDropdown && (
+                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[90vw] md:w-[48rem] max-w-[calc(100vw-2rem)] bg-white border-2 border-gray-300 rounded-xl shadow-2xl z-50 max-h-[32rem] flex flex-col">
+                          <div className="flex-1 overflow-y-auto p-5">
+                            <div className="mb-4 pb-4 border-b border-gray-200">
+                              <label className="inline-flex items-center cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors w-full">
+                                <input
+                                  type="checkbox"
+                                  checked={searchFilters.areas.includes('全国')}
+                                  onChange={() => handleAreaToggle('全国')}
+                                  className="form-checkbox h-5 w-5 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
+                                />
+                                <span className="ml-3 text-base font-medium text-gray-800">全国</span>
+                              </label>
+                            </div>
+
+                            <div className="space-y-3">
+                              {Object.entries(areaData).map(([region, prefectures]) => {
+                                if (region === '全国') return null;
+                                const currentAreas = searchFilters.areas.filter(a => a !== '全国');
+                                const allSelected = prefectures.every((pref: string) => currentAreas.includes(pref));
+                                const someSelected = prefectures.some((pref: string) => currentAreas.includes(pref));
+                                return (
+                                  <div key={region} className="border border-gray-100 rounded-lg p-3">
+                                    <div className="mb-2">
+                                      <label className="inline-flex items-center cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-colors w-full">
+                                        <input
+                                          type="checkbox"
+                                          checked={allSelected}
+                                          ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                                          onChange={() => handleRegionToggle(region)}
+                                          className="form-checkbox h-4 w-4 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
+                                        />
+                                        <span className="ml-2 text-sm font-bold text-[#FF5A5F]">{region}</span>
+                                      </label>
+                                    </div>
+                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 pl-4">
+                                      {prefectures.map((prefecture) => (
+                                        <label key={prefecture} className="inline-flex items-center cursor-pointer p-1 rounded hover:bg-gray-50 transition-colors">
+                                          <input
+                                            type="checkbox"
+                                            checked={currentAreas.includes(prefecture)}
+                                            onChange={() => handleAreaToggle(prefecture)}
+                                            className="form-checkbox h-3 w-3 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
+                                          />
+                                          <span className="ml-2 text-xs text-gray-700">{prefecture}</span>
+                                        </label>
+                                      ))}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 bg-gray-50 px-5 py-4 border-t border-gray-200 rounded-b-xl">
+                            <div className="text-sm text-gray-600 mb-2 text-center">
+                              選択中: {searchFilters.areas.length > 0 ? searchFilters.areas.join(', ') : '全国'}
+                            </div>
+                            <button
+                              onClick={() => setShowAreaDropdown(false)}
+                              className="w-full px-6 py-3 bg-[#FF5A5F] text-white rounded-lg hover:bg-[#FF385C] transition-colors text-sm font-medium"
+                            >
+                              決定
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                   
-                  <div>
+                  <div className="flex-1">
                     <label className="block text-sm text-gray-600 mb-2">チェックイン</label>
                     <input
                       type="date"
-                      className="w-full bg-white border border-gray-200 rounded-lg p-3 text-base focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                      className="w-full h-14 px-4 text-base leading-6 rounded-2xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 appearance-none"
                       value={searchFilters.checkIn}
                       onChange={(e) => setSearchFilters({...searchFilters, checkIn: e.target.value})}
                       min={new Date().toISOString().split('T')[0]}
                     />
                   </div>
                   
-                  <div>
+                  <div className="flex-1">
                     <label className="block text-sm text-gray-600 mb-2">チェックアウト</label>
                     <input
                       type="date"
-                      className="w-full bg-white border border-gray-200 rounded-lg p-3 text-base focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                      className="w-full h-14 px-4 text-base leading-6 rounded-2xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200 appearance-none"
                       value={searchFilters.checkOut}
                       onChange={(e) => setSearchFilters({...searchFilters, checkOut: e.target.value})}
                       min={searchFilters.checkIn || new Date().toISOString().split('T')[0]}
                     />
                   </div>
-                  
-
+                  <div className="flex-none">
+                    <button 
+                      onClick={handleSearch}
+                      className="h-14 px-6 text-base rounded-2xl bg-red-500 hover:bg-red-600 text-white font-semibold transition-all duration-300 flex items-center"
+                    >
+                      <Dog className="w-4 h-4 mr-2" />
+                      再検索
+                    </button>
+                  </div>
                 </div>
                 
                 {/* 詳細条件 */}
@@ -381,27 +497,19 @@ function SearchContent() {
                   </div>
                 </div>
                 
-                <div className="flex justify-center">
-                  <button 
-                    onClick={handleSearch}
-                    className="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-full font-semibold transition-all duration-300 flex items-center"
-                  >
-                    <Dog className="w-4 h-4 mr-2" />
-                    再検索
-                  </button>
-                </div>
+                
               </div>
 
               {/* 並び替えとフィルター */}
               <div className="bg-[#F9F6F2] rounded-lg p-3 mb-4 border border-[#F0E8D8]">
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center">
-                    <div className="flex items-center mr-3">
+                <div className="flex flex-wrap items-center gap-4 justify-between">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex items-center">
                       <SortAsc className="w-4 h-4 mr-1" />
                       <span className="text-sm font-medium">並び替え:</span>
                     </div>
                     <select 
-                      className="border border-gray-200 rounded p-2 text-sm bg-white focus:ring-2 focus:ring-[#FF5A5F] focus:border-[#FF5A5F]"
+                      className="h-14 px-4 text-base leading-6 rounded-2xl border border-gray-200 bg-white shadow-sm focus:outline-none focus:ring-2 focus:ring-rose-200"
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                     >
