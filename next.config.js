@@ -11,6 +11,8 @@ const nextConfig = {
       { protocol: 'https', hostname: 'img.travel.rakuten.co.jp' },
       { protocol: 'https', hostname: 'trvimg.r10s.jp' },
       { protocol: 'https', hostname: 'travel.rakuten.co.jp' },
+      // microCMS メディア（手動入力画像）
+      { protocol: 'https', hostname: 'images.microcms-assets.io' },
     ],
   },
 };

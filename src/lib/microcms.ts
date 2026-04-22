@@ -56,6 +56,12 @@ export interface DogHotelInfo {
   groomingRoom: boolean;
   leashFreeInside: boolean;
   otherNotes?: string;
+
+  // 手動入力フィールド（microCMS側で追加されたら反映される）
+  image?: string;       // メイン画像URL
+  images?: string[];    // ギャラリー画像URLs
+  latitude?: number;    // 緯度（十進度）
+  longitude?: number;   // 経度（十進度）
 }
 
 // inutabi スキーマ → 既存DogHotelInfoへ正規化
@@ -69,6 +75,36 @@ function normalizeInutabiRecordToDogHotelInfo(record: any): DogHotelInfo {
     const s = String(v || '').trim();
     return !(s === 'NG' || s === '無' || s === 'なし' || s === 'No' || s === 'no' || s === 'false' || s === 'FALSE');
   };
+
+  // microCMS 画像フィールドは { url, width, height } オブジェクトで返る場合と
+  // テキストURLの場合があるため、両方に対応
+  const extractImageUrl = (v: any): string | undefined => {
+    if (!v) return undefined;
+    if (typeof v === 'string') return v || undefined;
+    if (typeof v === 'object' && typeof v.url === 'string') return v.url;
+    return undefined;
+  };
+  const extractImageUrls = (v: any): string[] => {
+    if (!v) return [];
+    if (!Array.isArray(v)) return [];
+    return v.map(extractImageUrl).filter((u): u is string => !!u);
+  };
+  const toNum = (v: any): number | undefined => {
+    if (typeof v === 'number' && Number.isFinite(v)) return v;
+    if (typeof v === 'string') {
+      const n = parseFloat(v);
+      return Number.isFinite(n) ? n : undefined;
+    }
+    return undefined;
+  };
+
+  const mainImage = extractImageUrl(record.image) || extractImageUrl(record.main_image);
+  const galleryImages = [
+    ...extractImageUrls(record.images),
+    ...extractImageUrls(record.gallery),
+  ];
+  const latitude = toNum(record.latitude ?? record.lat);
+  const longitude = toNum(record.longitude ?? record.lng ?? record.lon);
 
   return {
     id: record.id,
@@ -105,6 +141,10 @@ function normalizeInutabiRecordToDogHotelInfo(record: any): DogHotelInfo {
     groomingRoom: notFalse(record.grooming_room),
     leashFreeInside: toBool(record.lead_ok_inside),
     otherNotes: record.other,
+    image: mainImage,
+    images: galleryImages.length > 0 ? galleryImages : undefined,
+    latitude,
+    longitude,
   } as DogHotelInfo;
 }
 

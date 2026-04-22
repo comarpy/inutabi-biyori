@@ -401,7 +401,18 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
   let reviewCount: number | undefined;
   let latitude: number | undefined;
   let longitude: number | undefined;
-  
+
+  // microCMS で画像が手動入力されていれば最優先
+  const manualImage = microCMSHotel.image || microCMSHotel.images?.[0];
+  if (manualImage) {
+    hotelImage = manualImage;
+  }
+  // microCMS で座標が手動入力されていれば最優先
+  if (typeof microCMSHotel.latitude === 'number' && typeof microCMSHotel.longitude === 'number') {
+    latitude = microCMSHotel.latitude;
+    longitude = microCMSHotel.longitude;
+  }
+
   if (rakutenHotels && Array.isArray(rakutenHotels)) {
     devLog(`${microCMSHotel.hotelName}: 楽天APIホテル数 ${rakutenHotels.length}件でマッチング試行中`);
     // ホテル名で楽天APIのデータから検索（改善されたマッチングロジック）
@@ -445,35 +456,38 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
       rakutenPrice = generatePrice(matchedRakutenHotel.reviewAverage, matchedRakutenHotel.hotelMinCharge);
       if (matchedRakutenHotel.reviewAverage) reviewAverage = matchedRakutenHotel.reviewAverage;
       if (matchedRakutenHotel.reviewCount) reviewCount = matchedRakutenHotel.reviewCount;
-      if (matchedRakutenHotel.latitude) latitude = matchedRakutenHotel.latitude;
-      if (matchedRakutenHotel.longitude) longitude = matchedRakutenHotel.longitude;
-      
-      // 楽天APIから画像を取得（優先順位: hotelImageUrl > hotelThumbnailUrl > roomImageUrl > roomThumbnailUrl）
-      if (matchedRakutenHotel.hotelImageUrl) {
-        hotelImage = matchedRakutenHotel.hotelImageUrl;
-        devLog(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelImageUrl) -> ${hotelImage}`);
-      } else if (matchedRakutenHotel.hotelThumbnailUrl) {
-        hotelImage = matchedRakutenHotel.hotelThumbnailUrl;
-        devLog(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelThumbnailUrl) -> ${hotelImage}`);
-      } else if (matchedRakutenHotel.roomImageUrl) {
-        hotelImage = matchedRakutenHotel.roomImageUrl;
-        devLog(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomImageUrl) -> ${hotelImage}`);
-      } else if (matchedRakutenHotel.roomThumbnailUrl) {
-        hotelImage = matchedRakutenHotel.roomThumbnailUrl;
-        devLog(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomThumbnailUrl) -> ${hotelImage}`);
-      } else {
-        devLog(`${microCMSHotel.hotelName}: 楽天APIに画像がありません、デフォルト画像を使用`);
+      // 座標は microCMS 手動入力が最優先。未入力時のみ楽天から反映。
+      if (!latitude && matchedRakutenHotel.latitude) latitude = matchedRakutenHotel.latitude;
+      if (!longitude && matchedRakutenHotel.longitude) longitude = matchedRakutenHotel.longitude;
+
+      // 画像は microCMS 手動入力が最優先。未入力時のみ楽天から反映。
+      if (!manualImage) {
+        if (matchedRakutenHotel.hotelImageUrl) {
+          hotelImage = matchedRakutenHotel.hotelImageUrl;
+          devLog(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelImageUrl) -> ${hotelImage}`);
+        } else if (matchedRakutenHotel.hotelThumbnailUrl) {
+          hotelImage = matchedRakutenHotel.hotelThumbnailUrl;
+          devLog(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelThumbnailUrl) -> ${hotelImage}`);
+        } else if (matchedRakutenHotel.roomImageUrl) {
+          hotelImage = matchedRakutenHotel.roomImageUrl;
+          devLog(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomImageUrl) -> ${hotelImage}`);
+        } else if (matchedRakutenHotel.roomThumbnailUrl) {
+          hotelImage = matchedRakutenHotel.roomThumbnailUrl;
+          devLog(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomThumbnailUrl) -> ${hotelImage}`);
+        } else {
+          devLog(`${microCMSHotel.hotelName}: 楽天APIに画像がありません、デフォルト画像を使用`);
+        }
       }
     } else {
       // エリア内でマッチなし → キーワード検索キャッシュを確認
       const kw = rakutenMatchCache.get(microCMSHotel.hotelName);
       if (kw && !kw.missing && kw.image) {
-        hotelImage = kw.image;
+        if (!manualImage) hotelImage = kw.image;
         if (kw.reviewAverage && !reviewAverage) reviewAverage = kw.reviewAverage;
         if (kw.reviewCount && !reviewCount) reviewCount = kw.reviewCount;
         if (kw.latitude && !latitude) latitude = kw.latitude;
         if (kw.longitude && !longitude) longitude = kw.longitude;
-      } else {
+      } else if (!manualImage) {
         // キャッシュにない → 同エリア楽天画像プール or 汎用Unsplashプールから決定論的に選択
         const imagePoolFromRakuten: string[] = [];
         rakutenHotels.forEach(r => {
@@ -715,6 +729,16 @@ async function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): Promis
   // 楽天の同名候補をマッチングして画像を収集
   let images: string[] = [];
   let rakutenUrl: string | undefined = undefined;
+
+  // microCMS に手動入力された画像群があれば最優先でギャラリーに投入
+  const manualGallery = [
+    microCMSHotel.image,
+    ...(microCMSHotel.images || []),
+  ].filter((u): u is string => !!u);
+  for (const url of manualGallery) {
+    if (!images.includes(url)) images.push(url);
+    if (images.length >= 5) break;
+  }
   if (rakutenHotels && Array.isArray(rakutenHotels) && rakutenHotels.length > 0) {
     const normalize = (s: string) => s.toLowerCase()
       .replace(/\s+/g, '')
