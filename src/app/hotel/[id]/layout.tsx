@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import { getHotelById } from "@/lib/hotelService";
 
+// ISR: 1時間ごとに再生成（CDN で高速配信）
+export const revalidate = 3600;
+
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://inutabi-biyori.com";
 
 export async function generateMetadata(

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { searchDogFriendlyHotels, type DetailFilters } from '@/lib/hotelService';
+import { devLog, devWarn } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -26,14 +27,14 @@ export async function GET(request: NextRequest) {
       leashFree: searchParams.get('leashFree') === 'true'
     };
 
-    console.log('検索パラメータ:', { areas, checkinDate, checkoutDate, detailFilters });
+    devLog('検索パラメータ:', { areas, checkinDate, checkoutDate, detailFilters });
 
     if (areas.length === 0) {
       return NextResponse.json({ success: true, hotels: [], count: 0 });
     }
     const hotels = await searchDogFriendlyHotels(areas, checkinDate, checkoutDate, detailFilters);
 
-    console.log('検索結果:', hotels.length, '件');
+    devLog('検索結果:', hotels.length, '件');
 
     return NextResponse.json({
       success: true,

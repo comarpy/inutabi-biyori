@@ -701,9 +701,8 @@ function SearchContent() {
                       運営会社
                     </h5>
                     <ul className="space-y-1 text-gray-300">
-                      <li><Link href="/contact" className="hover:text-white cursor-pointer">会社概要</Link></li>
-                      <li><Link href="/contact" className="hover:text-white cursor-pointer">採用情報</Link></li>
-                      <li><Link href="/contact" className="hover:text-white cursor-pointer">パートナー募集</Link></li>
+                      <li><a href="https://comarpy.co.jp" target="_blank" rel="noopener noreferrer" className="hover:text-white cursor-pointer">会社概要</a></li>
+                      <li><Link href="/business-contact" className="hover:text-white cursor-pointer">パートナー募集</Link></li>
                     </ul>
                   </div>
                   <div>
@@ -712,13 +711,13 @@ function SearchContent() {
                       SNSでフォロー
                     </h5>
                     <div className="flex space-x-3 text-base">
-                      <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="text-pink-500 hover:text-pink-300 transition-colors">
+                      <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-pink-500 hover:text-pink-300 transition-colors">
                         <Instagram className="w-4 h-4" />
                       </a>
                       <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-400 transition-colors">
                         <Facebook className="w-4 h-4" />
                       </a>
-                                                                   <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 transition-colors">
+                                                                   <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)" className="text-blue-400 hover:text-blue-300 transition-colors">
                         <XIcon size={16} />
                       </a>
                       <a href="#" className="text-green-500 hover:text-green-400 transition-colors">

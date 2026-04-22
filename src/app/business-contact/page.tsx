@@ -15,19 +15,23 @@ export default function BusinessContactPage() {
     message: ''
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isAgreed || isSubmitting) return;
-    
+
     setIsSubmitting(true);
-    
+
+    const form = e.currentTarget;
+    const hpInput = form.querySelector('input[name="hp_field"]') as HTMLInputElement | null;
+    const hp_field = hpInput?.value || '';
+
     try {
       const response = await fetch('/api/business-contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, hp_field }),
       });
 
       const result = await response.json();
@@ -119,6 +123,13 @@ export default function BusinessContactPage() {
 
           {/* お問い合わせフォーム */}
           <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl mx-auto">
+            {/* Honeypot */}
+            <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+              <label>HP (do not fill)
+                <input type="text" name="hp_field" tabIndex={-1} autoComplete="off" />
+              </label>
+            </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">
                 宿泊施設名/企業名 <span className="text-red-500">*</span>

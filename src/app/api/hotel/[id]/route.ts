@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getHotelById } from '@/lib/hotelService';
+import { devLog, devWarn } from '@/lib/logger';
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +9,7 @@ export async function GET(
   try {
     const { id } = await params;
     
-    console.log('ホテル詳細API呼び出し ID:', id);
+    devLog('ホテル詳細API呼び出し ID:', id);
     
     const hotel = await getHotelById(id);
     
@@ -22,7 +23,7 @@ export async function GET(
       );
     }
     
-    console.log('ホテル詳細取得成功:', hotel.name);
+    devLog('ホテル詳細取得成功:', hotel.name);
     
     return NextResponse.json({
       success: true,

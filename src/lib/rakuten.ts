@@ -1,3 +1,5 @@
+import { devLog, devWarn } from './logger';
+
 // 楽天アフィリエイトリンクでURLを包む
 // affiliateId が設定されていなければ元URLをそのまま返す
 export function withAffiliate(url: string | undefined | null): string {
@@ -43,6 +45,8 @@ export interface RakutenHotel {
   nearestStation: string;
   hotelComment: string;
   hotelMinCharge?: number; // 最低料金
+  latitude?: number;
+  longitude?: number;
 }
 
 // 楽天トラベル地区コードAPIから取得した正しい地区コード
@@ -69,7 +73,7 @@ export async function fetchAreaCodes(): Promise<any> {
     const response = await fetch(url);
     const data = await response.json();
     
-    console.log('楽天トラベル地区コードAPI レスポンス:', JSON.stringify(data, null, 2));
+    devLog('楽天トラベル地区コードAPI レスポンス:', JSON.stringify(data, null, 2));
     return data;
   } catch (error) {
     console.error('楽天トラベル地区コードAPI エラー:', error);
@@ -102,7 +106,7 @@ function getCheckoutDate(checkinDate: string): string {
 
 // 地区コード付きで段階的に試行する関数
 async function tryWithAreaCode(applicationId: string, affiliateId?: string): Promise<RakutenHotel[]> {
-  console.log('地区コード付きで段階的に試行中...');
+  devLog('地区コード付きで段階的に試行中...');
   
   // 試行する地区コードの組み合わせ（より多くの地域をカバー）
   const areaCombinations = [
@@ -127,7 +131,7 @@ async function tryWithAreaCode(applicationId: string, affiliateId?: string): Pro
 
   for (let i = 0; i < areaCombinations.length; i++) {
     const combination = areaCombinations[i];
-    console.log(`試行 ${i + 1}:`, combination);
+    devLog(`試行 ${i + 1}:`, combination);
 
     const params = new URLSearchParams({
       applicationId,
@@ -146,25 +150,25 @@ async function tryWithAreaCode(applicationId: string, affiliateId?: string): Pro
     }
 
     const url = `https://app.rakuten.co.jp/services/api/Travel/SimpleHotelSearch/20170426?${params.toString()}`;
-    console.log(`試行 ${i + 1} URL:`, url);
+    devLog(`試行 ${i + 1} URL:`, url);
 
     try {
       const response = await fetch(url);
-      console.log(`試行 ${i + 1} HTTPステータス:`, response.status);
+      devLog(`試行 ${i + 1} HTTPステータス:`, response.status);
       
       const data = await response.json();
-      console.log(`試行 ${i + 1} レスポンス概要:`, {
+      devLog(`試行 ${i + 1} レスポンス概要:`, {
         hasError: !!data.error,
         hasHotels: !!(data.hotels && Array.isArray(data.hotels)),
         hotelCount: data.hotels ? data.hotels.length : 0
       });
 
       if (data.error) {
-        console.log(`試行 ${i + 1} エラー:`, data.error, data.error_description);
+        devLog(`試行 ${i + 1} エラー:`, data.error, data.error_description);
         
         // API制限の場合はモックデータを返す
         if (data.error === 'too_many_requests') {
-          console.log('API制限中のため、モックデータを返します');
+          devLog('API制限中のため、モックデータを返します');
           return getMockHotelData();
         }
         
@@ -172,20 +176,20 @@ async function tryWithAreaCode(applicationId: string, affiliateId?: string): Pro
       }
 
       if (data.hotels && Array.isArray(data.hotels) && data.hotels.length > 0) {
-        console.log(`試行 ${i + 1} 成功! ホテル数:`, data.hotels.length);
+        devLog(`試行 ${i + 1} 成功! ホテル数:`, data.hotels.length);
         const hotels = convertHotelData(data.hotels);
-        console.log(`変換後のホテル数:`, hotels.length);
-        console.log(`サンプルホテル:`, hotels[0]?.hotelName, hotels[0]?.hotelImageUrl);
+        devLog(`変換後のホテル数:`, hotels.length);
+        devLog(`サンプルホテル:`, hotels[0]?.hotelName, hotels[0]?.hotelImageUrl);
         return hotels;
       } else {
-        console.log(`試行 ${i + 1} ホテルなし - データ構造:`, Object.keys(data));
+        devLog(`試行 ${i + 1} ホテルなし - データ構造:`, Object.keys(data));
       }
     } catch (error) {
-      console.log(`試行 ${i + 1} 例外:`, error);
+      devLog(`試行 ${i + 1} 例外:`, error);
     }
   }
 
-  console.log('すべての試行が失敗しました');
+  devLog('すべての試行が失敗しました');
   return [];
 }
 
@@ -212,12 +216,14 @@ function convertHotelData(hotels: any[]): RakutenHotel[] {
     nearestStation: hotel.hotel?.[0]?.hotelBasicInfo?.nearestStation || '',
     hotelComment: hotel.hotel?.[0]?.hotelBasicInfo?.hotelComment || '',
     hotelMinCharge: hotel.hotel?.[0]?.hotelBasicInfo?.hotelMinCharge || undefined,
+    latitude: hotel.hotel?.[0]?.hotelBasicInfo?.latitude || undefined,
+    longitude: hotel.hotel?.[0]?.hotelBasicInfo?.longitude || undefined,
   }));
 }
 
 // API制限中に使用するモックデータ
 function getMockHotelData(): RakutenHotel[] {
-  console.log('モックデータを返しています（楽天API制限中）');
+  devLog('モックデータを返しています（楽天API制限中）');
   return [
     {
       hotelNo: 'mock001',
@@ -337,36 +343,36 @@ export async function fetchRakutenHotels(
   checkinDate?: string, 
   checkoutDate?: string
 ): Promise<RakutenHotel[]> {
-  console.log('楽天API呼び出し開始:', { area, checkinDate, checkoutDate });
+  devLog('楽天API呼び出し開始:', { area, checkinDate, checkoutDate });
   
   const applicationId = process.env.RAKUTEN_APPLICATION_ID;
   const affiliateId = process.env.RAKUTEN_AFFILIATE_ID;
   
   if (!applicationId) {
-    console.log('楽天API認証情報が設定されていません。モックデータを返します。');
+    devLog('楽天API認証情報が設定されていません。モックデータを返します。');
     return filterHotelsByArea(getMockHotelData(), area);
   }
 
   try {
     // 楽天APIを試行し、失敗した場合はモックデータを返す
-    console.log('楽天API呼び出しを試行中...');
+    devLog('楽天API呼び出しを試行中...');
     
     const hotels = await tryWithAreaCode(applicationId, affiliateId);
     
     if (hotels && hotels.length > 0) {
-      console.log('楽天API成功:', hotels.length, '件');
+      devLog('楽天API成功:', hotels.length, '件');
       const filtered = filterHotelsByArea(hotels, area);
-      console.log('地域フィルタ後(楽天):', filtered.length, '件 / 指定エリア:', area);
+      devLog('地域フィルタ後(楽天):', filtered.length, '件 / 指定エリア:', area);
       return filtered;
     } else {
-      console.log('楽天APIからデータが取得できませんでした。モックデータを返します。');
+      devLog('楽天APIからデータが取得できませんでした。モックデータを返します。');
       const mockData = filterHotelsByArea(getMockHotelData(), area);
-      console.log('モックデータの最初のホテル画像:', mockData[0]?.hotelImageUrl);
+      devLog('モックデータの最初のホテル画像:', mockData[0]?.hotelImageUrl);
       return mockData;
     }
   } catch (error) {
     console.error('楽天API例外:', error);
-    console.log('エラーのためモックデータを返します');
+    devLog('エラーのためモックデータを返します');
     return filterHotelsByArea(getMockHotelData(), area);
   }
 }
@@ -399,7 +405,7 @@ export async function searchRakutenByKeyword(keyword: string): Promise<RakutenHo
     const response = await fetch(url);
     const data = await response.json();
     if (data.error) {
-      console.log('KeywordHotelSearch エラー:', data.error);
+      devLog('KeywordHotelSearch エラー:', data.error);
       return [];
     }
     if (data.hotels && Array.isArray(data.hotels)) {
@@ -418,28 +424,28 @@ export async function fetchRakutenHotelDetail(hotelNo: string): Promise<any | nu
   const affiliateId = process.env.RAKUTEN_AFFILIATE_ID;
   
   if (!applicationId) {
-    console.log('楽天API認証情報が設定されていません');
+    devLog('楽天API認証情報が設定されていません');
     return null;
   }
 
   try {
     const url = `https://app.rakuten.co.jp/services/api/Travel/HotelDetailSearch/20170426?applicationId=${applicationId}&format=json&hotelNo=${hotelNo}&responseType=large`;
     
-    console.log('楽天ホテル詳細API URL:', url);
+    devLog('楽天ホテル詳細API URL:', url);
     
     const response = await fetch(url);
     const data = await response.json();
 
     if (data.error) {
-      console.log('楽天ホテル詳細API エラー:', data.error, data.error_description);
+      devLog('楽天ホテル詳細API エラー:', data.error, data.error_description);
       return null;
     }
 
     if (data.hotels && Array.isArray(data.hotels) && data.hotels.length > 0) {
-      console.log('楽天ホテル詳細API 成功! ホテル詳細情報を取得');
+      devLog('楽天ホテル詳細API 成功! ホテル詳細情報を取得');
       return data.hotels[0].hotel[0]; // 詳細情報を返す
     } else {
-      console.log('楽天ホテル詳細API: ホテルが見つかりません');
+      devLog('楽天ホテル詳細API: ホテルが見つかりません');
       return null;
     }
   } catch (error) {

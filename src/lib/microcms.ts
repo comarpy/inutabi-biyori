@@ -1,4 +1,5 @@
 import { createClient } from 'microcms-js-sdk';
+import { devLog, devWarn } from './logger';
 
 // 環境変数が未設定でもアプリが動作するようにフォールバック
 const serviceDomain = process.env.MICROCMS_SERVICE_DOMAIN;
@@ -109,13 +110,13 @@ function normalizeInutabiRecordToDogHotelInfo(record: any): DogHotelInfo {
 
 export async function getDogHotels(): Promise<DogHotelInfo[]> {
   try {
-    console.log('=== microCMS接続テスト ===');
-    console.log('Service Domain:', serviceDomain || '(未設定)');
-    console.log('API Key:', apiKey ? '設定済み' : '未設定');
-    console.log('Endpoint:', endpoint);
+    devLog('=== microCMS接続テスト ===');
+    devLog('Service Domain:', serviceDomain || '(未設定)');
+    devLog('API Key:', apiKey ? '設定済み' : '未設定');
+    devLog('Endpoint:', endpoint);
     
     if (!microcmsAvailable || !client) {
-      console.warn('microCMSの環境変数が未設定のため、空データでフォールバックします');
+      devWarn('microCMSの環境変数が未設定のため、空データでフォールバックします');
       return [];
     }
     
@@ -127,7 +128,7 @@ export async function getDogHotels(): Promise<DogHotelInfo[]> {
     });
     
     const contents = (response as any)?.contents || [];
-    console.log('取得件数:', contents.length || 0);
+    devLog('取得件数:', contents.length || 0);
     return contents.map((rec: any) => normalizeInutabiRecordToDogHotelInfo(rec));
   } catch (error) {
     console.error('microCMSからのデータ取得エラー:', error);
@@ -155,7 +156,7 @@ export async function getDogHotelById(id: string): Promise<DogHotelInfo | null> 
 export async function searchDogHotelsByPrefecture(prefecture: string): Promise<DogHotelInfo[]> {
   try {
     if (!microcmsAvailable || !client) {
-      console.warn('microCMSの環境変数が未設定のため、都道府県検索は空データでフォールバックします');
+      devWarn('microCMSの環境変数が未設定のため、都道府県検索は空データでフォールバックします');
       return [];
     }
     const response = await client.get({
@@ -171,7 +172,7 @@ export async function searchDogHotelsByPrefecture(prefecture: string): Promise<D
       return contents.map((rec: any) => normalizeInutabiRecordToDogHotelInfo(rec));
     }
     // 期待したレスポンスでない場合はフォールバック
-    console.warn('microCMSレスポンスにcontentsが見つからないため全件取得にフォールバックします');
+    devWarn('microCMSレスポンスにcontentsが見つからないため全件取得にフォールバックします');
     const all = await getDogHotels();
     return all.filter((item) => {
       const pref = (item as any)?.prefecture || '';

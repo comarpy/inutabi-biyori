@@ -1,10 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // TypeScript 型チェックは有効（潜在バグ検出）
+  // ESLint は any 型などのスタイル警告が多いので一旦ビルド妨害しない設定
   eslint: {
     ignoreDuringBuilds: true,
-  },
-  typescript: {
-    ignoreBuildErrors: true,
   },
   images: {
     remotePatterns: [

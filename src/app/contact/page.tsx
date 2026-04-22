@@ -22,19 +22,24 @@ export default function ContactPage() {
     message: ''
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!isAgreed || isSubmitting) return;
-    
+
     setIsSubmitting(true);
-    
+
+    // Honeypot フィールドの値を取得（Bot のみが埋める）
+    const form = e.currentTarget;
+    const honeypotInput = form.querySelector('input[name="website"]') as HTMLInputElement | null;
+    const website = honeypotInput?.value || '';
+
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ ...formData, website }),
       });
 
       const result = await response.json();
@@ -136,17 +141,24 @@ export default function ContactPage() {
 
           {/* Contact Form */}
           <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl mx-auto">
+            {/* Honeypot: Bot はこの隠しフィールドを埋めがち。ユーザーは見えない */}
+            <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+              <label>Website (do not fill)
+                <input type="text" name="website" tabIndex={-1} autoComplete="off" />
+              </label>
+            </div>
+
             <div>
               <label className="block text-sm font-medium mb-1">
                 お名前 <span className="text-red-500">*</span>
               </label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
                 className="w-full h-10 border border-gray-300 rounded-md px-3 bg-gray-50 focus:outline-none focus:border-[#FF5A5F] focus:ring-2 focus:ring-[#FF5A5F]/20"
-                required 
+                required
               />
             </div>
 

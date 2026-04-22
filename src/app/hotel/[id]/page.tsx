@@ -448,6 +448,7 @@ function HotelDetailContent() {
                 <h3 className="text-lg font-bold">{hotel.name} - 写真ギャラリー</h3>
                 <button
                   onClick={() => setIsImageModalOpen(false)}
+                  aria-label="写真ギャラリーを閉じる"
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 >
                   <X className="w-5 h-5" />
@@ -469,6 +470,7 @@ function HotelDetailContent() {
                   {hotel.images.length > 1 && selectedImageIndex > 0 && (
                     <button
                       onClick={() => setSelectedImageIndex(selectedImageIndex - 1)}
+                      aria-label="前の写真"
                       className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 text-white p-2 rounded-full hover:bg-opacity-80 transition-colors"
                     >
                       <ChevronLeft className="w-5 h-5" />
@@ -479,6 +481,7 @@ function HotelDetailContent() {
                   {hotel.images.length > 1 && selectedImageIndex < hotel.images.length - 1 && (
                     <button
                       onClick={() => setSelectedImageIndex(selectedImageIndex + 1)}
+                      aria-label="次の写真"
                       className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-60 text-white p-2 rounded-full hover:bg-opacity-80 transition-colors"
                     >
                       <ChevronRight className="w-5 h-5" />
@@ -540,9 +543,8 @@ function HotelDetailContent() {
                   運営会社
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-300">
-                  <li className="cursor-pointer hover:text-white">会社概要</li>
-                  <li className="cursor-pointer hover:text-white">採用情報</li>
-                  <li className="cursor-pointer hover:text-white">パートナー募集</li>
+                  <li><a href="https://comarpy.co.jp" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-white">会社概要</a></li>
+                  <li><Link href="/business-contact" className="cursor-pointer hover:text-white">パートナー募集</Link></li>
                 </ul>
               </div>
               <div>
@@ -551,13 +553,13 @@ function HotelDetailContent() {
                   SNSでフォロー
                 </h3>
                 <div className="flex space-x-4 text-xl">
-                  <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">
+                  <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="cursor-pointer hover:text-[#FF5A5F]">
                     <Instagram className="w-6 h-6" />
                   </a>
                   <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">
                     <Facebook className="w-6 h-6" />
                   </a>
-                  <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="cursor-pointer hover:text-[#FF5A5F]">
+                  <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)" className="cursor-pointer hover:text-[#FF5A5F]">
                     <XIcon size={24} />
                   </a>
                   <div className="cursor-pointer hover:text-[#FF5A5F]">

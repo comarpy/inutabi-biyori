@@ -17,7 +17,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, email, subject, message } = await request.json();
+    const body = await request.json();
+    const { name, email, subject, message, website } = body;
+    // Honeypot: 隠しフィールド "website" に値が入っていたらBot
+    if (website) {
+      return NextResponse.json({ success: true, message: 'お問い合わせを受け付けました' });
+    }
 
     // バリデーション
     if (!name || !email || !subject || !message) {

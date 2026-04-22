@@ -24,6 +24,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const body = await request.json();
     const {
       companyName,
       contactName,
@@ -31,8 +32,12 @@ export async function POST(request: NextRequest) {
       phone,
       website,
       businessType,
-      message
-    } = await request.json();
+      message,
+      hp_field, // Honeypot
+    } = body;
+    if (hp_field) {
+      return NextResponse.json({ success: true, message: 'お問い合わせを受け付けました' });
+    }
 
     // バリデーション
     if (!companyName || !email || !message) {

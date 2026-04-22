@@ -2,6 +2,7 @@ import type { ComponentType, SVGProps } from 'react';
 import { fetchRakutenHotels, RakutenHotel, fetchRakutenHotelDetail, withAffiliate, searchRakutenByKeyword, buildRakutenSearchUrl } from './rakuten';
 import { getDogHotels, getDogHotelById, searchDogHotelsByPrefecture, DogHotelInfo } from './microcms';
 import { Dog, Car, Bath, UtensilsCrossed } from 'lucide-react';
+import { devLog, devWarn } from './logger';
 
 type LucideIcon = ComponentType<SVGProps<SVGSVGElement>>;
 
@@ -82,7 +83,7 @@ function generatePrice(reviewAverage: number, hotelMinCharge?: number): number {
 
 // ホテルIDに基づいて異なる画像セットを生成
 function generateHotelImages(hotelId: string | number): string[] {
-  console.log('generateHotelImages called with ID:', hotelId, 'type:', typeof hotelId);
+  devLog('generateHotelImages called with ID:', hotelId, 'type:', typeof hotelId);
   
   const imagePool = [
     // 犬と一緒の宿の外観
@@ -116,7 +117,7 @@ function generateHotelImages(hotelId: string | number): string[] {
     hotelId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) : 
     hotelId;
   
-  console.log('Generated seed:', seed, 'for hotelId:', hotelId);
+  devLog('Generated seed:', seed, 'for hotelId:', hotelId);
 
   // シードを使って決定論的に画像を選択
   const images: string[] = [];
@@ -177,6 +178,8 @@ interface RakutenNameMatchCache {
   planListUrl?: string;
   reviewAverage?: number;
   reviewCount?: number;
+  latitude?: number;
+  longitude?: number;
   missing: boolean;
   cachedAt: number;
 }
@@ -213,6 +216,8 @@ async function getRakutenMatchByName(hotelName: string): Promise<RakutenNameMatc
     planListUrl: best.planListUrl || best.dpPlanListUrl || undefined,
     reviewAverage: best.reviewAverage || undefined,
     reviewCount: best.reviewCount || undefined,
+    latitude: best.latitude || undefined,
+    longitude: best.longitude || undefined,
     missing: false,
     cachedAt: now,
   };
@@ -227,10 +232,10 @@ export async function searchDogFriendlyHotels(
   detailFilters?: DetailFilters
 ): Promise<Hotel[]> {
   try {
-    console.log('検索パラメータ:', { areas, checkinDate, checkoutDate, detailFilters });
+    devLog('検索パラメータ:', { areas, checkinDate, checkoutDate, detailFilters });
     
     // 並行してmicroCMSと楽天APIからデータを取得
-    console.log('=== データ取得開始 ===');
+    devLog('=== データ取得開始 ===');
 
     // 犬関連・設備の詳細条件が有効かどうか
     // 楽天データには犬サイズ等の構造化情報が無いため、これらが有効な時は楽天を混ぜない
@@ -256,12 +261,12 @@ export async function searchDogFriendlyHotels(
       allRakutenHotels.push(...r.rakuten);
     });
 
-    console.log('microCMSデータ件数:', allMicroCMSHotels.length);
+    devLog('microCMSデータ件数:', allMicroCMSHotels.length);
 
     // 楽天APIのデータをHotel形式に変換（犬/設備フィルタが未指定の場合のみ混ぜる）
     let rakutenHotelsConverted: Hotel[] = [];
     if (!hasSpecificFilter && allRakutenHotels.length > 0) {
-      console.log('楽天APIから取得したデータ件数:', allRakutenHotels.length);
+      devLog('楽天APIから取得したデータ件数:', allRakutenHotels.length);
       // microCMSで既にマッチ済みの楽天ホテルは重複を避けるため除外
       const usedRakutenNames = new Set(
         allMicroCMSHotels.map(h => h.name.toLowerCase().replace(/\s+/g, ''))
@@ -275,28 +280,30 @@ export async function searchDogFriendlyHotels(
           price: generatePrice(hotel.reviewAverage, hotel.hotelMinCharge),
           amenities: generateAmenities(),
           image: hotel.hotelImageUrl || hotel.hotelThumbnailUrl || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
-          coordinates: generateCoordinates(areas[0] || '全国', index),
+          coordinates: (hotel.latitude && hotel.longitude)
+            ? [hotel.latitude, hotel.longitude]
+            : generateCoordinates(areas[0] || '全国', index),
           reviewAverage: hotel.reviewAverage || undefined,
           reviewCount: hotel.reviewCount || undefined,
         }));
     } else if (hasSpecificFilter) {
-      console.log('詳細条件が指定されているため楽天データは除外（構造化情報が無いため）');
+      devLog('詳細条件が指定されているため楽天データは除外（構造化情報が無いため）');
     }
 
     // microCMSと楽天APIのデータを統合（二次フィルタは廃止。microCMS側で正しくフィルタ済み）
     const allHotels: Hotel[] = [...allMicroCMSHotels, ...rakutenHotelsConverted];
 
-    console.log('=== データ統合結果 ===');
-    console.log('microCMS:', allMicroCMSHotels.length, '件');
-    console.log('楽天API:', rakutenHotelsConverted.length, '件');
-    console.log('合計:', allHotels.length, '件');
+    devLog('=== データ統合結果 ===');
+    devLog('microCMS:', allMicroCMSHotels.length, '件');
+    devLog('楽天API:', rakutenHotelsConverted.length, '件');
+    devLog('合計:', allHotels.length, '件');
 
     return allHotels;
   } catch (error) {
     console.error('検索エラー:', error);
     // エラー時はmicroCMSデータのみを返す（最初のエリアのみ）
     try {
-      console.log('エラー発生時のフォールバック: microCMSデータのみ取得');
+      devLog('エラー発生時のフォールバック: microCMSデータのみ取得');
       return await getMicroCMSHotels(areas[0] || '全国', detailFilters);
     } catch (fallbackError) {
       console.error('フォールバックも失敗:', fallbackError);
@@ -322,9 +329,11 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
   let hotelImage = '/images/画像2.jpeg'; // デフォルト画像
   let reviewAverage: number | undefined;
   let reviewCount: number | undefined;
+  let latitude: number | undefined;
+  let longitude: number | undefined;
   
   if (rakutenHotels && Array.isArray(rakutenHotels)) {
-    console.log(`${microCMSHotel.hotelName}: 楽天APIホテル数 ${rakutenHotels.length}件でマッチング試行中`);
+    devLog(`${microCMSHotel.hotelName}: 楽天APIホテル数 ${rakutenHotels.length}件でマッチング試行中`);
     // ホテル名で楽天APIのデータから検索（改善されたマッチングロジック）
     const matchedRakutenHotel = rakutenHotels.find(rakutenHotel => {
       const microCMSName = microCMSHotel.hotelName.toLowerCase()
@@ -362,27 +371,28 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
     });
     
     if (matchedRakutenHotel) {
-      console.log(`楽天APIでマッチしたホテル: ${microCMSHotel.hotelName} -> ${matchedRakutenHotel.hotelName}`);
-      console.log(`楽天ホテルの画像URL: hotelImageUrl=${matchedRakutenHotel.hotelImageUrl}, hotelThumbnailUrl=${matchedRakutenHotel.hotelThumbnailUrl}`);
+      devLog(`楽天APIでマッチしたホテル: ${microCMSHotel.hotelName} -> ${matchedRakutenHotel.hotelName}`);
       rakutenPrice = generatePrice(matchedRakutenHotel.reviewAverage, matchedRakutenHotel.hotelMinCharge);
       if (matchedRakutenHotel.reviewAverage) reviewAverage = matchedRakutenHotel.reviewAverage;
       if (matchedRakutenHotel.reviewCount) reviewCount = matchedRakutenHotel.reviewCount;
+      if (matchedRakutenHotel.latitude) latitude = matchedRakutenHotel.latitude;
+      if (matchedRakutenHotel.longitude) longitude = matchedRakutenHotel.longitude;
       
       // 楽天APIから画像を取得（優先順位: hotelImageUrl > hotelThumbnailUrl > roomImageUrl > roomThumbnailUrl）
       if (matchedRakutenHotel.hotelImageUrl) {
         hotelImage = matchedRakutenHotel.hotelImageUrl;
-        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelImageUrl) -> ${hotelImage}`);
+        devLog(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelImageUrl) -> ${hotelImage}`);
       } else if (matchedRakutenHotel.hotelThumbnailUrl) {
         hotelImage = matchedRakutenHotel.hotelThumbnailUrl;
-        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelThumbnailUrl) -> ${hotelImage}`);
+        devLog(`${microCMSHotel.hotelName}: 楽天API画像を使用 (hotelThumbnailUrl) -> ${hotelImage}`);
       } else if (matchedRakutenHotel.roomImageUrl) {
         hotelImage = matchedRakutenHotel.roomImageUrl;
-        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomImageUrl) -> ${hotelImage}`);
+        devLog(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomImageUrl) -> ${hotelImage}`);
       } else if (matchedRakutenHotel.roomThumbnailUrl) {
         hotelImage = matchedRakutenHotel.roomThumbnailUrl;
-        console.log(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomThumbnailUrl) -> ${hotelImage}`);
+        devLog(`${microCMSHotel.hotelName}: 楽天API画像を使用 (roomThumbnailUrl) -> ${hotelImage}`);
       } else {
-        console.log(`${microCMSHotel.hotelName}: 楽天APIに画像がありません、デフォルト画像を使用`);
+        devLog(`${microCMSHotel.hotelName}: 楽天APIに画像がありません、デフォルト画像を使用`);
       }
     } else {
       // エリア内でマッチなし → キーワード検索キャッシュを確認
@@ -391,7 +401,8 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
         hotelImage = kw.image;
         if (kw.reviewAverage && !reviewAverage) reviewAverage = kw.reviewAverage;
         if (kw.reviewCount && !reviewCount) reviewCount = kw.reviewCount;
-        console.log(`${microCMSHotel.hotelName}: キャッシュから楽天画像を使用`);
+        if (kw.latitude && !latitude) latitude = kw.latitude;
+        if (kw.longitude && !longitude) longitude = kw.longitude;
       } else {
         // キャッシュにない → 同エリア楽天画像プールからフォールバック
         const imagePoolFromRakuten: string[] = [];
@@ -414,7 +425,7 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
   // 楽天APIから価格が取得できた場合はそれを使用、できなかった場合はmicroCMSの料金計算
   if (rakutenPrice) {
     price = rakutenPrice;
-    console.log(`${microCMSHotel.hotelName}: 楽天API価格 ¥${price.toLocaleString()}`);
+    devLog(`${microCMSHotel.hotelName}: 楽天API価格 ¥${price.toLocaleString()}`);
   } else {
     // microCMSの料金計算（従来通り）
     const dogFeeText = microCMSHotel.smallDogFee || microCMSHotel.mediumDogFee || microCMSHotel.largeDogFee;
@@ -426,8 +437,13 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
         price += parseInt(priceMatch[1]);
       }
     }
-    console.log(`${microCMSHotel.hotelName}: microCMS計算価格 ¥${price.toLocaleString()}`);
+    devLog(`${microCMSHotel.hotelName}: microCMS計算価格 ¥${price.toLocaleString()}`);
   }
+
+  // 座標: 楽天で取得できていれば実座標、なければ生成（都道府県ベースの近似）
+  const coordinates: [number, number] = (latitude && longitude)
+    ? [latitude, longitude]
+    : generateCoordinates(microCMSHotel.prefecture, index);
 
   return {
     id: microCMSHotel.id,
@@ -435,8 +451,8 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
     location: `${microCMSHotel.prefecture} ${microCMSHotel.address}`,
     price: price,
     amenities: amenities,
-    image: hotelImage, // 楽天API画像またはデフォルト画像
-    coordinates: generateCoordinates(microCMSHotel.prefecture, index),
+    image: hotelImage,
+    coordinates,
     reviewAverage,
     reviewCount,
     smallDog: microCMSHotel.smallDog,
@@ -452,7 +468,7 @@ export async function getMicroCMSHotels(
   preFetchedRakutenHotels?: RakutenHotel[]
 ): Promise<Hotel[]> {
   try {
-    console.log('microCMSからデータを取得中...');
+    devLog('microCMSからデータを取得中...');
     
     let microCMSHotels: DogHotelInfo[];
     
@@ -465,14 +481,14 @@ export async function getMicroCMSHotels(
         (h.prefecture || '').includes(area) || (h.address || '').includes(area)
       );
       if (before !== microCMSHotels.length) {
-        console.log(`エリアフィルタ（ローカル補正）: ${before} -> ${microCMSHotels.length}件`);
+        devLog(`エリアフィルタ（ローカル補正）: ${before} -> ${microCMSHotels.length}件`);
       }
     } else {
       // 全てのデータを取得
       microCMSHotels = await getDogHotels();
     }
 
-    console.log('microCMSから取得したデータ件数:', microCMSHotels.length);
+    devLog('microCMSから取得したデータ件数:', microCMSHotels.length);
     
     // 詳細条件でフィルタリング
     if (detailFilters) {
@@ -498,10 +514,10 @@ export async function getMicroCMSHotels(
     // 楽天APIから価格データを取得（価格マッチング用）
     let rakutenHotels: RakutenHotel[] | undefined = preFetchedRakutenHotels;
     if (!rakutenHotels) {
-      console.log('楽天APIから価格データを取得中...');
+      devLog('楽天APIから価格データを取得中...');
       rakutenHotels = await fetchRakutenHotels(area || '全国');
     } else {
-      console.log('事前取得済みの楽天データを利用:', rakutenHotels.length, '件');
+      devLog('事前取得済みの楽天データを利用:', rakutenHotels.length, '件');
     }
     
     // 楽天マッチング用にキーワード検索キャッシュを事前投入
@@ -517,7 +533,7 @@ export async function getMicroCMSHotels(
     const prefetchAsync = microCMSHotels.slice(30).filter(needsKeywordLookup);
 
     if (prefetchSync.length > 0) {
-      console.log(`キーワード検索プリフェッチ(同期): ${prefetchSync.length} 件`);
+      devLog(`キーワード検索プリフェッチ(同期): ${prefetchSync.length} 件`);
       const budget = 7000;
       const start = Date.now();
       await mapWithConcurrency(
@@ -533,7 +549,7 @@ export async function getMicroCMSHotels(
 
     // 残りは非同期。次回以降の検索でキャッシュヒット
     if (prefetchAsync.length > 0) {
-      console.log(`キーワード検索プリフェッチ(非同期): ${prefetchAsync.length} 件をバックグラウンドで取得`);
+      devLog(`キーワード検索プリフェッチ(非同期): ${prefetchAsync.length} 件をバックグラウンドで取得`);
       mapWithConcurrency(
         prefetchAsync,
         async (h) => {
@@ -548,7 +564,7 @@ export async function getMicroCMSHotels(
       microCMSHotels.map((hotel, index) => convertMicroCMSToHotel(hotel, index, rakutenHotels))
     );
 
-    console.log('microCMSフィルタ後の件数:', hotels.length);
+    devLog('microCMSフィルタ後の件数:', hotels.length);
     return hotels;
     
   } catch (error) {
@@ -586,7 +602,7 @@ export interface HotelDetail extends Hotel {
 // id は microCMS レコードID or "r_<hotelNo>"（楽天）
 export async function getHotelById(id: string): Promise<HotelDetail | null> {
   try {
-    console.log('ホテル詳細取得 ID:', id);
+    devLog('ホテル詳細取得 ID:', id);
 
     // 楽天IDの場合
     if (id.startsWith('r_')) {
@@ -594,7 +610,7 @@ export async function getHotelById(id: string): Promise<HotelDetail | null> {
       // 楽天詳細APIを試行
       const rakutenHotelDetail = await fetchRakutenHotelDetail(hotelNo);
       if (rakutenHotelDetail) {
-        console.log('楽天詳細APIでホテルが見つかりました:', rakutenHotelDetail.hotelBasicInfo?.hotelName);
+        devLog('楽天詳細APIでホテルが見つかりました:', rakutenHotelDetail.hotelBasicInfo?.hotelName);
         return convertRakutenDetailToHotelDetail(rakutenHotelDetail, id);
       }
       // 詳細APIで見つからない場合は検索APIから
@@ -602,18 +618,18 @@ export async function getHotelById(id: string): Promise<HotelDetail | null> {
       if (rakutenHotels && Array.isArray(rakutenHotels)) {
         const rakutenHotel = rakutenHotels.find(h => h.hotelNo === hotelNo);
         if (rakutenHotel) {
-          console.log('楽天検索APIでホテルが見つかりました:', rakutenHotel.hotelName);
+          devLog('楽天検索APIでホテルが見つかりました:', rakutenHotel.hotelName);
           return convertRakutenToHotelDetail(rakutenHotel, id);
         }
       }
-      console.log('楽天ホテルが見つかりませんでした ID:', id);
+      devLog('楽天ホテルが見つかりませんでした ID:', id);
       return null;
     }
 
     // microCMSから単一レコード取得（効率的）
     const direct = await getDogHotelById(id);
     if (direct) {
-      console.log('microCMSでホテルが見つかりました:', direct.hotelName);
+      devLog('microCMSでホテルが見つかりました:', direct.hotelName);
       return await convertMicroCMSToHotelDetail(direct);
     }
 
@@ -621,11 +637,11 @@ export async function getHotelById(id: string): Promise<HotelDetail | null> {
     const microCMSHotels = await getDogHotels();
     const microCMSHotel = microCMSHotels.find(h => h.id === id);
     if (microCMSHotel) {
-      console.log('microCMSでホテルが見つかりました(全件フォールバック):', microCMSHotel.hotelName);
+      devLog('microCMSでホテルが見つかりました(全件フォールバック):', microCMSHotel.hotelName);
       return await convertMicroCMSToHotelDetail(microCMSHotel);
     }
 
-    console.log('ホテルが見つかりませんでした ID:', id);
+    devLog('ホテルが見つかりませんでした ID:', id);
     return null;
 
   } catch (error) {
@@ -690,7 +706,7 @@ async function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): Promis
         if (images.length >= 5) break;
       }
       if (!rakutenUrl) rakutenUrl = withAffiliate(best.planListUrl || best.dpPlanListUrl) || undefined;
-      console.log(`${microCMSHotel.hotelName}: キーワード検索で楽天データを取得`);
+      devLog(`${microCMSHotel.hotelName}: キーワード検索で楽天データを取得`);
     }
   }
 
