@@ -36,11 +36,19 @@ export async function GET(request: NextRequest) {
 
     devLog('検索結果:', hotels.length, '件');
 
-    return NextResponse.json({
-      success: true,
-      hotels,
-      count: hotels.length,
-    });
+    // 同一クエリは CDN でキャッシュ（5分新鮮、1時間までstale配信）
+    return NextResponse.json(
+      {
+        success: true,
+        hotels,
+        count: hotels.length,
+      },
+      {
+        headers: {
+          'Cache-Control': 's-maxage=300, stale-while-revalidate=3600',
+        },
+      }
+    );
   } catch (error) {
     console.error('検索API エラー:', error);
     return NextResponse.json(

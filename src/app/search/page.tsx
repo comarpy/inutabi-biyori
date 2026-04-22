@@ -628,10 +628,10 @@ function SearchContent() {
                             </div>
                             <div className="flex justify-between items-center">
                               <span className="font-bold text-[#FF5A5F]">¥{hotel.price.toLocaleString()}〜</span>
-                              <button className="bg-red-500 text-white text-sm px-3 py-1 rounded-full hover:bg-red-600 transition-colors flex items-center">
+                              <span className="bg-red-500 text-white text-sm px-3 py-1 rounded-full group-hover:bg-red-600 transition-colors flex items-center">
                                 <Heart className="w-3 h-3 mr-1" />
                                 詳細
-                              </button>
+                              </span>
                             </div>
                           </div>
                         </div>

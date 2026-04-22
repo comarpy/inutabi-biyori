@@ -520,42 +520,24 @@ export async function getMicroCMSHotels(
       devLog('事前取得済みの楽天データを利用:', rakutenHotels.length, '件');
     }
     
-    // 楽天マッチング用にキーワード検索キャッシュを事前投入
-    // 同期: 先頭30件（レスポンスブロック、予算7秒）。非同期: 残り（fire-and-forget、次回以降に反映）
+    // キャッシュ投入は全件 非同期 (fire-and-forget) で実施。
+    // レスポンスはブロックせず、初回検索は Unsplash フォールバック、
+    // 2回目以降の検索でキャッシュヒットして楽天画像になる。
     const rakutenMatchedNames = new Set(
       (rakutenHotels || []).map(r => r.hotelName.toLowerCase().replace(/\s+/g, ''))
     );
-    const needsKeywordLookup = (h: DogHotelInfo) => {
+    const toEnrich = microCMSHotels.filter(h => {
       const n = h.hotelName.toLowerCase().replace(/\s+/g, '');
       return !rakutenMatchedNames.has(n) && !rakutenMatchCache.has(h.hotelName);
-    };
-    const prefetchSync = microCMSHotels.slice(0, 30).filter(needsKeywordLookup);
-    const prefetchAsync = microCMSHotels.slice(30).filter(needsKeywordLookup);
-
-    if (prefetchSync.length > 0) {
-      devLog(`キーワード検索プリフェッチ(同期): ${prefetchSync.length} 件`);
-      const budget = 7000;
-      const start = Date.now();
-      await mapWithConcurrency(
-        prefetchSync,
-        async (h) => {
-          const remaining = budget - (Date.now() - start);
-          if (remaining <= 200) return;
-          await withTimeout(getRakutenMatchByName(h.hotelName), Math.min(1500, remaining), null);
-        },
-        5
-      );
-    }
-
-    // 残りは非同期。次回以降の検索でキャッシュヒット
-    if (prefetchAsync.length > 0) {
-      devLog(`キーワード検索プリフェッチ(非同期): ${prefetchAsync.length} 件をバックグラウンドで取得`);
+    });
+    if (toEnrich.length > 0) {
+      devLog(`キーワード検索プリフェッチ(非同期): ${toEnrich.length} 件をバックグラウンド取得`);
       mapWithConcurrency(
-        prefetchAsync,
+        toEnrich,
         async (h) => {
           await withTimeout(getRakutenMatchByName(h.hotelName), 2000, null);
         },
-        3
+        5
       ).catch(() => {});
     }
 
