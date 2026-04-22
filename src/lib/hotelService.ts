@@ -44,23 +44,75 @@ export interface EnrichedHotel {
   hotelComment: string;
 }
 
-// 座標を生成する関数（地域に基づく）
-function generateCoordinates(area: string, index: number): [number, number] {
-  const baseCoordinates: { [key: string]: [number, number] } = {
-    '北海道': [43.0642, 141.3469],
-    '関東': [35.6762, 139.6503],
-    '関西': [34.6937, 135.5023],
-    '東北': [38.2682, 140.8694],
-    '中部': [36.2048, 138.2529],
-    '中国': [34.3853, 132.4553],
-    '四国': [33.7461, 133.1053],
-    '九州': [33.2382, 130.2429],
-    '全国': [35.6762, 139.6503], // デフォルトは東京
-  };
-  
-  const base = baseCoordinates[area] || baseCoordinates['全国'];
-  // 少しずつ座標をずらして重複を避ける
-  return [base[0] + (index * 0.01), base[1] + (index * 0.01)];
+// 都道府県の概ねの中心座標
+const PREFECTURE_COORDS: Record<string, [number, number]> = {
+  '北海道': [43.2203, 142.8635],
+  '青森県': [40.8243, 140.7400],
+  '岩手県': [39.7036, 141.1527],
+  '宮城県': [38.2688, 140.8721],
+  '秋田県': [39.7186, 140.1024],
+  '山形県': [38.2404, 140.3633],
+  '福島県': [37.7500, 140.4676],
+  '茨城県': [36.3418, 140.4468],
+  '栃木県': [36.5657, 139.8836],
+  '群馬県': [36.3911, 139.0608],
+  '埼玉県': [35.8569, 139.6489],
+  '千葉県': [35.6074, 140.1233],
+  '東京都': [35.6895, 139.6917],
+  '神奈川県': [35.4478, 139.6425],
+  '新潟県': [37.9022, 139.0233],
+  '富山県': [36.6953, 137.2113],
+  '石川県': [36.5946, 136.6256],
+  '福井県': [36.0652, 136.2216],
+  '山梨県': [35.6635, 138.5684],
+  '長野県': [36.2048, 138.0949],
+  '岐阜県': [35.3912, 136.7223],
+  '静岡県': [34.9769, 138.3831],
+  '愛知県': [35.1802, 136.9066],
+  '三重県': [34.7302, 136.5087],
+  '滋賀県': [35.0045, 135.8686],
+  '京都府': [35.0211, 135.7556],
+  '大阪府': [34.6862, 135.5198],
+  '兵庫県': [34.6913, 135.1830],
+  '奈良県': [34.6850, 135.8329],
+  '和歌山県': [34.2260, 135.1675],
+  '鳥取県': [35.5038, 134.2381],
+  '島根県': [35.4724, 133.0505],
+  '岡山県': [34.6617, 133.9350],
+  '広島県': [34.3963, 132.4596],
+  '山口県': [34.1859, 131.4706],
+  '徳島県': [34.0658, 134.5593],
+  '香川県': [34.3401, 134.0434],
+  '愛媛県': [33.8416, 132.7657],
+  '高知県': [33.5597, 133.5311],
+  '福岡県': [33.6064, 130.4181],
+  '佐賀県': [33.2494, 130.2989],
+  '長崎県': [32.7448, 129.8737],
+  '熊本県': [32.7898, 130.7417],
+  '大分県': [33.2382, 131.6126],
+  '宮崎県': [31.9111, 131.4239],
+  '鹿児島県': [31.5602, 130.5581],
+  '沖縄県': [26.2125, 127.6809],
+  '全国': [36.2048, 138.2529],
+};
+
+// 座標を生成する関数（都道府県 + ホテル名ハッシュで決定論的に散らす）
+// 楽天から実座標が取れないホテルのフォールバック
+function generateCoordinates(prefecture: string, seed: string | number): [number, number] {
+  // prefecture が "北海道 札幌市..." のように住所が含まれる場合に備え、前方マッチで都道府県抽出
+  let key = prefecture;
+  if (!PREFECTURE_COORDS[key]) {
+    const hit = Object.keys(PREFECTURE_COORDS).find((p) => prefecture?.startsWith(p));
+    if (hit) key = hit;
+  }
+  const base = PREFECTURE_COORDS[key] || PREFECTURE_COORDS['全国'];
+
+  const seedStr = String(seed);
+  const hash = seedStr.split('').reduce((acc, ch) => acc + ch.charCodeAt(0) * 31, 0);
+  // 緯度 ±0.25度（約 25km）、経度 ±0.35度 でバラけさせる。同県内に散らばる範囲。
+  const latOffset = ((hash * 7) % 10000 - 5000) / 10000 * 0.5;
+  const lngOffset = ((hash * 13) % 10000 - 5000) / 10000 * 0.7;
+  return [base[0] + latOffset, base[1] + lngOffset];
 }
 
 // アメニティを生成する関数（楽天API経由の汎用ホテル用のデフォルト表示）
@@ -186,6 +238,27 @@ interface RakutenNameMatchCache {
 const rakutenMatchCache = new Map<string, RakutenNameMatchCache>();
 const MATCH_CACHE_TTL = 24 * 60 * 60 * 1000;
 
+// エリア単位の楽天ホテル一覧キャッシュ（30分）
+// サーバレスインスタンス単位だが、CDN キャッシュと併用すれば実質的に十分速い
+interface RakutenAreaCache {
+  hotels: RakutenHotel[];
+  cachedAt: number;
+}
+const rakutenAreaCache = new Map<string, RakutenAreaCache>();
+const AREA_CACHE_TTL = 30 * 60 * 1000;
+
+async function getRakutenForArea(area: string): Promise<RakutenHotel[]> {
+  const now = Date.now();
+  const cached = rakutenAreaCache.get(area);
+  if (cached && (now - cached.cachedAt) < AREA_CACHE_TTL) {
+    return cached.hotels;
+  }
+  // 短めタイムアウト(800ms)。失敗時は空配列でフォールバック。
+  const hotels = await withTimeout(fetchRakutenHotels(area), 800, [] as RakutenHotel[]);
+  rakutenAreaCache.set(area, { hotels, cachedAt: now });
+  return hotels;
+}
+
 // 並列度を制限したマップ
 async function mapWithConcurrency<T>(items: T[], fn: (item: T) => Promise<void>, concurrency: number): Promise<void> {
   let cursor = 0;
@@ -241,12 +314,13 @@ export async function searchDogFriendlyHotels(
     // 楽天データには犬サイズ等の構造化情報が無いため、これらが有効な時は楽天を混ぜない
     const hasSpecificFilter = !!detailFilters && Object.values(detailFilters).some(Boolean);
 
-    // 各エリアを完全並列化。楽天APIは同期パスでは使わず、microCMSのみで即応答。
-    // 画像マッチングはキーワード検索キャッシュ（非同期プリフェッチ）に任せる。
+    // 各エリアを並列化。楽天データはエリアキャッシュから取得（初回のみ 800ms まで待つ、以降キャッシュ）
+    // 画像・座標のマッチングに使う。
     const perAreaResults = await Promise.all(
       areas.map(async (area) => {
-        const micro = await getMicroCMSHotels(area, detailFilters, []);
-        return { micro, rakuten: [] as RakutenHotel[] };
+        const rakuten = await getRakutenForArea(area);
+        const micro = await getMicroCMSHotels(area, detailFilters, rakuten);
+        return { micro, rakuten };
       })
     );
 
@@ -278,7 +352,7 @@ export async function searchDogFriendlyHotels(
           image: hotel.hotelImageUrl || hotel.hotelThumbnailUrl || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&auto=format&fit=crop&w=300&q=80',
           coordinates: (hotel.latitude && hotel.longitude)
             ? [hotel.latitude, hotel.longitude]
-            : generateCoordinates(areas[0] || '全国', index),
+            : generateCoordinates(hotel.address1 || areas[0] || '全国', hotel.hotelNo || `r_${index}`),
           reviewAverage: hotel.reviewAverage || undefined,
           reviewCount: hotel.reviewCount || undefined,
         }));
@@ -400,7 +474,7 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
         if (kw.latitude && !latitude) latitude = kw.latitude;
         if (kw.longitude && !longitude) longitude = kw.longitude;
       } else {
-        // キャッシュにない → 同エリア楽天画像プールからフォールバック
+        // キャッシュにない → 同エリア楽天画像プール or 汎用Unsplashプールから決定論的に選択
         const imagePoolFromRakuten: string[] = [];
         rakutenHotels.forEach(r => {
           if (r.hotelImageUrl) imagePoolFromRakuten.push(r.hotelImageUrl);
@@ -408,12 +482,16 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
           if (r.hotelThumbnailUrl) imagePoolFromRakuten.push(r.hotelThumbnailUrl);
           if (r.roomThumbnailUrl) imagePoolFromRakuten.push(r.roomThumbnailUrl);
         });
-        if (imagePoolFromRakuten.length > 0) {
-          const seedStr = `${microCMSHotel.hotelName}|${microCMSHotel.address}|${microCMSHotel.id}`;
-          const seed = seedStr.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-          const pick = imagePoolFromRakuten[seed % imagePoolFromRakuten.length];
-          if (pick) hotelImage = pick;
-        }
+        const pool = imagePoolFromRakuten.length > 0
+          ? imagePoolFromRakuten
+          : generateHotelImages(microCMSHotel.id); // Unsplash プール（1枚目はローカル画像）
+        const seedStr = `${microCMSHotel.hotelName}|${microCMSHotel.address}|${microCMSHotel.id}`;
+        const seed = seedStr.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+        // プールの2枚目以降（Unsplashの場合）から選んで、ローカル画像連発を避ける
+        const offset = imagePoolFromRakuten.length > 0 ? 0 : 1;
+        const idx = offset + (seed % Math.max(1, pool.length - offset));
+        const pick = pool[idx] || pool[0];
+        if (pick) hotelImage = pick;
       }
     }
   }
@@ -436,10 +514,10 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
     devLog(`${microCMSHotel.hotelName}: microCMS計算価格 ¥${price.toLocaleString()}`);
   }
 
-  // 座標: 楽天で取得できていれば実座標、なければ生成（都道府県ベースの近似）
+  // 座標: 楽天で取得できていれば実座標、なければ都道府県+ホテルID で散らす
   const coordinates: [number, number] = (latitude && longitude)
     ? [latitude, longitude]
-    : generateCoordinates(microCMSHotel.prefecture, index);
+    : generateCoordinates(microCMSHotel.prefecture, microCMSHotel.id);
 
   return {
     id: microCMSHotel.id,
@@ -752,11 +830,13 @@ function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel, requestedId?: s
     price: generatePrice(rakutenHotel.reviewAverage, rakutenHotel.hotelMinCharge),
     amenities: generateAmenities(),
     image: rakutenHotel.hotelImageUrl || '/images/画像2.jpeg',
-    coordinates: generateCoordinates('全国', 0),
+    coordinates: (rakutenHotel.latitude && rakutenHotel.longitude)
+      ? [rakutenHotel.latitude, rakutenHotel.longitude]
+      : generateCoordinates(rakutenHotel.address1 || '全国', rakutenHotel.hotelNo || '0'),
     reviewAverage: rakutenHotel.reviewAverage || undefined,
     reviewCount: rakutenHotel.reviewCount || undefined,
   };
-  
+
   // 楽天APIから取得できる複数の画像URLを配列として設定
   const images: string[] = [];
   
@@ -843,7 +923,9 @@ function convertRakutenDetailToHotelDetail(rakutenDetail: any, requestedId?: str
     price: generatePrice(basicInfo.reviewAverage || 4.0, basicInfo.hotelMinCharge),
     amenities: generateAmenities(),
     image: basicInfo.hotelImageUrl || '/images/画像2.jpeg',
-    coordinates: generateCoordinates('全国', 0),
+    coordinates: (basicInfo.latitude && basicInfo.longitude)
+      ? [basicInfo.latitude / 3600, basicInfo.longitude / 3600] // 念のため生のAPI値が来ても対応
+      : generateCoordinates(basicInfo.address1 || '全国', basicInfo.hotelNo || '0'),
     reviewAverage: basicInfo.reviewAverage || undefined,
     reviewCount: basicInfo.reviewCount || undefined,
   };
