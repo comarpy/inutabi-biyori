@@ -582,9 +582,9 @@ export interface HotelDetail extends Hotel {
   payment?: string;
   phone?: string;
   images: string[];
+  // icon はクライアント側で名前から解決する（Server → Client で関数を渡せないため）
   dogFeatures: Array<{
     name: string;
-    icon: LucideIcon;
     available: boolean;
   }>;
   petInfo: {
@@ -734,16 +734,16 @@ async function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): Promis
     phone: microCMSHotel.phoneNumber || '電話番号なし',
     images,
     dogFeatures: [
-      { name: '小型犬OK', icon: Dog, available: microCMSHotel.smallDog },
-      { name: '中型犬OK', icon: Dog, available: microCMSHotel.mediumDog },
-      { name: '大型犬OK', icon: Dog, available: microCMSHotel.largeDog },
-      { name: '多頭OK', icon: Dog, available: microCMSHotel.multipleDogs },
-      { name: 'ドッグラン', icon: Dog, available: microCMSHotel.dogRunOnSite },
-      { name: 'お部屋にドッグラン', icon: Dog, available: microCMSHotel.roomDogRun },
-      { name: '一緒にごはんOK', icon: UtensilsCrossed, available: microCMSHotel.diningWithDog },
-      { name: 'ドッグメニュー', icon: UtensilsCrossed, available: microCMSHotel.dogMenu },
-      { name: '温泉', icon: Bath, available: microCMSHotel.hotSpring },
-      { name: '駐車場', icon: Car, available: microCMSHotel.parking },
+      { name: '小型犬OK', available: microCMSHotel.smallDog },
+      { name: '中型犬OK', available: microCMSHotel.mediumDog },
+      { name: '大型犬OK', available: microCMSHotel.largeDog },
+      { name: '多頭OK', available: microCMSHotel.multipleDogs },
+      { name: 'ドッグラン', available: microCMSHotel.dogRunOnSite },
+      { name: 'お部屋にドッグラン', available: microCMSHotel.roomDogRun },
+      { name: '一緒にごはんOK', available: microCMSHotel.diningWithDog },
+      { name: 'ドッグメニュー', available: microCMSHotel.dogMenu },
+      { name: '温泉', available: microCMSHotel.hotSpring },
+      { name: '駐車場', available: microCMSHotel.parking },
     ],
     petInfo: {
       sizes: [
@@ -833,12 +833,12 @@ function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel, requestedId?: s
     phone: rakutenHotel.telephoneNo || '電話番号なし',
     images: images, // 複数の画像URLを配列として設定
     dogFeatures: [
-      { name: '小型犬OK', icon: Dog, available: true },
-      { name: '中型犬OK', icon: Dog, available: true },
-      { name: '大型犬OK', icon: Dog, available: true },
-      { name: 'ドッグラン', icon: Dog, available: true },
-      { name: '駐車場', icon: Car, available: true },
-      { name: '温泉', icon: Bath, available: true },
+      { name: '小型犬OK', available: true },
+      { name: '中型犬OK', available: true },
+      { name: '大型犬OK', available: true },
+      { name: 'ドッグラン', available: true },
+      { name: '駐車場', available: true },
+      { name: '温泉', available: true },
     ],
     petInfo: {
       sizes: '全サイズOK（小型犬・中型犬・大型犬）',
@@ -945,12 +945,12 @@ function convertRakutenDetailToHotelDetail(rakutenDetail: any, requestedId?: str
     phone: basicInfo.telephoneNo || detailInfo?.reserveTelephoneNo || '電話番号なし',
     images: images, // 楽天詳細APIから取得した複数の画像URLを配列として設定
     dogFeatures: [
-      { name: 'ペット宿泊可', icon: Dog, available: hasPetFacility },
-      { name: '小型犬OK', icon: Dog, available: hasPetFacility },
-      { name: '中型犬OK', icon: Dog, available: hasPetFacility },
-      { name: '大型犬OK', icon: Dog, available: hasPetFacility },
-      { name: '駐車場', icon: Car, available: hasParking },
-      { name: '温泉', icon: Bath, available: hasHotSpring },
+      { name: 'ペット宿泊可', available: hasPetFacility },
+      { name: '小型犬OK', available: hasPetFacility },
+      { name: '中型犬OK', available: hasPetFacility },
+      { name: '大型犬OK', available: hasPetFacility },
+      { name: '駐車場', available: hasParking },
+      { name: '温泉', available: hasHotSpring },
     ],
     petInfo: {
       sizes: hasPetFacility ? '要確認（ホテルにお問い合わせください）' : 'ペット宿泊については要確認',
