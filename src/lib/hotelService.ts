@@ -241,16 +241,12 @@ export async function searchDogFriendlyHotels(
     // 楽天データには犬サイズ等の構造化情報が無いため、これらが有効な時は楽天を混ぜない
     const hasSpecificFilter = !!detailFilters && Object.values(detailFilters).some(Boolean);
 
-    // 各エリアを完全並列化し、楽天はタイムアウト付き（1.5s）でフォールバック
+    // 各エリアを完全並列化。楽天APIは同期パスでは使わず、microCMSのみで即応答。
+    // 画像マッチングはキーワード検索キャッシュ（非同期プリフェッチ）に任せる。
     const perAreaResults = await Promise.all(
       areas.map(async (area) => {
-        const rakuten = await withTimeout(
-          fetchRakutenHotels(area, checkinDate, checkoutDate),
-          1500,
-          []
-        );
-        const micro = await getMicroCMSHotels(area, detailFilters, rakuten);
-        return { micro, rakuten };
+        const micro = await getMicroCMSHotels(area, detailFilters, []);
+        return { micro, rakuten: [] as RakutenHotel[] };
       })
     );
 
