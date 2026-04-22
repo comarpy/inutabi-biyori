@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Dog, AlertTriangle, RefreshCw, Home, Heart, Info, Building, Instagram, Facebook, MessageCircle } from 'lucide-react';
 import { XIcon } from '../components/XIcon';
 
@@ -88,11 +89,13 @@ export default function GlobalError({
                 しばらく経ってから再度アクセスしていただくか、以下のボタンからトップページにお戻りください。
               </p>
               
-              <div className="mb-8">
-                <img 
-                  src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" 
-                  alt="困った表情の可愛い犬" 
-                  className="mx-auto rounded-lg shadow-md max-h-60 object-cover"
+              <div className="mb-8 mx-auto rounded-lg shadow-md max-h-60 overflow-hidden" style={{ maxWidth: 800 }}>
+                <Image
+                  src="https://images.unsplash.com/photo-1548199973-03cce0bbc87b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
+                  alt="困った表情の可愛い犬"
+                  width={800}
+                  height={600}
+                  className="w-full h-auto max-h-60 object-cover"
                 />
               </div>
               

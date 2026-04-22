@@ -2,9 +2,10 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { MapPin, House, Waves, Dog, Bone, Utensils, Car, Heart, Play, ParkingCircle, ArrowLeft, ArrowRight, Map, SortAsc, Wifi, Camera, Laptop, Battery, ShoppingBag, Tv, GlassWater, TreePine, List, AlertCircle, Instagram, Facebook, MessageCircle, ChevronDown } from 'lucide-react';
+import { MapPin, House, Waves, Dog, Bone, Car, Heart, ParkingCircle, ArrowLeft, ArrowRight, Map, SortAsc, Wifi, Camera, Laptop, Battery, ShoppingBag, Tv, TreePine, List, AlertCircle, Instagram, Facebook, MessageCircle, ChevronDown, Settings2, Star } from 'lucide-react';
 import { XIcon } from '../../components/XIcon';
 import Link from 'next/link';
+import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import { Hotel } from '../../lib/hotelService';
 import type { DetailFilters } from '@/lib/hotelService';
@@ -28,7 +29,6 @@ function SearchContent() {
   
   // エリア階層データ構造（楽天トラベル方式）
   const areaData = {
-    '全国': ['全国'],
     '北海道': ['北海道'],
     '東北': ['青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県'],
     '北関東': ['茨城県', '栃木県', '群馬県'],
@@ -47,59 +47,23 @@ function SearchContent() {
   // 詳細条件の状態
   const [detailFilters, setDetailFilters] = useState({
     dogRun: searchParams.get('dogRun') === 'true',
+    smallDog: searchParams.get('smallDog') === 'true',
+    mediumDog: searchParams.get('mediumDog') === 'true',
     largeDog: searchParams.get('largeDog') === 'true',
-    roomDining: searchParams.get('roomDining') === 'true',
     hotSpring: searchParams.get('hotSpring') === 'true',
     parking: searchParams.get('parking') === 'true',
     multipleDogs: searchParams.get('multipleDogs') === 'true',
     petAmenities: searchParams.get('petAmenities') === 'true',
     dogMenu: searchParams.get('dogMenu') === 'true',
-    privateBath: searchParams.get('privateBath') === 'true',
     roomDogRun: searchParams.get('roomDogRun') === 'true',
-    grooming: searchParams.get('grooming') === 'true',
-    leashFree: searchParams.get('leashFree') === 'true'
+    grooming: searchParams.get('grooming') === 'true'
   });
   
   const [searchFilters, setSearchFilters] = useState({
-    areas: searchParams.get('areas')?.split(',') || ['全国'],
+    areas: searchParams.get('areas')?.split(',') || [],
     checkIn: searchParams.get('checkIn') || '',
     checkOut: searchParams.get('checkOut') || ''
   });
-
-  // エリア選択ドロップダウン
-  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
-
-  // エリア選択の処理（ホーム画面と同等の挙動）
-  const handleAreaToggle = (area: string) => {
-    if (area === '全国') {
-      setSearchFilters(prev => ({ ...prev, areas: ['全国'] }));
-      return;
-    }
-    setSearchFilters(prev => {
-      const currentAreas = prev.areas.filter(a => a !== '全国');
-      const isSelected = currentAreas.includes(area);
-      if (isSelected) {
-        const newAreas = currentAreas.filter(a => a !== area);
-        return { ...prev, areas: newAreas.length === 0 ? ['全国'] : newAreas };
-      }
-      return { ...prev, areas: [...currentAreas, area] };
-    });
-  };
-
-  // 地方全選択の処理
-  const handleRegionToggle = (region: string) => {
-    const prefectures = areaData[region as keyof typeof areaData];
-    if (!prefectures) return;
-    const currentAreas = searchFilters.areas.filter(a => a !== '全国');
-    const allSelected = prefectures.every((pref: string) => currentAreas.includes(pref));
-    if (allSelected) {
-      const newAreas = currentAreas.filter(a => !prefectures.includes(a));
-      setSearchFilters(prev => ({ ...prev, areas: newAreas.length === 0 ? ['全国'] : newAreas }));
-    } else {
-      const newAreas = [...new Set([...currentAreas, ...prefectures])];
-      setSearchFilters(prev => ({ ...prev, areas: newAreas }));
-    }
-  };
 
   // 詳細条件のトグル
   const toggleDetailFilter = (filterKey: keyof typeof detailFilters) => {
@@ -115,6 +79,20 @@ function SearchContent() {
   const [sortBy, setSortBy] = useState('人気順');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
+  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
+  const PAGE_SIZE = 9;
+  const [showDetailFilters, setShowDetailFilters] = useState(false);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showAreaDropdown && !target.closest('.area-dropdown-container')) {
+        setShowAreaDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showAreaDropdown]);
 
   // 検索実行
   const searchHotels = async () => {
@@ -134,26 +112,13 @@ function SearchContent() {
       
       const response = await fetch(`/api/search-hotels?${queryParams.toString()}`);
       const data = await response.json();
-      
-      console.log('APIレスポンス:', data);
-      console.log('hotels配列:', data.hotels);
-      console.log('hotels配列の型:', typeof data.hotels);
-      console.log('hotels配列かどうか:', Array.isArray(data.hotels));
-      
+
       if (data.success && data.hotels) {
-        // データが配列であることを確認
         const hotelsArray = Array.isArray(data.hotels) ? data.hotels : [];
-        console.log('設定するhotels:', hotelsArray);
-        if (hotelsArray.length > 0) {
-          console.log('最初のホテルのamenities:', hotelsArray[0]?.amenities);
-          console.log('amenitiesの型:', typeof hotelsArray[0]?.amenities);
-          console.log('amenitiesは配列か:', Array.isArray(hotelsArray[0]?.amenities));
-        }
         setHotels(hotelsArray);
       } else {
-        console.log('APIエラーまたはhotelsが存在しない:', data);
         setError(data.error || '検索に失敗しました');
-        setHotels([]); // エラー時は空配列を設定
+        setHotels([]);
       }
     } catch (err) {
       console.error('検索エラー:', err);
@@ -169,8 +134,20 @@ function SearchContent() {
     searchHotels();
   }, []);
 
+  // 総ページ数の変化に合わせて現在ページを補正
+  useEffect(() => {
+    const total = Math.max(1, Math.ceil((hotels || []).length / PAGE_SIZE));
+    if (currentPage > total) {
+      setCurrentPage(total);
+    }
+  }, [hotels, currentPage]);
+
   const handleSearch = () => {
     console.log('再検索実行:', searchFilters);
+    if (searchFilters.areas.length === 0) {
+      alert('エリアを選択してください');
+      return;
+    }
     searchHotels();
   };
 
@@ -244,87 +221,76 @@ function SearchContent() {
               {/* 再検索フォーム */}
               <div className="bg-white bg-opacity-95 rounded-xl shadow-lg p-4 mb-4 border border-gray-100">
                 <div className="flex flex-wrap items-center gap-4 mb-3">
-                  <div className="flex-1">
+                  <div className="flex-1 relative area-dropdown-container">
                     <label className="block text-sm text-gray-600 mb-2">選択中のエリア</label>
-                    <div className="relative area-dropdown-container">
-                      <button
-                        type="button"
-                        onClick={() => setShowAreaDropdown(prev => !prev)}
-                        className="w-full h-14 px-4 text-base leading-6 rounded-2xl border border-gray-200 bg-white shadow-sm text-gray-800 cursor-pointer hover:border-[#FF5A5F] transition-all duration-300 text-left flex items-center justify-between"
-                      >
-                        <span>
-                          {searchFilters.areas.length > 0 ? searchFilters.areas.join(', ') : '全国'}
-                        </span>
-                        <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform duration-300 ${showAreaDropdown ? 'rotate-180' : ''}`} />
-                      </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowAreaDropdown(!showAreaDropdown)}
+                      className="w-full h-14 px-4 text-base leading-6 rounded-2xl border border-gray-200 bg-white shadow-sm text-left flex items-center justify-between"
+                    >
+                      <span className="text-gray-700 flex-1 min-w-0 truncate">
+                        {searchFilters.areas.length > 0 ? searchFilters.areas.join(', ') : 'エリアを選択してください'}
+                      </span>
+                      <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${showAreaDropdown ? 'rotate-180' : ''}`} />
+                    </button>
 
-                      {showAreaDropdown && (
-                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[90vw] md:w-[48rem] max-w-[calc(100vw-2rem)] bg-white border-2 border-gray-300 rounded-xl shadow-2xl z-50 max-h-[32rem] flex flex-col">
-                          <div className="flex-1 overflow-y-auto p-5">
-                            <div className="mb-4 pb-4 border-b border-gray-200">
-                              <label className="inline-flex items-center cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors w-full">
-                                <input
-                                  type="checkbox"
-                                  checked={searchFilters.areas.includes('全国')}
-                                  onChange={() => handleAreaToggle('全国')}
-                                  className="form-checkbox h-5 w-5 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
-                                />
-                                <span className="ml-3 text-base font-medium text-gray-800">全国</span>
-                              </label>
-                            </div>
-
-                            <div className="space-y-3">
-                              {Object.entries(areaData).map(([region, prefectures]) => {
-                                if (region === '全国') return null;
-                                const currentAreas = searchFilters.areas.filter(a => a !== '全国');
-                                const allSelected = prefectures.every((pref: string) => currentAreas.includes(pref));
-                                const someSelected = prefectures.some((pref: string) => currentAreas.includes(pref));
-                                return (
-                                  <div key={region} className="border border-gray-100 rounded-lg p-3">
-                                    <div className="mb-2">
-                                      <label className="inline-flex items-center cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-colors w-full">
+                    {showAreaDropdown && (
+                        <div className="absolute top-full left-0 translate-x-0 mt-2 w-[min(90vw,64rem)] max-w-[calc(100vw-2rem)] bg-white border-2 border-gray-300 rounded-xl shadow-2xl z-50 max-h-[70vh] flex flex-col">
+                        <div className="flex-1 overflow-y-auto p-4">
+                          <div className="space-y-3">
+                            {Object.entries(areaData).map(([region, prefectures]) => {
+                              const currentAreas = searchFilters.areas;
+                              const allSelected = prefectures.every((pref: string) => currentAreas.includes(pref));
+                              const someSelected = prefectures.some((pref: string) => currentAreas.includes(pref));
+                              return (
+                                <div key={region} className="border border-gray-100 rounded-lg p-3">
+                                  <div className="mb-2">
+                                    <label className="inline-flex items-center cursor-pointer p-2 rounded-lg hover:bg-gray-50 transition-colors w-full">
+                                      <input
+                                        type="checkbox"
+                                        checked={allSelected}
+                                        ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
+                                        onChange={() => {
+                                          const prefecturesList = areaData[region as keyof typeof areaData] || [];
+                                          const current = searchFilters.areas;
+                                          const nowAll = prefecturesList.every(p => current.includes(p));
+                                          const next = nowAll ? current.filter(a => !prefecturesList.includes(a)) : [...new Set([...current, ...prefecturesList])];
+                                          setSearchFilters(prev => ({...prev, areas: next}));
+                                        }}
+                                        className="form-checkbox h-4 w-4 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
+                                      />
+                                      <span className="ml-2 text-sm font-bold text-[#FF5A5F]">{region}</span>
+                                    </label>
+                                  </div>
+                                  <div className="grid grid-cols-2 gap-1 pl-4">
+                                    {prefectures.map((prefecture) => (
+                                      <label key={prefecture} className="inline-flex items-center cursor-pointer p-1 rounded hover:bg-gray-50 transition-colors">
                                         <input
                                           type="checkbox"
-                                          checked={allSelected}
-                                          ref={(el) => { if (el) el.indeterminate = someSelected && !allSelected; }}
-                                          onChange={() => handleRegionToggle(region)}
-                                          className="form-checkbox h-4 w-4 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
+                                          checked={currentAreas.includes(prefecture)}
+                                          onChange={() => {
+                                            const current = searchFilters.areas;
+                                            const isSel = current.includes(prefecture);
+                                            const next = isSel ? current.filter(a => a !== prefecture) : [...current, prefecture];
+                                            setSearchFilters(prev => ({...prev, areas: next}));
+                                          }}
+                                          className="form-checkbox h-3 w-3 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
                                         />
-                                        <span className="ml-2 text-sm font-bold text-[#FF5A5F]">{region}</span>
+                                        <span className="ml-2 text-xs text-gray-700">{prefecture}</span>
                                       </label>
-                                    </div>
-                                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 pl-4">
-                                      {prefectures.map((prefecture) => (
-                                        <label key={prefecture} className="inline-flex items-center cursor-pointer p-1 rounded hover:bg-gray-50 transition-colors">
-                                          <input
-                                            type="checkbox"
-                                            checked={currentAreas.includes(prefecture)}
-                                            onChange={() => handleAreaToggle(prefecture)}
-                                            className="form-checkbox h-3 w-3 text-[#FF5A5F] rounded focus:ring-[#FF5A5F] border-2 border-gray-300"
-                                          />
-                                          <span className="ml-2 text-xs text-gray-700">{prefecture}</span>
-                                        </label>
-                                      ))}
-                                    </div>
+                                    ))}
                                   </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                          <div className="flex-shrink-0 bg-gray-50 px-5 py-4 border-t border-gray-200 rounded-b-xl">
-                            <div className="text-sm text-gray-600 mb-2 text-center">
-                              選択中: {searchFilters.areas.length > 0 ? searchFilters.areas.join(', ') : '全国'}
-                            </div>
-                            <button
-                              onClick={() => setShowAreaDropdown(false)}
-                              className="w-full px-6 py-3 bg-[#FF5A5F] text-white rounded-lg hover:bg-[#FF385C] transition-colors text-sm font-medium"
-                            >
-                              決定
-                            </button>
+                                </div>
+                              );
+                            })}
                           </div>
                         </div>
-                      )}
-                    </div>
+                        <div className="flex-shrink-0 bg-gray-50 px-4 py-3 border-t border-gray-200 rounded-b-xl">
+                          <div className="text-sm text-gray-600 mb-2 text-center break-words">選択中: {searchFilters.areas.length > 0 ? searchFilters.areas.join(', ') : 'エリアを選択してください'}</div>
+                          <button onClick={() => { setShowAreaDropdown(false); searchHotels(); }} className="w-full px-6 py-2 bg-[#FF5A5F] text-white rounded-lg hover:bg-[#FF385C] transition-colors text-sm font-medium">決定</button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="flex-1">
@@ -359,10 +325,26 @@ function SearchContent() {
                   </div>
                 </div>
                 
-                {/* 詳細条件 */}
+                {/* 詳細条件（折りたたみ） */}
                 <div className="mb-4">
-                  <label className="block text-sm text-gray-600 mb-3">詳細条件</label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+                  <button
+                    onClick={() => setShowDetailFilters(prev => !prev)}
+                    aria-expanded={showDetailFilters}
+                    className="w-full flex items-center justify-between bg-white rounded-xl border border-gray-200 px-3 py-2 shadow-sm hover:border-[#FF5A5F] transition-all"
+                  >
+                    <span className="flex items-center text-sm font-medium text-gray-700">
+                      <Settings2 className="w-4 h-4 mr-2 text-[#FF5A5F]" />
+                      詳細条件
+                      {Object.values(detailFilters).filter(Boolean).length > 0 && (
+                        <span className="ml-2 text-xs bg-[#FFF0F0] text-[#FF5A5F] px-2 py-0.5 rounded-full border border-[#FFE4E4]">
+                          {Object.values(detailFilters).filter(Boolean).length}
+                        </span>
+                      )}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-gray-400 transition-transform ${showDetailFilters ? 'rotate-180' : ''}`} />
+                  </button>
+                  <div className={`transition-all duration-300 ease-in-out overflow-hidden ${showDetailFilters ? 'max-h-[1000px] opacity-100 mt-3' : 'max-h-0 opacity-0'}`}>
+                    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
                     <label className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
                       <input
                         type="checkbox"
@@ -377,6 +359,28 @@ function SearchContent() {
                     <label className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
                       <input
                         type="checkbox"
+                        checked={detailFilters.smallDog}
+                        onChange={() => toggleDetailFilter('smallDog')}
+                        className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                      />
+                      <Dog className="w-4 h-4 text-[#FF5A5F]" />
+                      <span className="text-sm font-medium text-gray-700">小型犬OK</span>
+                    </label>
+
+                    <label className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={detailFilters.mediumDog}
+                        onChange={() => toggleDetailFilter('mediumDog')}
+                        className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
+                      />
+                      <Dog className="w-4 h-4 text-[#FF5A5F]" />
+                      <span className="text-sm font-medium text-gray-700">中型犬OK</span>
+                    </label>
+
+                    <label className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
+                      <input
+                        type="checkbox"
                         checked={detailFilters.largeDog}
                         onChange={() => toggleDetailFilter('largeDog')}
                         className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
@@ -385,16 +389,7 @@ function SearchContent() {
                       <span className="text-sm font-medium text-gray-700">大型犬OK</span>
                     </label>
 
-                    <label className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={detailFilters.roomDining}
-                        onChange={() => toggleDetailFilter('roomDining')}
-                        className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                      />
-                      <Utensils className="w-4 h-4 text-[#FF5A5F]" />
-                      <span className="text-sm font-medium text-gray-700">部屋食あり</span>
-                    </label>
+                    
 
                     <label className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
                       <input
@@ -451,16 +446,7 @@ function SearchContent() {
                       <span className="text-sm font-medium text-gray-700">犬用メニュー</span>
                     </label>
 
-                    <label className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={detailFilters.privateBath}
-                        onChange={() => toggleDetailFilter('privateBath')}
-                        className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                      />
-                      <GlassWater className="w-4 h-4 text-[#FF5A5F]" />
-                      <span className="text-sm font-medium text-gray-700">貸切風呂</span>
-                    </label>
+                    
 
                     <label className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
                       <input
@@ -483,17 +469,7 @@ function SearchContent() {
                       <Camera className="w-4 h-4 text-[#FF5A5F]" />
                       <span className="text-sm font-medium text-gray-700">グルーミング</span>
                     </label>
-
-                    <label className="flex items-center space-x-2 p-2 bg-gray-50 rounded-lg border border-gray-200 hover:bg-[#FFF0F0] hover:border-[#FF5A5F] transition-all duration-300 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={detailFilters.leashFree}
-                        onChange={() => toggleDetailFilter('leashFree')}
-                        className="w-4 h-4 text-[#FF5A5F] bg-gray-100 border-gray-300 rounded focus:ring-[#FF5A5F] focus:ring-2"
-                      />
-                      <Play className="w-4 h-4 text-[#FF5A5F]" />
-                      <span className="text-sm font-medium text-gray-700">室内ノーリード</span>
-                    </label>
+                    </div>
                   </div>
                 </div>
                 
@@ -592,8 +568,8 @@ function SearchContent() {
               ) : viewMode === 'list' ? (
                 <>
                   {/* 宿泊施設一覧 */}
-                  <div className="grid grid-cols-3 gap-4 mb-6">
-                    {hotels && hotels.map((hotel, hotelIndex) => (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                    {(hotels || []).slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((hotel, hotelIndex) => (
                       <div 
                         key={`hotel-${hotel.id}-${hotelIndex}`}
                         className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-gray-100 relative"
@@ -602,31 +578,47 @@ function SearchContent() {
 
 
                         <div className="flex gap-3 mb-3">
-                          <div className="w-[120px] h-[120px] rounded-lg overflow-hidden flex-shrink-0">
-                            <img 
+                          <div className="relative w-[120px] h-[120px] rounded-lg overflow-hidden flex-shrink-0">
+                            <Image
                               src={hotel.image}
                               alt={hotel.name}
-                              className="w-full h-full object-cover"
+                              fill
+                              sizes="120px"
+                              className="object-cover"
                             />
                           </div>
                           <div className="flex-1">
                             <h3 className="font-bold text-lg mb-1">{hotel.name}</h3>
-                            <p className="text-sm text-gray-600 mb-2">{hotel.location}</p>
-                                                        <div className="flex mb-2">
-                              {hotel.amenities && Array.isArray(hotel.amenities) && hotel.amenities.map((amenity, amenityIndex) => {
-                                // デバッグ: amenityの型を確認
-                                console.log('amenity:', amenity, 'type:', typeof amenity);
-                                
-                                // amenityが文字列でない場合はスキップ
-                                if (typeof amenity !== 'string') {
-                                  console.warn('amenityが文字列ではありません:', amenity);
-                                  return null;
-                                }
-                                
+                            <p className="text-sm text-gray-600 mb-1">{hotel.location}</p>
+                            {hotel.reviewAverage ? (
+                              <div className="flex items-center text-xs text-gray-700 mb-1">
+                                <Star className="w-3.5 h-3.5 mr-1 text-yellow-500 fill-yellow-500" />
+                                <span className="font-semibold">{hotel.reviewAverage.toFixed(1)}</span>
+                                {hotel.reviewCount ? (
+                                  <span className="ml-1 text-gray-500">({hotel.reviewCount}件)</span>
+                                ) : null}
+                              </div>
+                            ) : null}
+                            {(hotel.smallDog || hotel.mediumDog || hotel.largeDog) ? (
+                              <div className="flex gap-1 mb-2">
+                                {hotel.smallDog && (
+                                  <span className="bg-[#FFF8E7] text-[#B8860B] border border-[#F0E0B0] rounded px-1.5 py-0.5 text-[10px] font-medium">小型</span>
+                                )}
+                                {hotel.mediumDog && (
+                                  <span className="bg-[#FFF0E0] text-[#D2691E] border border-[#F0D5B0] rounded px-1.5 py-0.5 text-[10px] font-medium">中型</span>
+                                )}
+                                {hotel.largeDog && (
+                                  <span className="bg-[#FFE4E4] text-[#C43939] border border-[#F0B5B5] rounded px-1.5 py-0.5 text-[10px] font-medium">大型</span>
+                                )}
+                              </div>
+                            ) : null}
+                                                        <div className="flex flex-wrap gap-1 mb-2">
+                              {hotel.amenities && Array.isArray(hotel.amenities) && hotel.amenities.slice(0, 4).map((amenity, amenityIndex) => {
+                                if (typeof amenity !== 'string') return null;
                                 return (
                                   <div
                                     key={`amenity-${hotelIndex}-${amenityIndex}`}
-                                    className="bg-[#FFF0F0] text-[#FF5A5F] rounded-full px-2 py-1 text-xs mr-1"
+                                    className="bg-[#FFF0F0] text-[#FF5A5F] rounded-full px-2 py-1 text-xs"
                                   >
                                     {amenity}
                                   </div>
@@ -647,35 +639,39 @@ function SearchContent() {
                   </div>
 
                   {/* ページネーション */}
-                  <div className="bg-[#F9F6F2] rounded-lg p-4 mb-4 border border-[#F0E8D8]">
-                    <div className="flex justify-center items-center space-x-2">
-                      <button 
-                        className="px-3 py-1 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 transition-colors"
-                        onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                      </button>
-                      {[1, 2, 3, 4, 5].map((page) => (
+                  {Math.ceil((hotels || []).length / PAGE_SIZE) > 1 && (
+                    <div className="bg-[#F9F6F2] rounded-lg p-4 mb-4 border border-[#F0E8D8]">
+                      <div className="flex justify-center items-center space-x-2">
                         <button 
-                          key={page}
-                          className={`px-3 py-1 rounded text-sm transition-colors ${
-                            currentPage === page 
-                              ? 'bg-red-500 text-white' 
-                              : 'border border-gray-300 bg-white hover:bg-gray-50'
-                          }`}
-                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1 border border-gray-300 rounded text-sm bg-white transition-colors ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                          onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+                          disabled={currentPage === 1}
                         >
-                          {page}
+                          <ArrowLeft className="w-4 h-4" />
                         </button>
-                      ))}
-                      <button 
-                        className="px-3 py-1 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 transition-colors"
-                        onClick={() => setCurrentPage(Math.min(5, currentPage + 1))}
-                      >
-                        <ArrowRight className="w-4 h-4" />
-                      </button>
+                        {Array.from({ length: Math.max(1, Math.ceil((hotels || []).length / PAGE_SIZE)) }, (_, i) => i + 1).map((page) => (
+                          <button 
+                            key={page}
+                            className={`px-3 py-1 rounded text-sm transition-colors ${
+                              currentPage === page 
+                                ? 'bg-red-500 text-white' 
+                                : 'border border-gray-300 bg-white hover:bg-gray-50'
+                            }`}
+                            onClick={() => setCurrentPage(page)}
+                          >
+                            {page}
+                          </button>
+                        ))}
+                        <button 
+                          className={`px-3 py-1 border border-gray-300 rounded text-sm bg-white transition-colors ${currentPage === Math.max(1, Math.ceil((hotels || []).length / PAGE_SIZE)) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                          onClick={() => currentPage < Math.max(1, Math.ceil((hotels || []).length / PAGE_SIZE)) && setCurrentPage(currentPage + 1)}
+                          disabled={currentPage === Math.max(1, Math.ceil((hotels || []).length / PAGE_SIZE))}
+                        >
+                          <ArrowRight className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </>
               ) : (
                 /* 地図表示 */
@@ -686,7 +682,7 @@ function SearchContent() {
 
               {/* フッター */}
               <footer className="bg-gray-800 text-white p-4 text-xs rounded-lg">
-                <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                   <div>
                     <h5 className="font-bold mb-2 flex items-center">
                       <Bone className="w-3 h-3 mr-1" />

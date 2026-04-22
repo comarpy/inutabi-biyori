@@ -2,10 +2,11 @@
 
 import { useState, useEffect, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Heart, ArrowLeft, Camera, Dog, Home, Info, CalendarCheck, MapPin, Phone, Car, CreditCard, Weight, Gift, Utensils, Building, Bed, Bath, UtensilsCrossed, X, ChevronLeft, ChevronRight, Instagram, Facebook, MessageCircle } from 'lucide-react';
+import { Heart, ArrowLeft, Camera, Dog, Home, Info, CalendarCheck, MapPin, Phone, Car, CreditCard, Weight, Gift, Utensils, Building, Bed, Bath, UtensilsCrossed, X, ChevronLeft, ChevronRight, Instagram, Facebook, MessageCircle, Star } from 'lucide-react';
 import { XIcon } from '../../../components/XIcon';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { HotelDetail } from '@/lib/hotelService';
 
 // 型定義
@@ -26,34 +27,36 @@ function HotelDetailContent() {
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   
   const paramId = Array.isArray(params.id) ? params.id[0] : params.id;
-  
+
+  const fetchHotelDetail = async () => {
+    if (!paramId) {
+      setError('ホテルIDが指定されていません');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`/api/hotel/${paramId}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setHotel(data.hotel);
+      } else {
+        setError(data.error || 'ホテルが見つかりません');
+      }
+    } catch (err) {
+      console.error('ホテル詳細取得エラー:', err);
+      setError('データの取得に失敗しました。通信環境をご確認ください。');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchHotelDetail = async () => {
-      if (!paramId) {
-        setError('ホテルIDが指定されていません');
-        setLoading(false);
-        return;
-      }
-      
-      try {
-        setLoading(true);
-        const response = await fetch(`/api/hotel/${paramId}`);
-        const data = await response.json();
-        
-        if (data.success) {
-          setHotel(data.hotel);
-        } else {
-          setError(data.error || 'ホテルが見つかりません');
-        }
-      } catch (err) {
-        console.error('ホテル詳細取得エラー:', err);
-        setError('データの取得に失敗しました');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
     fetchHotelDetail();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paramId]);
 
   if (loading) {
@@ -69,12 +72,27 @@ function HotelDetailContent() {
 
   if (error || !hotel) {
     return (
-      <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">{error || '宿が見つかりません'}</h1>
-          <Link href="/search" className="text-[#FF5A5F] hover:underline">
-            検索結果に戻る
-          </Link>
+      <div className="min-h-screen bg-[#FDF8F3] flex items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <Dog className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold mb-2">{error || '宿が見つかりません'}</h1>
+          <p className="text-sm text-gray-600 mb-6">
+            ページを再度読み込むか、検索結果に戻ってお試しください。
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <button
+              onClick={fetchHotelDetail}
+              className="bg-[#FF5A5F] hover:bg-[#FF385C] text-white px-6 py-2 rounded-full transition-colors"
+            >
+              再試行
+            </button>
+            <Link
+              href="/search"
+              className="border border-[#FF5A5F] text-[#FF5A5F] px-6 py-2 rounded-full hover:bg-[#FFF0F0] transition-colors"
+            >
+              検索結果に戻る
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -137,6 +155,15 @@ function HotelDetailContent() {
                     <Home className="w-8 h-8 mr-3 text-[#FF5A5F]" />
                     {hotel.name}
                   </h1>
+                  {hotel.reviewAverage ? (
+                    <div className="flex items-center text-sm text-gray-700 ml-11">
+                      <Star className="w-4 h-4 mr-1 text-yellow-500 fill-yellow-500" />
+                      <span className="font-semibold">{hotel.reviewAverage.toFixed(1)}</span>
+                      {hotel.reviewCount ? (
+                        <span className="ml-1 text-gray-500">（レビュー {hotel.reviewCount}件）</span>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
 
               </div>
@@ -144,15 +171,18 @@ function HotelDetailContent() {
 
             {/* メイン写真と基本情報 */}
             <div className="p-6">
-              <div className="flex gap-6 mb-8">
+              <div className="flex flex-col lg:flex-row gap-6 mb-8">
                 {/* 画像エリア */}
-                <div className="flex gap-4 w-1/2">
+                <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-1/2">
                   {/* メイン画像 */}
-                  <div className="relative">
-                    <img
+                  <div className="relative w-80 h-80">
+                    <Image
                       src={hotel.images[selectedImageIndex]}
                       alt={hotel.name}
-                      className="w-80 h-80 object-cover rounded-xl"
+                      fill
+                      sizes="320px"
+                      priority
+                      className="object-cover rounded-xl"
                     />
                     <div className="absolute bottom-3 right-3 bg-black bg-opacity-60 text-white text-sm px-3 py-2 rounded-full flex items-center cursor-pointer hover:bg-opacity-80 transition-colors"
                          onClick={() => setIsImageModalOpen(true)}>
@@ -164,16 +194,21 @@ function HotelDetailContent() {
                   {/* サムネイル */}
                   <div className="grid grid-cols-2 gap-3 h-80">
                     {hotel.images.slice(0, 4).map((image, index) => (
-                      <div key={index} className="relative">
-                        <img
+                      <div
+                        key={index}
+                        className={`relative w-36 h-36 rounded-lg overflow-hidden cursor-pointer transition-all duration-200 ${
+                          selectedImageIndex === index
+                            ? 'border-2 border-[#FF5A5F] transform scale-105'
+                            : 'border-2 border-transparent hover:transform hover:scale-105'
+                        }`}
+                        onClick={() => setSelectedImageIndex(index)}
+                      >
+                        <Image
                           src={image}
                           alt={`${hotel.name} 写真${index + 1}`}
-                          className={`w-36 h-36 object-cover rounded-lg cursor-pointer transition-all duration-200 ${
-                            selectedImageIndex === index 
-                              ? 'border-2 border-[#FF5A5F] transform scale-105' 
-                              : 'border-2 border-transparent hover:transform hover:scale-105'
-                          }`}
-                          onClick={() => setSelectedImageIndex(index)}
+                          fill
+                          sizes="144px"
+                          className="object-cover"
                         />
                         {/* 4枚目で残り画像がある場合の表示 */}
                         {index === 3 && hotel.images.length > 4 && (
@@ -193,7 +228,7 @@ function HotelDetailContent() {
                 </div>
 
                 {/* 基本情報 */}
-                <div className="w-1/2">
+                <div className="w-full lg:w-1/2">
                   <div className="bg-[#F5F0E8] text-[#555555] p-4 rounded-xl border border-[#E8D5B7] flex items-center mb-4">
                     <Info className="w-6 h-6 mr-3 text-[#8B7355]" />
                     <h2 className="text-xl font-bold">宿泊基本情報</h2>
@@ -291,7 +326,7 @@ function HotelDetailContent() {
                 <h2 className="text-xl font-bold">ペット宿泊情報</h2>
               </div>
               <div className="bg-gray-50 rounded-xl p-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="bg-white rounded-lg p-4">
                     <h4 className="font-bold text-gray-700 mb-2 text-sm flex items-center">
                       <Weight className="w-4 h-4 mr-2 text-[#FF5A5F]" />
@@ -378,10 +413,26 @@ function HotelDetailContent() {
                       <p className="text-sm text-gray-600">（税込）/泊</p>
                     </div>
                   </div>
-                  <button className="bg-[#FF5A5F] hover:bg-[#FF385C] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center">
-                    <Dog className="w-4 h-4 mr-1" />
-                    予約へ
-                  </button>
+                  {hotel.rakutenUrl ? (
+                    <a
+                      href={hotel.rakutenUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-[#FF5A5F] hover:bg-[#FF385C] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors flex items-center"
+                    >
+                      <Dog className="w-4 h-4 mr-1" />
+                      予約へ
+                    </a>
+                  ) : (
+                    <button
+                      disabled
+                      className="bg-gray-300 text-gray-600 px-4 py-2 rounded-lg text-sm font-bold cursor-not-allowed flex items-center"
+                      title="現在、この宿の楽天リンクは準備中です"
+                    >
+                      <Dog className="w-4 h-4 mr-1" />
+                      準備中
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
@@ -405,11 +456,13 @@ function HotelDetailContent() {
               
               {/* 画像表示エリア */}
               <div className="p-4">
-                <div className="relative mb-4">
-                  <img
+                <div className="relative mb-4 h-96 w-full">
+                  <Image
                     src={hotel.images[selectedImageIndex]}
                     alt={`${hotel.name} 写真${selectedImageIndex + 1}`}
-                    className="w-full max-h-96 object-contain rounded-lg"
+                    fill
+                    sizes="(max-width: 1280px) 100vw, 1200px"
+                    className="object-contain rounded-lg"
                   />
                   
                   {/* 前の画像ボタン */}
@@ -441,17 +494,23 @@ function HotelDetailContent() {
                 {/* サムネイル一覧 */}
                 <div className="grid grid-cols-6 gap-2 max-h-32 overflow-y-auto">
                   {hotel.images.map((image, index) => (
-                    <img
+                    <div
                       key={index}
-                      src={image}
-                      alt={`${hotel.name} サムネイル${index + 1}`}
-                      className={`w-full h-16 object-cover rounded cursor-pointer transition-all duration-200 ${
-                        selectedImageIndex === index 
-                          ? 'border-2 border-[#FF5A5F] transform scale-105' 
+                      className={`relative h-16 rounded overflow-hidden cursor-pointer transition-all duration-200 ${
+                        selectedImageIndex === index
+                          ? 'border-2 border-[#FF5A5F] transform scale-105'
                           : 'border border-gray-200 hover:transform hover:scale-105 hover:border-[#FF5A5F]'
                       }`}
                       onClick={() => setSelectedImageIndex(index)}
-                    />
+                    >
+                      <Image
+                        src={image}
+                        alt={`${hotel.name} サムネイル${index + 1}`}
+                        fill
+                        sizes="120px"
+                        className="object-cover"
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
@@ -462,7 +521,7 @@ function HotelDetailContent() {
         {/* フッター */}
         <footer className="bg-gray-800 text-white mt-16 rounded-t-xl">
           <div className="max-w-7xl mx-auto px-4 py-12">
-            <div className="grid grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               <div>
                 <h3 className="font-bold mb-4 flex items-center">
                   <Info className="w-5 h-5 mr-2 text-[#FF5A5F]" />

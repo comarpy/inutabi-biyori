@@ -1,3 +1,27 @@
+// 楽天アフィリエイトリンクでURLを包む
+// affiliateId が設定されていなければ元URLをそのまま返す
+export function withAffiliate(url: string | undefined | null): string {
+  if (!url) return '';
+  const affiliateId = process.env.RAKUTEN_AFFILIATE_ID;
+  if (!affiliateId) return url;
+  // 楽天APIが affiliateId 付きで発行したトラッキングURL は二重ラップしない
+  // - hb.afl.rakuten.co.jp: hgcアフィリエイトリンクビルダー経由
+  // - img.travel.rakuten.co.jp/image/tr/api: SimpleHotelSearch等が返すリダイレクトURL
+  if (url.includes('hb.afl.rakuten.co.jp') || url.includes('img.travel.rakuten.co.jp/image/tr/api')) {
+    return url;
+  }
+  const encoded = encodeURIComponent(url);
+  return `https://hb.afl.rakuten.co.jp/hgc/${affiliateId}/?pc=${encoded}&m=${encoded}`;
+}
+
+// 宿名で楽天トラベルを検索するURLをアフィリエイト付きで生成
+// 完全一致しなくても、ユーザーが結果から選んで予約すれば成果になる
+export function buildRakutenSearchUrl(hotelName: string): string {
+  const q = encodeURIComponent(hotelName);
+  const base = `https://search.travel.rakuten.co.jp/ae/dsearch?f_query=${q}`;
+  return withAffiliate(base);
+}
+
 export interface RakutenHotel {
   hotelNo: string;
   hotelName: string;
@@ -320,7 +344,7 @@ export async function fetchRakutenHotels(
   
   if (!applicationId) {
     console.log('楽天API認証情報が設定されていません。モックデータを返します。');
-    return getMockHotelData();
+    return filterHotelsByArea(getMockHotelData(), area);
   }
 
   try {
@@ -331,22 +355,61 @@ export async function fetchRakutenHotels(
     
     if (hotels && hotels.length > 0) {
       console.log('楽天API成功:', hotels.length, '件');
-      return hotels;
+      const filtered = filterHotelsByArea(hotels, area);
+      console.log('地域フィルタ後(楽天):', filtered.length, '件 / 指定エリア:', area);
+      return filtered;
     } else {
       console.log('楽天APIからデータが取得できませんでした。モックデータを返します。');
-      const mockData = getMockHotelData();
+      const mockData = filterHotelsByArea(getMockHotelData(), area);
       console.log('モックデータの最初のホテル画像:', mockData[0]?.hotelImageUrl);
       return mockData;
     }
   } catch (error) {
     console.error('楽天API例外:', error);
     console.log('エラーのためモックデータを返します');
-    return getMockHotelData();
+    return filterHotelsByArea(getMockHotelData(), area);
   }
 }
 
 export async function fetchRakutenHotelsByArea(area: string): Promise<RakutenHotel[]> {
   return fetchRakutenHotels(area);
+}
+
+// 楽天キーワード検索: ホテル名で探す
+// KeywordHotelSearch は2文字以上の keyword を要求する
+export async function searchRakutenByKeyword(keyword: string): Promise<RakutenHotel[]> {
+  const applicationId = process.env.RAKUTEN_APPLICATION_ID;
+  const affiliateId = process.env.RAKUTEN_AFFILIATE_ID;
+
+  if (!applicationId || !keyword || keyword.trim().length < 2) {
+    return [];
+  }
+
+  const params = new URLSearchParams({
+    applicationId,
+    format: 'json',
+    keyword: keyword.trim(),
+    hits: '5',
+  });
+  if (affiliateId) params.append('affiliateId', affiliateId);
+
+  const url = `https://app.rakuten.co.jp/services/api/Travel/KeywordHotelSearch/20170426?${params.toString()}`;
+
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.error) {
+      console.log('KeywordHotelSearch エラー:', data.error);
+      return [];
+    }
+    if (data.hotels && Array.isArray(data.hotels)) {
+      return convertHotelData(data.hotels);
+    }
+    return [];
+  } catch (error) {
+    console.error('KeywordHotelSearch 例外:', error);
+    return [];
+  }
 }
 
 // 楽天トラベルホテル詳細検索APIから詳細情報を取得する関数
@@ -384,3 +447,31 @@ export async function fetchRakutenHotelDetail(hotelNo: string): Promise<any | nu
     return null;
   }
 } 
+
+// 指定エリア（都道府県/地方）で楽天ホテル配列をフィルタ
+function filterHotelsByArea(hotels: RakutenHotel[], area: string): RakutenHotel[] {
+  if (!area || area === '全国') return hotels;
+
+  const REGION_TO_PREFS: Record<string, string[]> = {
+    '北海道': ['北海道'],
+    '東北': ['青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県'],
+    '北関東': ['茨城県', '栃木県', '群馬県'],
+    '首都圏': ['埼玉県', '千葉県', '東京都', '神奈川県'],
+    '甲信越': ['山梨県', '長野県', '新潟県'],
+    '北陸': ['富山県', '石川県', '福井県'],
+    '東海': ['岐阜県', '静岡県', '愛知県'],
+    '近畿': ['三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県'],
+    '中国': ['鳥取県', '島根県', '岡山県', '広島県', '山口県'],
+    '四国': ['徳島県', '香川県', '愛媛県', '高知県'],
+    '九州': ['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県'],
+    '沖縄': ['沖縄県'],
+  };
+
+  const targetPrefs = REGION_TO_PREFS[area] || [area];
+
+  return hotels.filter(hotel => {
+    const addr1 = hotel.address1 || '';
+    const addr2 = hotel.address2 || '';
+    return targetPrefs.some(pref => addr1.includes(pref) || addr2.includes(pref));
+  });
+}

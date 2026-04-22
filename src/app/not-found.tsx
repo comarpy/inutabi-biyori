@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { Dog, Home, Search, Heart, Info, Building, Instagram, Facebook, MessageCircle, AlertTriangle } from 'lucide-react';
 import { XIcon } from '../components/XIcon';
 
@@ -54,11 +55,13 @@ export default function NotFound() {
                 URLをご確認いただくか、以下のボタンからトップページにお戻りください。
               </p>
               
-              <div className="mb-8">
-                <img 
-                  src="https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80" 
-                  alt="可愛らしい犬の姿" 
-                  className="mx-auto rounded-lg shadow-md max-h-60 object-cover"
+              <div className="mb-8 mx-auto rounded-lg shadow-md max-h-60 overflow-hidden" style={{ maxWidth: 800 }}>
+                <Image
+                  src="https://images.unsplash.com/photo-1552053831-71594a27632d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&q=80"
+                  alt="可愛らしい犬の姿"
+                  width={800}
+                  height={600}
+                  className="w-full h-auto max-h-60 object-cover"
                 />
               </div>
               

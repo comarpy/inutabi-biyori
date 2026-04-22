@@ -233,7 +233,7 @@ export default function PrivacyPolicyPage() {
                 <ul className="list-disc pl-4 space-y-1">
                   <li><span className="font-semibold">事業者名：</span>株式会社コマーピー</li>
                   <li><span className="font-semibold">代表者：</span>元廣 祐太</li>
-                  <li><span className="font-semibold">所在地：</span>東京都中央区</li>
+                  <li><span className="font-semibold">所在地：</span>東京都中央区銀座1丁目12番4号N&EBLD.6F</li>
                 </ul>
               </div>
             </div>
@@ -256,7 +256,6 @@ export default function PrivacyPolicyPage() {
                 </div>
                 <ul className="space-y-2 text-sm">
                   <li><Link href="/business-contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を掲載する</Link></li>
-                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">管理画面</Link></li>
                 </ul>
               </div>
 

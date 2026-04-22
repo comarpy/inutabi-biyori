@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { Heart, MapPin } from 'lucide-react';
+import Image from 'next/image';
 import { Hotel } from '../../../lib/hotelService';
 
 // Leafletのデフォルトアイコンの問題を修正
@@ -99,11 +100,15 @@ export default function HotelMap({ hotels, onHotelSelect }: HotelMapProps) {
             <Popup maxWidth={300} className="custom-popup">
               <div className="p-2">
                 <div className="flex gap-3">
-                  <img 
-                    src={hotel.image}
-                    alt={hotel.name}
-                    className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-                  />
+                  <div className="relative w-20 h-20 rounded-lg overflow-hidden flex-shrink-0">
+                    <Image
+                      src={hotel.image}
+                      alt={hotel.name}
+                      fill
+                      sizes="80px"
+                      className="object-cover"
+                    />
+                  </div>
                   <div className="flex-1">
                     <h3 className="font-bold text-lg mb-1 text-gray-800">{hotel.name}</h3>
                     <div className="flex items-center text-sm text-gray-600 mb-2">

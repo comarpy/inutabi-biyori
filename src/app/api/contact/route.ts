@@ -1,20 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
+import { rateLimit, getClientIp } from '@/lib/rateLimit';
 
 // APIキーが設定されている場合のみResendを初期化
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('API Key exists:', !!process.env.RESEND_API_KEY);
-    console.log('API Key prefix:', process.env.RESEND_API_KEY?.substring(0, 10));
-    
+    // レート制限: 同一IPから10分間で最大5回
+    const ip = getClientIp(request);
+    const rl = rateLimit({ key: `contact:${ip}`, limit: 5, windowMs: 10 * 60 * 1000 });
+    if (!rl.ok) {
+      return NextResponse.json(
+        { error: 'リクエストが多すぎます。しばらく経ってから再度お試しください。' },
+        { status: 429, headers: { 'Retry-After': String(rl.retryAfterSec) } }
+      );
+    }
+
     const { name, email, subject, message } = await request.json();
 
     // バリデーション
     if (!name || !email || !subject || !message) {
       return NextResponse.json(
         { error: '必須項目が入力されていません' },
+        { status: 400 }
+      );
+    }
+
+    // 形式・長さチェック
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email));
+    if (!emailOk) {
+      return NextResponse.json(
+        { error: 'メールアドレスの形式が正しくありません' },
+        { status: 400 }
+      );
+    }
+    if (String(name).length > 100 || String(subject).length > 200 || String(message).length > 5000) {
+      return NextResponse.json(
+        { error: '入力文字数の上限を超えています' },
         { status: 400 }
       );
     }
@@ -27,11 +50,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const esc = (s: string) =>
+      String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
     // メール送信
     const { data, error } = await resend.emails.send({
       from: 'onboarding@resend.dev', // Resendのテスト用認証済みドメイン
       to: ['support@comarpy.co.jp'], // 受信者アドレス（Resendアカウントのメール）
-      subject: `【お問い合わせ】${subject}`,
+      subject: `【お問い合わせ】${esc(subject)}`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2 style="color: #FF5A5F; border-bottom: 2px solid #FF5A5F; padding-bottom: 10px;">
@@ -44,22 +75,22 @@ export async function POST(request: NextRequest) {
             <table style="width: 100%; border-collapse: collapse;">
               <tr>
                 <td style="padding: 8px 0; font-weight: bold; color: #666; width: 120px;">お名前:</td>
-                <td style="padding: 8px 0;">${name}</td>
+                <td style="padding: 8px 0;">${esc(name)}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; font-weight: bold; color: #666;">メールアドレス:</td>
-                <td style="padding: 8px 0;">${email}</td>
+                <td style="padding: 8px 0;">${esc(email)}</td>
               </tr>
               <tr>
                 <td style="padding: 8px 0; font-weight: bold; color: #666;">件名:</td>
-                <td style="padding: 8px 0;">${subject}</td>
+                <td style="padding: 8px 0;">${esc(subject)}</td>
               </tr>
             </table>
-            
+
             <div style="margin-top: 20px;">
               <strong style="color: #666;">お問い合わせ内容:</strong>
               <div style="background-color: white; padding: 15px; border-radius: 4px; margin-top: 8px; white-space: pre-wrap; border-left: 4px solid #FF5A5F;">
-${message}
+${esc(message)}
               </div>
             </div>
           </div>
