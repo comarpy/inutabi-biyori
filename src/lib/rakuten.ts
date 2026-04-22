@@ -193,6 +193,16 @@ async function tryWithAreaCode(applicationId: string, affiliateId?: string): Pro
   return [];
 }
 
+// 楽天 API の緯度経度は秒単位 (例: 154693) なので度に変換する
+// 値が 200 を超えていれば秒、そうでなければ既に度とみなす（将来の仕様変更や他経路への保険）
+function normalizeRakutenCoord(v: any): number | undefined {
+  if (v === undefined || v === null || v === '') return undefined;
+  const n = typeof v === 'number' ? v : parseFloat(String(v));
+  if (!Number.isFinite(n)) return undefined;
+  if (Math.abs(n) > 200) return n / 3600;
+  return n;
+}
+
 // ホテルデータの変換を別関数に分離
 function convertHotelData(hotels: any[]): RakutenHotel[] {
   return hotels.map((hotel: any) => ({
@@ -216,8 +226,10 @@ function convertHotelData(hotels: any[]): RakutenHotel[] {
     nearestStation: hotel.hotel?.[0]?.hotelBasicInfo?.nearestStation || '',
     hotelComment: hotel.hotel?.[0]?.hotelBasicInfo?.hotelComment || '',
     hotelMinCharge: hotel.hotel?.[0]?.hotelBasicInfo?.hotelMinCharge || undefined,
-    latitude: hotel.hotel?.[0]?.hotelBasicInfo?.latitude || undefined,
-    longitude: hotel.hotel?.[0]?.hotelBasicInfo?.longitude || undefined,
+    // 楽天 API は緯度経度を "秒単位" で返すため、度に変換 (/3600)
+    // 念のため: 値が 200 以上なら秒単位とみなし変換、そうでなければそのまま（度として扱う）
+    latitude: normalizeRakutenCoord(hotel.hotel?.[0]?.hotelBasicInfo?.latitude),
+    longitude: normalizeRakutenCoord(hotel.hotel?.[0]?.hotelBasicInfo?.longitude),
   }));
 }
 
