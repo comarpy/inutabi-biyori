@@ -570,10 +570,11 @@ function SearchContent() {
                   {/* 宿泊施設一覧 */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
                     {(hotels || []).slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE).map((hotel, hotelIndex) => (
-                      <div 
+                      <Link
                         key={`hotel-${hotel.id}-${hotelIndex}`}
-                        className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-gray-100 relative"
-                        onClick={() => handleHotelSelect(hotel)}
+                        href={`/hotel/${hotel.id}`}
+                        prefetch
+                        className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer border border-gray-100 relative block"
                       >
 
 
@@ -634,7 +635,7 @@ function SearchContent() {
                             </div>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
 
