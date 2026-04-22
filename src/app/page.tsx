@@ -240,25 +240,28 @@ function HomeContent() {
 
       <div className="relative z-10">
         {/* ヘッダー */}
-        <header className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white p-3">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <div className="flex items-center">
-              <Dog className="w-6 h-6 mr-2" />
-              <div className="flex flex-col">
-                <span className="font-bold text-lg">犬旅びより</span>
-                <span className="text-xs opacity-90">- 愛犬に合う宿が見つかる、旅の検索サイト</span>
+        <header className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white px-3 py-2.5 md:py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between gap-2">
+            <div className="flex items-center min-w-0">
+              <Dog className="w-6 h-6 mr-2 flex-shrink-0" />
+              <div className="flex flex-col min-w-0">
+                <span className="font-bold text-base md:text-lg">犬旅びより</span>
+                <span className="text-[10px] md:text-xs opacity-90 truncate hidden sm:inline">
+                  - 愛犬に合う宿が見つかる、旅の検索サイト
+                </span>
               </div>
             </div>
-            <nav className="flex items-center space-x-4">
-              <Link href="/contact" className="text-sm hover:text-gray-200 cursor-pointer">
+            <nav className="flex items-center space-x-3 md:space-x-4 flex-shrink-0">
+              <Link href="/contact" className="text-xs md:text-sm hover:text-gray-200 cursor-pointer">
                 お問い合わせ
               </Link>
               <Link
                 href="/business-contact"
-                className="text-sm hover:text-gray-200 cursor-pointer flex items-center"
+                className="text-xs md:text-sm hover:text-gray-200 cursor-pointer flex items-center"
               >
                 <Dog className="w-4 h-4 mr-1" />
-                宿を掲載する
+                <span className="hidden sm:inline">宿を掲載する</span>
+                <span className="sm:hidden">掲載</span>
               </Link>
             </nav>
           </div>
@@ -266,57 +269,59 @@ function HomeContent() {
 
         {/* ヒーローエリア */}
         <section
-          className="min-h-[760px] bg-cover bg-center bg-no-repeat relative flex flex-col justify-center items-center py-10 px-4"
+          className="relative min-h-[680px] md:min-h-[780px] bg-cover bg-center bg-no-repeat flex flex-col justify-center items-center py-14 md:py-20 px-4"
           style={{
             backgroundImage: "url('/images/画像2.jpeg')",
-            backgroundPosition: 'center center',
+            backgroundPosition: 'center 30%',
           }}
         >
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/30" />
+          {/* オーバーレイ: 下に行くほど暗くする（可読性向上） */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/35 to-black/55" />
+          {/* 暖色の微かな照り */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-[#3D2E1E]/10 via-transparent to-[#FF5A5F]/5" />
 
           {/* キャッチコピー */}
-          <div className="relative z-10 text-center mb-6 max-w-3xl">
-            <h1
-              className="text-4xl md:text-5xl font-bold text-white mb-3 leading-tight"
-              style={{
-                textShadow:
-                  '0 0 20px rgba(255, 255, 255, 0.8), 0 0 30px rgba(255, 255, 255, 0.6), 2px 2px 4px rgba(0,0,0,0.7)',
-              }}
-            >
-              愛犬に合う宿を探そう
+          <div className="relative z-10 text-center mb-8 md:mb-10 max-w-3xl px-2">
+            {/* リード */}
+            <div className="inline-flex items-center gap-1.5 text-[11px] md:text-xs text-white/90 tracking-widest uppercase mb-3 md:mb-4 px-3 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20">
+              <span className="inline-block w-1.5 h-1.5 rounded-full bg-[#FF8A8F]" />
+              Inutabi-biyori
+            </div>
+
+            <h1 className="text-[34px] leading-[1.15] md:text-[56px] md:leading-[1.1] font-bold text-white mb-4 tracking-tight drop-shadow-[0_2px_8px_rgba(0,0,0,0.4)]">
+              愛犬に合う宿を、<br className="md:hidden" />
+              <span className="text-[#FFD9B0]">失敗せずに</span>選ぶ。
             </h1>
-            <p
-              className="text-base md:text-lg text-white"
-              style={{ textShadow: '1px 1px 3px rgba(0,0,0,0.7)' }}
-            >
-              サイズ・頭数・過ごし方から、あなたの愛犬で本当に泊まれる宿が見つかります。
+            <p className="text-[15px] md:text-lg text-white/95 leading-relaxed max-w-2xl mx-auto drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
+              サイズ・頭数・過ごし方から、<br className="md:hidden" />
+              あなたの愛犬で本当に泊まれる宿が見つかります。
             </p>
           </div>
 
           {/* 検索カード */}
-          <div className="relative z-10 w-full max-w-4xl bg-white/98 rounded-2xl shadow-2xl overflow-visible backdrop-blur-sm">
-            <div className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white px-5 py-3 rounded-t-2xl">
-              <h2 className="text-base md:text-lg font-bold flex items-center justify-center">
-                <Dog className="w-5 h-5 mr-2" />
+          <div className="relative z-10 w-full max-w-4xl bg-white rounded-3xl shadow-[0_20px_60px_-20px_rgba(0,0,0,0.4)] overflow-visible ring-1 ring-black/5">
+            <div className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white px-5 py-3 rounded-t-3xl">
+              <h2 className="text-sm md:text-base font-bold flex items-center justify-center tracking-wide">
+                <Dog className="w-4 h-4 md:w-5 md:h-5 mr-2" />
                 愛犬のプロフィールから探す
               </h2>
             </div>
 
-            <div className="p-5 md:p-6 space-y-5">
+            <div className="p-5 md:p-7 space-y-6">
               {/* STEP 1: 犬のサイズ */}
               <div>
-                <div className="flex items-center mb-2">
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FF5A5F] text-white text-xs font-bold mr-2">
+                <div className="flex items-center mb-3">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#FF5A5F] to-[#FF385C] text-white text-[11px] font-bold mr-2.5 shadow-sm">
                     1
                   </span>
-                  <label className="text-sm md:text-base font-semibold text-gray-800">
+                  <label className="text-sm md:text-[15px] font-semibold text-gray-900">
                     犬のサイズ
-                    <span className="ml-2 text-xs font-normal text-gray-500">
-                      ※ 複数頭でサイズが違う場合は複数選択OK
+                    <span className="ml-2 text-[11px] font-normal text-gray-500">
+                      複数選択OK
                     </span>
                   </label>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3">
                   {DOG_SIZE_OPTIONS.map((opt) => {
                     const active = sizes.has(opt.key);
                     return (
@@ -325,24 +330,31 @@ function HomeContent() {
                         type="button"
                         onClick={() => toggleSize(opt.key)}
                         aria-pressed={active}
-                        className={`rounded-xl border-2 p-3 transition-all duration-200 flex flex-col items-center justify-center text-center ${
+                        className={`group relative rounded-2xl border-2 px-3 py-4 min-h-[96px] transition-all duration-200 flex flex-col items-center justify-center text-center active:scale-[0.98] ${
                           active
-                            ? 'border-[#FF5A5F] bg-[#FFF0F0] shadow-md'
-                            : 'border-gray-200 bg-white hover:border-[#FF5A5F]/60 hover:bg-[#FFF7F7]'
+                            ? 'border-[#FF5A5F] bg-gradient-to-b from-[#FFF5F5] to-[#FFEDED] shadow-[0_4px_12px_-4px_rgba(255,90,95,0.3)]'
+                            : 'border-[#E8D5B7]/60 bg-white hover:border-[#FF5A5F]/50 hover:bg-[#FFFAF5]'
                         }`}
                       >
+                        {active && (
+                          <span className="absolute top-1.5 right-1.5 w-4 h-4 rounded-full bg-[#FF5A5F] text-white text-[10px] flex items-center justify-center font-bold">
+                            ✓
+                          </span>
+                        )}
                         <Dog
-                          className={active ? 'text-[#FF5A5F]' : 'text-gray-400'}
+                          className={`transition-colors ${
+                            active ? 'text-[#FF5A5F]' : 'text-[#8B7355] group-hover:text-[#FF5A5F]/80'
+                          }`}
                           style={{ width: opt.iconSize, height: opt.iconSize }}
                         />
                         <span
-                          className={`text-sm font-bold mt-1 ${
-                            active ? 'text-[#FF5A5F]' : 'text-gray-700'
+                          className={`text-sm font-bold mt-1.5 ${
+                            active ? 'text-[#FF5A5F]' : 'text-gray-800'
                           }`}
                         >
                           {opt.label}
                         </span>
-                        <span className="text-[10px] text-gray-500">{opt.desc}</span>
+                        <span className="text-[10px] text-gray-500 mt-0.5">{opt.desc}</span>
                       </button>
                     );
                   })}
@@ -351,13 +363,13 @@ function HomeContent() {
 
               {/* STEP 2: 頭数 */}
               <div>
-                <div className="flex items-center mb-2">
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FF5A5F] text-white text-xs font-bold mr-2">
+                <div className="flex items-center mb-3">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#FF5A5F] to-[#FF385C] text-white text-[11px] font-bold mr-2.5 shadow-sm">
                     2
                   </span>
-                  <label className="text-sm md:text-base font-semibold text-gray-800">頭数</label>
+                  <label className="text-sm md:text-[15px] font-semibold text-gray-900">頭数</label>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-3 gap-2 md:gap-3">
                   {DOG_COUNT_OPTIONS.map((opt) => {
                     const active = count === opt.key;
                     return (
@@ -366,10 +378,10 @@ function HomeContent() {
                         type="button"
                         onClick={() => setCount(active ? '' : opt.key)}
                         aria-pressed={active}
-                        className={`rounded-xl border-2 py-3 font-semibold transition-all duration-200 ${
+                        className={`rounded-2xl border-2 py-3.5 md:py-4 font-semibold transition-all duration-200 active:scale-[0.98] ${
                           active
-                            ? 'border-[#FF5A5F] bg-[#FFF0F0] text-[#FF5A5F] shadow-md'
-                            : 'border-gray-200 bg-white text-gray-700 hover:border-[#FF5A5F]/60 hover:bg-[#FFF7F7]'
+                            ? 'border-[#FF5A5F] bg-gradient-to-b from-[#FFF5F5] to-[#FFEDED] text-[#FF5A5F] shadow-[0_4px_12px_-4px_rgba(255,90,95,0.3)]'
+                            : 'border-[#E8D5B7]/60 bg-white text-gray-800 hover:border-[#FF5A5F]/50 hover:bg-[#FFFAF5]'
                         }`}
                       >
                         {opt.label}
@@ -381,13 +393,13 @@ function HomeContent() {
 
               {/* STEP 3: こだわり条件 */}
               <div>
-                <div className="flex items-center mb-2">
-                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-[#FF5A5F] text-white text-xs font-bold mr-2">
+                <div className="flex items-center mb-3">
+                  <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-gradient-to-br from-[#FF5A5F] to-[#FF385C] text-white text-[11px] font-bold mr-2.5 shadow-sm">
                     3
                   </span>
-                  <label className="text-sm md:text-base font-semibold text-gray-800">
+                  <label className="text-sm md:text-[15px] font-semibold text-gray-900">
                     こだわり条件
-                    <span className="ml-2 text-xs font-normal text-gray-500">（任意・複数選択OK）</span>
+                    <span className="ml-2 text-[11px] font-normal text-gray-500">任意</span>
                   </label>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -400,10 +412,10 @@ function HomeContent() {
                         type="button"
                         onClick={() => togglePriority(opt.key)}
                         aria-pressed={active}
-                        className={`rounded-full border px-3 py-2 text-sm font-medium transition-all duration-200 flex items-center ${
+                        className={`rounded-full border px-3.5 py-2 text-[13px] md:text-sm font-medium transition-all duration-200 flex items-center active:scale-[0.98] ${
                           active
-                            ? 'border-[#FF5A5F] bg-[#FF5A5F] text-white shadow-md'
-                            : 'border-gray-200 bg-white text-gray-700 hover:border-[#FF5A5F]/60 hover:bg-[#FFF0F0]'
+                            ? 'border-[#FF5A5F] bg-[#FF5A5F] text-white shadow-[0_4px_10px_-3px_rgba(255,90,95,0.45)]'
+                            : 'border-[#E8D5B7]/60 bg-white text-gray-700 hover:border-[#FF5A5F]/50 hover:bg-[#FFF7F7] hover:text-[#FF5A5F]'
                         }`}
                       >
                         <Icon className="w-4 h-4 mr-1.5" />
@@ -546,55 +558,68 @@ function HomeContent() {
 
               {/* 選択中サマリー */}
               {selectedSummary && (
-                <div className="text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-2 border border-gray-100">
-                  <span className="font-medium text-gray-700">選択中:</span> {selectedSummary}
+                <div className="text-xs md:text-[13px] bg-gradient-to-r from-[#FFF5F0] to-[#FFFAF5] rounded-xl px-3.5 py-2.5 border border-[#E8D5B7]/50 flex items-start gap-2">
+                  <Heart className="w-3.5 h-3.5 mt-0.5 text-[#FF5A5F] flex-shrink-0" />
+                  <div>
+                    <span className="font-semibold text-gray-800">選択中:</span>{' '}
+                    <span className="text-gray-700">{selectedSummary}</span>
+                  </div>
                 </div>
               )}
 
               {/* CTA */}
               <button
                 onClick={handleSearch}
-                className="w-full h-14 text-base rounded-2xl bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white font-bold flex items-center justify-center hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 shadow-lg"
+                className="w-full h-14 md:h-16 text-[15px] md:text-base rounded-2xl bg-gradient-to-r from-[#FF5A5F] via-[#FF4D5A] to-[#FF385C] text-white font-bold flex items-center justify-center gap-2 hover:shadow-[0_12px_28px_-8px_rgba(255,90,95,0.55)] hover:-translate-y-0.5 active:translate-y-0 transition-all duration-300 shadow-[0_8px_20px_-6px_rgba(255,90,95,0.4)] ring-1 ring-white/20"
               >
-                <Search className="w-5 h-5 mr-2" />
-                愛犬に合う宿を探す
+                <Search className="w-5 h-5" />
+                <span>愛犬に合う宿を探す</span>
               </button>
 
-              <p className="text-center text-xs text-gray-500">
-                条件未選択のままでも「全国の犬と泊まれる宿」を一覧できます
+              <p className="text-center text-[11px] md:text-xs text-gray-500">
+                条件未選択でも「全国の犬と泊まれる宿」を一覧できます
               </p>
             </div>
           </div>
         </section>
 
-        {/* エッセイ風セクション: サイトの価値説明 */}
-        <section className="max-w-5xl mx-auto px-4 py-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
-              <div className="flex items-center mb-2">
-                <Dog className="w-5 h-5 mr-2 text-[#FF5A5F]" />
-                <h3 className="font-bold text-gray-800">犬条件から探せる</h3>
+        {/* 価値説明セクション */}
+        <section className="max-w-5xl mx-auto px-4 py-12 md:py-16">
+          <div className="text-center mb-8 md:mb-10">
+            <p className="inline-block text-[11px] md:text-xs tracking-widest text-[#FF5A5F] font-semibold uppercase mb-2">
+              Why 犬旅びより
+            </p>
+            <h2 className="text-xl md:text-2xl font-bold text-gray-900">
+              普通の旅行サイトでは探しにくい条件で、<br className="md:hidden" />
+              愛犬にぴったりの宿を
+            </h2>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5">
+            <div className="group bg-white border border-[#E8D5B7]/40 rounded-2xl p-5 md:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#FFF0F0] to-[#FFE4E4] mb-3 group-hover:scale-110 transition-transform">
+                <Dog className="w-5 h-5 text-[#FF5A5F]" />
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                小型・中型・大型・超大型まで、あなたの愛犬のサイズに対応した宿だけを絞り込み。
+              <h3 className="font-bold text-gray-900 mb-1.5">犬のサイズで正確に絞れる</h3>
+              <p className="text-[13px] text-gray-600 leading-relaxed">
+                小型・中型・大型・超大型まで、愛犬のサイズに対応した宿だけを絞り込み。
               </p>
             </div>
-            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
-              <div className="flex items-center mb-2">
-                <Heart className="w-5 h-5 mr-2 text-[#FF5A5F]" />
-                <h3 className="font-bold text-gray-800">多頭飼いもOK</h3>
+            <div className="group bg-white border border-[#E8D5B7]/40 rounded-2xl p-5 md:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#F5F0E8] to-[#E8D5B7]/40 mb-3 group-hover:scale-110 transition-transform">
+                <Heart className="w-5 h-5 text-[#B8860B]" />
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                2頭・3頭以上の宿泊可能な宿を頭数から絞り込み。多頭飼い家庭にもやさしい検索。
+              <h3 className="font-bold text-gray-900 mb-1.5">多頭飼いにもやさしい</h3>
+              <p className="text-[13px] text-gray-600 leading-relaxed">
+                2頭・3頭以上も宿泊可能な宿を頭数で絞れる。多頭飼い家庭でも安心。
               </p>
             </div>
-            <div className="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
-              <div className="flex items-center mb-2">
-                <Bone className="w-5 h-5 mr-2 text-[#FF5A5F]" />
-                <h3 className="font-bold text-gray-800">過ごし方から選ぶ</h3>
+            <div className="group bg-white border border-[#E8D5B7]/40 rounded-2xl p-5 md:p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300">
+              <div className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-br from-[#EFF4EC] to-[#DCE6D5] mb-3 group-hover:scale-110 transition-transform">
+                <Bone className="w-5 h-5 text-[#5F7A4E]" />
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                ドッグラン、犬と一緒の食事、客室ドッグラン、温泉など、こだわり条件で絞り込めます。
+              <h3 className="font-bold text-gray-900 mb-1.5">こだわり条件で過ごし方を決める</h3>
+              <p className="text-[13px] text-gray-600 leading-relaxed">
+                ドッグラン・温泉・客室ドッグラン・犬用メニューなど、過ごし方から選べる。
               </p>
             </div>
           </div>
