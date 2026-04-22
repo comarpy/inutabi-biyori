@@ -5,7 +5,8 @@ import { devLog, devWarn } from '@/lib/logger';
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const areas = searchParams.get('areas')?.split(',') || searchParams.get('area')?.split(',') || [];
+    const areasRaw = searchParams.get('areas') || searchParams.get('area') || '';
+    const areas = areasRaw.split(',').map(s => s.trim()).filter(Boolean);
     const checkinDate = searchParams.get('checkinDate') || searchParams.get('checkIn') || undefined;
     const checkoutDate = searchParams.get('checkoutDate') || searchParams.get('checkOut') || undefined;
     
@@ -29,10 +30,9 @@ export async function GET(request: NextRequest) {
 
     devLog('検索パラメータ:', { areas, checkinDate, checkoutDate, detailFilters });
 
-    if (areas.length === 0) {
-      return NextResponse.json({ success: true, hotels: [], count: 0 });
-    }
-    const hotels = await searchDogFriendlyHotels(areas, checkinDate, checkoutDate, detailFilters);
+    // エリア未指定は「全国」として扱う（犬プロフィール起点検索でエリア任意のため）
+    const effectiveAreas = areas.length === 0 ? ['全国'] : areas;
+    const hotels = await searchDogFriendlyHotels(effectiveAreas, checkinDate, checkoutDate, detailFilters);
 
     devLog('検索結果:', hotels.length, '件');
 

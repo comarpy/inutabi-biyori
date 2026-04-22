@@ -50,11 +50,15 @@ function SearchContent() {
     smallDog: searchParams.get('smallDog') === 'true',
     mediumDog: searchParams.get('mediumDog') === 'true',
     largeDog: searchParams.get('largeDog') === 'true',
+    // xlDog: 超大型犬（microCMS データ側未対応。UX 上の意図を残すため state に保持）
+    xlDog: searchParams.get('xlDog') === 'true',
     hotSpring: searchParams.get('hotSpring') === 'true',
     parking: searchParams.get('parking') === 'true',
     multipleDogs: searchParams.get('multipleDogs') === 'true',
     petAmenities: searchParams.get('petAmenities') === 'true',
     dogMenu: searchParams.get('dogMenu') === 'true',
+    // roomDining: ペット同伴食事（microCMS の diningWithDog に対応）
+    roomDining: searchParams.get('roomDining') === 'true',
     roomDogRun: searchParams.get('roomDogRun') === 'true',
     grooming: searchParams.get('grooming') === 'true'
   });
@@ -143,11 +147,7 @@ function SearchContent() {
   }, [hotels, currentPage]);
 
   const handleSearch = () => {
-    console.log('再検索実行:', searchFilters);
-    if (searchFilters.areas.length === 0) {
-      alert('エリアを選択してください');
-      return;
-    }
+    // エリア未指定は「全国」として扱う（犬プロフィール起点検索のため）
     searchHotels();
   };
 
