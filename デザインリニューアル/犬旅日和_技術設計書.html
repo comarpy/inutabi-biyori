@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>犬旅日和 技術設計書 — Next.js + Supabase + Vercel</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Inter", "Noto Sans JP", "Hiragino Sans", sans-serif; color: #2D2C28; background: #FAFAF8; line-height: 1.7; }
+.container { max-width: 960px; margin: 0 auto; padding: 40px 24px; }
+h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+.subtitle { font-size: 14px; color: #5C5A55; margin-bottom: 8px; }
+.meta { display: flex; gap: 16px; font-size: 12px; color: #8A877F; margin-bottom: 32px; flex-wrap: wrap; }
+h2 { font-size: 20px; font-weight: 700; margin: 56px 0 8px; padding-bottom: 8px; border-bottom: 3px solid #C75200; }
+h3 { font-size: 16px; font-weight: 600; margin: 32px 0 8px; }
+h4 { font-size: 14px; font-weight: 600; margin: 20px 0 6px; color: #5C5A55; }
+p { margin-bottom: 12px; font-size: 14px; }
+.desc { font-size: 13px; color: #5C5A55; margin-bottom: 16px; }
+.toc { background: #fff; border: 1px solid #E5E4DF; border-radius: 12px; padding: 20px 24px; margin-bottom: 40px; }
+.toc h3 { margin: 0 0 10px; font-size: 14px; }
+.toc ol { padding-left: 20px; }
+.toc li { font-size: 13px; margin-bottom: 6px; }
+.toc a { color: #1A6BC4; text-decoration: none; }
+.card { background: #fff; border: 1px solid #E5E4DF; border-radius: 12px; padding: 24px; margin: 12px 0; }
+pre { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 16px; font-size: 12px; font-family: "JetBrains Mono", "SF Mono", monospace; overflow-x: auto; line-height: 1.6; margin: 8px 0; }
+pre .cm { color: #6A9955; }
+pre .kw { color: #569CD6; }
+pre .st { color: #CE9178; }
+pre .fn { color: #DCDCAA; }
+pre .ty { color: #4EC9B0; }
+pre .nu { color: #B5CEA8; }
+code { font-size: 12px; background: #F3F2EE; padding: 2px 6px; border-radius: 4px; font-family: "JetBrains Mono", "SF Mono", monospace; }
+.note { font-size: 12px; color: #5C5A55; margin-top: 8px; padding: 10px 14px; background: #FFF4EC; border-radius: 6px; border-left: 3px solid #C75200; }
+.note-blue { background: #EBF5FF; border-left-color: #1A6BC4; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0; }
+th { text-align: left; padding: 8px 12px; background: #F3F2EE; font-weight: 600; border-bottom: 2px solid #E5E4DF; }
+td { padding: 8px 12px; border-bottom: 1px solid #E5E4DF; vertical-align: top; }
+.tree { font-family: "JetBrains Mono", monospace; font-size: 12px; line-height: 1.8; padding: 16px; background: #fff; border: 1px solid #E5E4DF; border-radius: 8px; }
+.tree .dir { color: #1A6BC4; font-weight: 600; }
+.tree .file { color: #2D2C28; }
+.tree .comment { color: #8A877F; }
+.badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+.badge-stack { background: #EBF5FF; color: #0E5299; }
+.badge-new { background: #E8FAF0; color: #0A7B3E; }
+@media print { body { background: #fff; } .card { break-inside: avoid; } h2 { break-before: page; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>犬旅日和 技術設計書</h1>
+<p class="subtitle">Next.js 環境構成 ・ Supabase DBスキーマ ・ 主要コード設計</p>
+<div class="meta">
+  <span>作成日: 2026年4月26日</span>
+  <span>Next.js 15 (App Router)</span>
+  <span>Supabase (PostgreSQL)</span>
+  <span>Vercel</span>
+</div>
+
+<div class="toc">
+  <h3>目次</h3>
+  <ol>
+    <li><a href="#stack">技術スタック</a></li>
+    <li><a href="#structure">ディレクトリ構成</a></li>
+    <li><a href="#db">DBスキーマ（Supabase PostgreSQL）</a></li>
+    <li><a href="#sql">SQLマイグレーション</a></li>
+    <li><a href="#code">主要コード例</a></li>
+    <li><a href="#env">環境変数・セットアップ手順</a></li>
+    <li><a href="#deploy">デプロイ・CI/CD</a></li>
+  </ol>
+</div>
+
+<!-- ======================== 1. STACK ======================== -->
+<h2 id="stack">1. 技術スタック</h2>
+<table>
+  <thead><tr><th>カテゴリ</th><th>技術</th><th>バージョン</th><th>選定理由</th></tr></thead>
+  <tbody>
+    <tr><td>フレームワーク</td><td>Next.js (App Router)</td><td>15.x</td><td>SSG/ISRでSEO最強。API Routes内蔵。</td></tr>
+    <tr><td>言語</td><td>TypeScript</td><td>5.x</td><td>型安全。DB型定義の自動生成。</td></tr>
+    <tr><td>スタイリング</td><td>Tailwind CSS</td><td>4.x</td><td>ユーティリティファースト。デザイントークンと統合。</td></tr>
+    <tr><td>DB</td><td>Supabase (PostgreSQL)</td><td>-</td><td>無料枠あり。Auth/Storage/Edge Functions統合。</td></tr>
+    <tr><td>ORM</td><td>Prisma</td><td>6.x</td><td>型安全なDB操作。マイグレーション管理。</td></tr>
+    <tr><td>ホスティング</td><td>Vercel</td><td>-</td><td>Next.js公式。ISR/Edge対応。無料枠で開始。</td></tr>
+    <tr><td>画像</td><td>Supabase Storage + next/image</td><td>-</td><td>画像最適化。WebP自動変換。</td></tr>
+    <tr><td>検索</td><td>Supabase Full Text Search</td><td>-</td><td>PostgreSQL tsvectorでフリーワード検索。</td></tr>
+    <tr><td>分析</td><td>Google Analytics 4 + GSC</td><td>-</td><td>トラフィック分析。検索パフォーマンス。</td></tr>
+    <tr><td>コンテンツ</td><td>MDX</td><td>-</td><td>Markdown+JSXで記事内にコンポーネント埋込。</td></tr>
+  </tbody>
+</table>
+
+<!-- ======================== 2. DIRECTORY ======================== -->
+<h2 id="structure">2. ディレクトリ構成</h2>
+<p class="desc">Next.js App Router ベース。機能ごとにモジュール分割。</p>
+
+<div class="tree">
+<span class="dir">inutabi-biyori/</span>
+├── <span class="dir">app/</span> <span class="comment">← App Router ルート</span>
+│   ├── layout.tsx <span class="comment">← ルートレイアウト (Navi, Footer, GA4)</span>
+│   ├── page.tsx <span class="comment">← トップページ (/)</span>
+│   ├── sitemap.ts <span class="comment">← 動的サイトマップ生成</span>
+│   ├── robots.ts <span class="comment">← robots.txt</span>
+│   ├── <span class="dir">area/</span>
+│   │   ├── page.tsx <span class="comment">← エリア一覧</span>
+│   │   └── <span class="dir">[slug]/</span>
+│   │       └── page.tsx <span class="comment">← 地方/都道府県ページ (SSG)</span>
+│   ├── <span class="dir">hotel/</span>
+│   │   ├── page.tsx <span class="comment">← 宿一覧 (フィルタ付き)</span>
+│   │   └── <span class="dir">[slug]/</span>
+│   │       └── page.tsx <span class="comment">← 宿詳細ページ (ISR) ⭐最重要</span>
+│   ├── <span class="dir">breed/</span>
+│   │   └── <span class="dir">[size]/</span>
+│   │       └── page.tsx <span class="comment">← 犬種サイズ別ページ</span>
+│   ├── <span class="dir">search/</span>
+│   │   └── page.tsx <span class="comment">← 検索結果ページ</span>
+│   ├── <span class="dir">article/</span>
+│   │   ├── page.tsx <span class="comment">← 記事一覧</span>
+│   │   └── <span class="dir">[slug]/</span>
+│   │       └── page.tsx <span class="comment">← 記事詳細 (MDX)</span>
+│   ├── <span class="dir">feature/</span>
+│   │   └── <span class="dir">[slug]/</span>
+│   │       └── page.tsx <span class="comment">← 特集ページ</span>
+│   ├── <span class="dir">listing/</span>
+│   │   ├── page.tsx <span class="comment">← 掲載案内</span>
+│   │   ├── plans/page.tsx <span class="comment">← 料金プラン</span>
+│   │   └── apply/page.tsx <span class="comment">← 申込フォーム</span>
+│   ├── <span class="dir">about/</span>
+│   │   └── page.tsx <span class="comment">← サイトについて</span>
+│   ├── <span class="dir">api/</span> <span class="comment">← API Routes</span>
+│   │   ├── <span class="dir">hotels/</span>
+│   │   │   ├── route.ts <span class="comment">← GET /api/hotels (一覧)</span>
+│   │   │   └── <span class="dir">[id]/</span>
+│   │   │       └── route.ts <span class="comment">← GET /api/hotels/:id (詳細)</span>
+│   │   ├── <span class="dir">search/</span>
+│   │   │   └── route.ts <span class="comment">← GET /api/search</span>
+│   │   └── <span class="dir">revalidate/</span>
+│   │       └── route.ts <span class="comment">← POST: ISR再生成トリガー</span>
+│   └── <span class="dir">(legal)/</span>
+│       ├── privacy/page.tsx
+│       ├── terms/page.tsx
+│       └── contact/page.tsx
+├── <span class="dir">components/</span>
+│   ├── <span class="dir">layout/</span>
+│   │   ├── Header.tsx <span class="comment">← グローバルナビ</span>
+│   │   ├── Footer.tsx
+│   │   └── Breadcrumb.tsx <span class="comment">← パンくず (JSON-LD連動)</span>
+│   ├── <span class="dir">hotel/</span>
+│   │   ├── HotelCard.tsx <span class="comment">← 宿カード (横型/縦型)</span>
+│   │   ├── HotelDetail.tsx
+│   │   ├── DogPolicyGrid.tsx <span class="comment">← 犬の受入れ条件グリッド</span>
+│   │   ├── AmenityBadges.tsx <span class="comment">← 設備バッジ群</span>
+│   │   └── BookingLinks.tsx <span class="comment">← 予約CTA (アフィリエイト)</span>
+│   ├── <span class="dir">search/</span>
+│   │   ├── SearchBox.tsx <span class="comment">← メイン検索UI</span>
+│   │   ├── FilterChips.tsx
+│   │   └── SortSelect.tsx
+│   ├── <span class="dir">seo/</span>
+│   │   ├── JsonLd.tsx <span class="comment">← JSON-LD汎用コンポーネント</span>
+│   │   ├── HotelJsonLd.tsx <span class="comment">← LodgingBusiness</span>
+│   │   ├── ArticleJsonLd.tsx <span class="comment">← Article</span>
+│   │   ├── FaqJsonLd.tsx <span class="comment">← FAQPage</span>
+│   │   └── BreadcrumbJsonLd.tsx <span class="comment">← BreadcrumbList</span>
+│   └── <span class="dir">ui/</span>
+│       ├── Button.tsx
+│       ├── Badge.tsx
+│       ├── Card.tsx
+│       ├── Chip.tsx
+│       └── Input.tsx
+├── <span class="dir">lib/</span>
+│   ├── supabase.ts <span class="comment">← Supabaseクライアント初期化</span>
+│   ├── prisma.ts <span class="comment">← Prismaクライアント (シングルトン)</span>
+│   ├── <span class="dir">queries/</span>
+│   │   ├── hotels.ts <span class="comment">← 宿データ取得</span>
+│   │   ├── areas.ts <span class="comment">← エリアデータ取得</span>
+│   │   └── articles.ts <span class="comment">← 記事データ取得</span>
+│   └── <span class="dir">utils/</span>
+│       ├── schema.ts <span class="comment">← JSON-LD生成ヘルパー</span>
+│       ├── seo.ts <span class="comment">← メタタグ生成</span>
+│       └── format.ts <span class="comment">← 表示用フォーマッタ</span>
+├── <span class="dir">prisma/</span>
+│   ├── schema.prisma <span class="comment">← Prismaスキーマ定義</span>
+│   └── <span class="dir">migrations/</span>
+├── <span class="dir">public/</span>
+│   ├── <span class="dir">images/</span>
+│   └── favicon.ico
+├── <span class="dir">styles/</span>
+│   └── globals.css <span class="comment">← Tailwind + CSS変数(デザインシステム)</span>
+├── <span class="dir">types/</span>
+│   ├── hotel.ts <span class="comment">← 宿関連の型定義</span>
+│   ├── area.ts
+│   └── article.ts
+├── next.config.ts
+├── tailwind.config.ts <span class="comment">← デザインシステムトークン統合</span>
+├── tsconfig.json
+├── .env.local <span class="comment">← 環境変数 (Supabase等)</span>
+└── package.json
+</div>
+
+<!-- ======================== 3. DB SCHEMA ======================== -->
+<h2 id="db">3. DBスキーマ（Supabase PostgreSQL）</h2>
+<p class="desc">宿データを中心に、犬特化情報を分離したスキーマ設計。JSON-LD生成に最適化。</p>
+
+<h3>3-1. テーブル一覧</h3>
+<table>
+  <thead><tr><th>テーブル名</th><th>説明</th><th>レコード数目安</th><th>リレーション</th></tr></thead>
+  <tbody>
+    <tr><td><code>regions</code></td><td>地方マスタ（北海道〜九州沖縄）</td><td>8</td><td>→ prefectures</td></tr>
+    <tr><td><code>prefectures</code></td><td>都道府県マスタ</td><td>47</td><td>→ hotels</td></tr>
+    <tr><td><code>hotels</code></td><td>宿メインデータ ⭐</td><td>500+</td><td>→ dog_policies, amenities, booking_links, images, faqs</td></tr>
+    <tr><td><code>hotel_dog_policies</code></td><td>犬の受入れ条件（1:1）</td><td>500+</td><td>← hotels</td></tr>
+    <tr><td><code>amenities</code></td><td>設備マスタ</td><td>~30</td><td>→ hotel_amenities</td></tr>
+    <tr><td><code>hotel_amenities</code></td><td>宿×設備 中間テーブル</td><td>3000+</td><td>← hotels, amenities</td></tr>
+    <tr><td><code>hotel_images</code></td><td>宿の画像</td><td>3000+</td><td>← hotels</td></tr>
+    <tr><td><code>booking_links</code></td><td>アフィリエイトリンク</td><td>1500+</td><td>← hotels</td></tr>
+    <tr><td><code>hotel_faqs</code></td><td>宿ごとのFAQ</td><td>2000+</td><td>← hotels</td></tr>
+    <tr><td><code>articles</code></td><td>記事データ</td><td>100+</td><td>→ article_hotels</td></tr>
+    <tr><td><code>article_hotels</code></td><td>記事×宿 中間テーブル</td><td>500+</td><td>← articles, hotels</td></tr>
+  </tbody>
+</table>
+
+<h3>3-2. 主要テーブル詳細</h3>
+
+<h4>hotels — 宿メインテーブル</h4>
+<table>
+  <thead><tr><th>カラム名</th><th>型</th><th>制約</th><th>説明</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>uuid</td><td>PK, DEFAULT gen_random_uuid()</td><td>主キー</td></tr>
+    <tr><td><code>prefecture_id</code></td><td>uuid</td><td>FK → prefectures.id, NOT NULL</td><td>都道府県</td></tr>
+    <tr><td><code>name</code></td><td>varchar(200)</td><td>NOT NULL</td><td>宿名</td></tr>
+    <tr><td><code>slug</code></td><td>varchar(200)</td><td>UNIQUE, NOT NULL</td><td>URLスラッグ</td></tr>
+    <tr><td><code>description</code></td><td>text</td><td></td><td>宿紹介文（SEO用）</td></tr>
+    <tr><td><code>postal_code</code></td><td>varchar(10)</td><td></td><td>郵便番号</td></tr>
+    <tr><td><code>address</code></td><td>varchar(300)</td><td>NOT NULL</td><td>住所</td></tr>
+    <tr><td><code>lat</code></td><td>decimal(10,7)</td><td></td><td>緯度</td></tr>
+    <tr><td><code>lng</code></td><td>decimal(10,7)</td><td></td><td>経度</td></tr>
+    <tr><td><code>phone</code></td><td>varchar(20)</td><td></td><td>電話番号</td></tr>
+    <tr><td><code>website_url</code></td><td>text</td><td></td><td>公式サイトURL</td></tr>
+    <tr><td><code>hotel_type</code></td><td>enum</td><td>NOT NULL</td><td>hotel/ryokan/pension/cottage/glamping</td></tr>
+    <tr><td><code>checkin_time</code></td><td>time</td><td></td><td>チェックイン時刻</td></tr>
+    <tr><td><code>checkout_time</code></td><td>time</td><td></td><td>チェックアウト時刻</td></tr>
+    <tr><td><code>room_count</code></td><td>int</td><td></td><td>総客室数</td></tr>
+    <tr><td><code>pet_room_count</code></td><td>int</td><td></td><td>ペット可客室数</td></tr>
+    <tr><td><code>parking</code></td><td>varchar(100)</td><td></td><td>駐車場情報</td></tr>
+    <tr><td><code>access</code></td><td>text</td><td></td><td>アクセス方法</td></tr>
+    <tr><td><code>listing_plan</code></td><td>enum</td><td>DEFAULT 'free'</td><td>free/standard/premium</td></tr>
+    <tr><td><code>is_published</code></td><td>boolean</td><td>DEFAULT true</td><td>公開状態</td></tr>
+    <tr><td><code>featured_order</code></td><td>int</td><td></td><td>おすすめ表示順 (NULL=非表示)</td></tr>
+    <tr><td><code>view_count</code></td><td>int</td><td>DEFAULT 0</td><td>閲覧数（ランキング用）</td></tr>
+    <tr><td><code>created_at</code></td><td>timestamptz</td><td>DEFAULT now()</td><td>作成日時</td></tr>
+    <tr><td><code>updated_at</code></td><td>timestamptz</td><td>DEFAULT now()</td><td>更新日時</td></tr>
+  </tbody>
+</table>
+
+<h4>hotel_dog_policies — 犬の受入れ条件（1:1）</h4>
+<table>
+  <thead><tr><th>カラム名</th><th>型</th><th>制約</th><th>説明</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>uuid</td><td>PK</td><td>主キー</td></tr>
+    <tr><td><code>hotel_id</code></td><td>uuid</td><td>FK, UNIQUE, NOT NULL</td><td>宿ID（1:1）</td></tr>
+    <tr><td><code>accepted_sizes</code></td><td>text[]</td><td>NOT NULL</td><td>{'超小型犬','小型犬','中型犬','大型犬','超大型犬'}</td></tr>
+    <tr><td><code>max_weight_kg</code></td><td>decimal(5,1)</td><td></td><td>最大体重(kg)</td></tr>
+    <tr><td><code>max_dogs</code></td><td>int</td><td>NOT NULL</td><td>1室あたり最大頭数</td></tr>
+    <tr><td><code>breed_restriction</code></td><td>text</td><td></td><td>犬種制限（NULLは制限なし）</td></tr>
+    <tr><td><code>dog_fee</code></td><td>int</td><td></td><td>犬1頭あたり料金(円)</td></tr>
+    <tr><td><code>dog_fee_note</code></td><td>text</td><td></td><td>料金補足（2頭目割引等）</td></tr>
+    <tr><td><code>dog_free_in_room</code></td><td>boolean</td><td>DEFAULT false</td><td>客室内フリー可否</td></tr>
+    <tr><td><code>required_vaccinations</code></td><td>text[]</td><td></td><td>必要な予防接種</td></tr>
+    <tr><td><code>dog_areas</code></td><td>text[]</td><td></td><td>犬同伴可能エリア</td></tr>
+    <tr><td><code>notes</code></td><td>text</td><td></td><td>その他注意事項</td></tr>
+  </tbody>
+</table>
+<div class="note">犬の受入れ条件を別テーブルに分離する理由: (1) hotelsテーブルの肥大化防止、(2) JSON-LD生成時にadditionalPropertyへ一括変換しやすい、(3) 将来的に猫等の他ペット対応時に拡張しやすい。</div>
+
+<h4>amenities — 設備マスタ</h4>
+<table>
+  <thead><tr><th>カラム名</th><th>型</th><th>説明</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>uuid</td><td>主キー</td></tr>
+    <tr><td><code>name</code></td><td>varchar(100)</td><td>設備名（ドッグラン等）</td></tr>
+    <tr><td><code>slug</code></td><td>varchar(100)</td><td>URLスラッグ</td></tr>
+    <tr><td><code>category</code></td><td>enum</td><td>dog_facility / general / room</td></tr>
+    <tr><td><code>icon</code></td><td>varchar(50)</td><td>アイコン識別子</td></tr>
+    <tr><td><code>sort_order</code></td><td>int</td><td>表示順</td></tr>
+  </tbody>
+</table>
+<div class="note note-blue">初期マスタデータ例: ドッグラン, 足洗い場, ドッグバス, ペットケージ貸出, 犬用食器, トイレシート, 消臭スプレー, リードフック, 犬用プール, アジリティ, ペットスパ, 犬用食事メニュー, 温泉, 露天風呂, 部屋食, 一棟貸し, BBQ, 送迎</div>
+
+<!-- ======================== 4. SQL ======================== -->
+<h2 id="sql">4. SQLマイグレーション</h2>
+<p class="desc">Supabase SQL Editorまたは Prisma migrate で実行。</p>
+
+<pre><span class="cm">-- ========================================</span>
+<span class="cm">-- 犬旅日和 DB初期マイグレーション</span>
+<span class="cm">-- Supabase PostgreSQL</span>
+<span class="cm">-- ========================================</span>
+
+<span class="cm">-- ENUMs</span>
+<span class="kw">CREATE TYPE</span> hotel_type <span class="kw">AS ENUM</span> (
+  <span class="st">'hotel'</span>, <span class="st">'ryokan'</span>, <span class="st">'pension'</span>, <span class="st">'cottage'</span>,
+  <span class="st">'glamping'</span>, <span class="st">'minshuku'</span>, <span class="st">'resort'</span>
+);
+
+<span class="kw">CREATE TYPE</span> listing_plan <span class="kw">AS ENUM</span> (
+  <span class="st">'free'</span>, <span class="st">'standard'</span>, <span class="st">'premium'</span>
+);
+
+<span class="kw">CREATE TYPE</span> booking_provider <span class="kw">AS ENUM</span> (
+  <span class="st">'rakuten'</span>, <span class="st">'jalan'</span>, <span class="st">'ikyu'</span>, <span class="st">'direct'</span>
+);
+
+<span class="kw">CREATE TYPE</span> amenity_category <span class="kw">AS ENUM</span> (
+  <span class="st">'dog_facility'</span>, <span class="st">'general'</span>, <span class="st">'room'</span>
+);
+
+<span class="kw">CREATE TYPE</span> article_category <span class="kw">AS ENUM</span> (
+  <span class="st">'area_guide'</span>, <span class="st">'tips'</span>, <span class="st">'ranking'</span>, <span class="st">'news'</span>, <span class="st">'feature'</span>
+);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- regions (地方マスタ)</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> regions (
+  id          uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  name        varchar(<span class="nu">50</span>) <span class="kw">NOT NULL</span>,
+  slug        varchar(<span class="nu">50</span>) <span class="kw">NOT NULL UNIQUE</span>,
+  sort_order  int <span class="kw">NOT NULL DEFAULT</span> <span class="nu">0</span>,
+  created_at  timestamptz <span class="kw">DEFAULT</span> now()
+);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- prefectures (都道府県マスタ)</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> prefectures (
+  id          uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  region_id   uuid <span class="kw">NOT NULL REFERENCES</span> regions(id),
+  name        varchar(<span class="nu">20</span>) <span class="kw">NOT NULL</span>,
+  slug        varchar(<span class="nu">50</span>) <span class="kw">NOT NULL UNIQUE</span>,
+  lat         decimal(<span class="nu">10</span>,<span class="nu">7</span>),
+  lng         decimal(<span class="nu">10</span>,<span class="nu">7</span>),
+  hotel_count int <span class="kw">DEFAULT</span> <span class="nu">0</span>,
+  created_at  timestamptz <span class="kw">DEFAULT</span> now()
+);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- hotels (宿メインテーブル)</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> hotels (
+  id              uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  prefecture_id   uuid <span class="kw">NOT NULL REFERENCES</span> prefectures(id),
+  name            varchar(<span class="nu">200</span>) <span class="kw">NOT NULL</span>,
+  slug            varchar(<span class="nu">200</span>) <span class="kw">NOT NULL UNIQUE</span>,
+  description     text,
+  postal_code     varchar(<span class="nu">10</span>),
+  address         varchar(<span class="nu">300</span>) <span class="kw">NOT NULL</span>,
+  lat             decimal(<span class="nu">10</span>,<span class="nu">7</span>),
+  lng             decimal(<span class="nu">10</span>,<span class="nu">7</span>),
+  phone           varchar(<span class="nu">20</span>),
+  website_url     text,
+  hotel_type      hotel_type <span class="kw">NOT NULL</span>,
+  checkin_time    time,
+  checkout_time   time,
+  room_count      int,
+  pet_room_count  int,
+  parking         varchar(<span class="nu">100</span>),
+  access          text,
+  listing_plan    listing_plan <span class="kw">DEFAULT</span> <span class="st">'free'</span>,
+  is_published    boolean <span class="kw">DEFAULT</span> true,
+  featured_order  int,
+  view_count      int <span class="kw">DEFAULT</span> <span class="nu">0</span>,
+  created_at      timestamptz <span class="kw">DEFAULT</span> now(),
+  updated_at      timestamptz <span class="kw">DEFAULT</span> now()
+);
+
+<span class="cm">-- フルテキスト検索用インデックス</span>
+<span class="kw">CREATE INDEX</span> idx_hotels_search <span class="kw">ON</span> hotels
+  <span class="kw">USING</span> GIN (to_tsvector(<span class="st">'japanese'</span>, name || <span class="st">' '</span> || coalesce(description,<span class="st">''</span>) || <span class="st">' '</span> || address));
+
+<span class="cm">-- slugでの高速検索</span>
+<span class="kw">CREATE INDEX</span> idx_hotels_slug <span class="kw">ON</span> hotels(slug);
+<span class="kw">CREATE INDEX</span> idx_hotels_prefecture <span class="kw">ON</span> hotels(prefecture_id);
+<span class="kw">CREATE INDEX</span> idx_hotels_published <span class="kw">ON</span> hotels(is_published) <span class="kw">WHERE</span> is_published = true;
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- hotel_dog_policies (犬の受入れ条件 1:1)</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> hotel_dog_policies (
+  id                      uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  hotel_id                uuid <span class="kw">NOT NULL UNIQUE REFERENCES</span> hotels(id) <span class="kw">ON DELETE CASCADE</span>,
+  accepted_sizes          text[] <span class="kw">NOT NULL</span>,
+  max_weight_kg           decimal(<span class="nu">5</span>,<span class="nu">1</span>),
+  max_dogs                int <span class="kw">NOT NULL DEFAULT</span> <span class="nu">1</span>,
+  breed_restriction       text,
+  dog_fee                 int,
+  dog_fee_note            text,
+  dog_free_in_room        boolean <span class="kw">DEFAULT</span> false,
+  required_vaccinations   text[],
+  dog_areas               text[],
+  notes                   text,
+  created_at              timestamptz <span class="kw">DEFAULT</span> now()
+);
+
+<span class="cm">-- 大型犬OK / 頭数での検索を高速化</span>
+<span class="kw">CREATE INDEX</span> idx_dog_policies_sizes <span class="kw">ON</span> hotel_dog_policies <span class="kw">USING</span> GIN(accepted_sizes);
+<span class="kw">CREATE INDEX</span> idx_dog_policies_max_dogs <span class="kw">ON</span> hotel_dog_policies(max_dogs);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- amenities (設備マスタ)</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> amenities (
+  id          uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  name        varchar(<span class="nu">100</span>) <span class="kw">NOT NULL</span>,
+  slug        varchar(<span class="nu">100</span>) <span class="kw">NOT NULL UNIQUE</span>,
+  category    amenity_category <span class="kw">NOT NULL</span>,
+  icon        varchar(<span class="nu">50</span>),
+  sort_order  int <span class="kw">DEFAULT</span> <span class="nu">0</span>
+);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- hotel_amenities (宿×設備 中間テーブル)</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> hotel_amenities (
+  id          uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  hotel_id    uuid <span class="kw">NOT NULL REFERENCES</span> hotels(id) <span class="kw">ON DELETE CASCADE</span>,
+  amenity_id  uuid <span class="kw">NOT NULL REFERENCES</span> amenities(id),
+  notes       text,
+  <span class="kw">UNIQUE</span>(hotel_id, amenity_id)
+);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- hotel_images (宿画像)</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> hotel_images (
+  id          uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  hotel_id    uuid <span class="kw">NOT NULL REFERENCES</span> hotels(id) <span class="kw">ON DELETE CASCADE</span>,
+  url         text <span class="kw">NOT NULL</span>,
+  alt_text    varchar(<span class="nu">200</span>),
+  sort_order  int <span class="kw">DEFAULT</span> <span class="nu">0</span>,
+  is_main     boolean <span class="kw">DEFAULT</span> false
+);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- booking_links (アフィリエイトリンク)</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> booking_links (
+  id              uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  hotel_id        uuid <span class="kw">NOT NULL REFERENCES</span> hotels(id) <span class="kw">ON DELETE CASCADE</span>,
+  provider        booking_provider <span class="kw">NOT NULL</span>,
+  affiliate_url   text <span class="kw">NOT NULL</span>,
+  is_active       boolean <span class="kw">DEFAULT</span> true,
+  <span class="kw">UNIQUE</span>(hotel_id, provider)
+);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- hotel_faqs (宿FAQ → JSON-LD FAQPage用)</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> hotel_faqs (
+  id          uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  hotel_id    uuid <span class="kw">NOT NULL REFERENCES</span> hotels(id) <span class="kw">ON DELETE CASCADE</span>,
+  question    text <span class="kw">NOT NULL</span>,
+  answer      text <span class="kw">NOT NULL</span>,
+  sort_order  int <span class="kw">DEFAULT</span> <span class="nu">0</span>
+);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- articles (記事データ)</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> articles (
+  id              uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  title           varchar(<span class="nu">200</span>) <span class="kw">NOT NULL</span>,
+  slug            varchar(<span class="nu">200</span>) <span class="kw">NOT NULL UNIQUE</span>,
+  description     text,
+  content         text <span class="kw">NOT NULL</span>,
+  category        article_category <span class="kw">NOT NULL</span>,
+  tags            text[],
+  thumbnail_url   text,
+  is_published    boolean <span class="kw">DEFAULT</span> false,
+  published_at    timestamptz,
+  created_at      timestamptz <span class="kw">DEFAULT</span> now(),
+  updated_at      timestamptz <span class="kw">DEFAULT</span> now()
+);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- article_hotels (記事×宿 中間テーブル)</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> article_hotels (
+  id          uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  article_id  uuid <span class="kw">NOT NULL REFERENCES</span> articles(id) <span class="kw">ON DELETE CASCADE</span>,
+  hotel_id    uuid <span class="kw">NOT NULL REFERENCES</span> hotels(id),
+  sort_order  int <span class="kw">DEFAULT</span> <span class="nu">0</span>,
+  <span class="kw">UNIQUE</span>(article_id, hotel_id)
+);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- updated_at自動更新トリガー</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE OR REPLACE FUNCTION</span> update_updated_at()
+<span class="kw">RETURNS</span> trigger <span class="kw">AS</span> $$
+<span class="kw">BEGIN</span>
+  NEW.updated_at = now();
+  <span class="kw">RETURN</span> NEW;
+<span class="kw">END</span>;
+$$ language plpgsql;
+
+<span class="kw">CREATE TRIGGER</span> hotels_updated_at
+  <span class="kw">BEFORE UPDATE ON</span> hotels
+  <span class="kw">FOR EACH ROW EXECUTE FUNCTION</span> update_updated_at();
+
+<span class="kw">CREATE TRIGGER</span> articles_updated_at
+  <span class="kw">BEFORE UPDATE ON</span> articles
+  <span class="kw">FOR EACH ROW EXECUTE FUNCTION</span> update_updated_at();
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- RLS (Row Level Security) — Supabase推奨</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">ALTER TABLE</span> hotels <span class="kw">ENABLE ROW LEVEL SECURITY</span>;
+<span class="kw">CREATE POLICY</span> <span class="st">"Public read"</span> <span class="kw">ON</span> hotels
+  <span class="kw">FOR SELECT USING</span> (is_published = true);
+
+<span class="kw">ALTER TABLE</span> articles <span class="kw">ENABLE ROW LEVEL SECURITY</span>;
+<span class="kw">CREATE POLICY</span> <span class="st">"Public read"</span> <span class="kw">ON</span> articles
+  <span class="kw">FOR SELECT USING</span> (is_published = true);</pre>
+
+<!-- ======================== 5. CODE ======================== -->
+<h2 id="code">5. 主要コード例</h2>
+
+<h3>5-1. Supabaseクライアント初期化</h3>
+<pre><span class="cm">// lib/supabase.ts</span>
+<span class="kw">import</span> { createClient } <span class="kw">from</span> <span class="st">'@supabase/supabase-js'</span>
+<span class="kw">import type</span> { <span class="ty">Database</span> } <span class="kw">from</span> <span class="st">'@/types/database'</span>
+
+<span class="kw">export const</span> supabase = createClient&lt;<span class="ty">Database</span>&gt;(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+)</pre>
+
+<h3>5-2. 宿データ取得クエリ</h3>
+<pre><span class="cm">// lib/queries/hotels.ts</span>
+<span class="kw">import</span> { supabase } <span class="kw">from</span> <span class="st">'@/lib/supabase'</span>
+
+<span class="kw">export async function</span> <span class="fn">getHotelBySlug</span>(slug: <span class="ty">string</span>) {
+  <span class="kw">const</span> { data } = <span class="kw">await</span> supabase
+    .from(<span class="st">'hotels'</span>)
+    .select(<span class="st">`
+      *,
+      prefecture:prefectures(*, region:regions(*)),
+      dog_policy:hotel_dog_policies(*),
+      amenities:hotel_amenities(*, amenity:amenities(*)),
+      images:hotel_images(*),
+      booking_links(*),
+      faqs:hotel_faqs(*)
+    `</span>)
+    .eq(<span class="st">'slug'</span>, slug)
+    .eq(<span class="st">'is_published'</span>, true)
+    .single()
+
+  <span class="kw">return</span> data
+}
+
+<span class="kw">export async function</span> <span class="fn">getHotelsByPrefecture</span>(
+  prefectureSlug: <span class="ty">string</span>,
+  filters?: {
+    sizes?: <span class="ty">string</span>[]
+    amenities?: <span class="ty">string</span>[]
+    minDogs?: <span class="ty">number</span>
+  }
+) {
+  <span class="kw">let</span> query = supabase
+    .from(<span class="st">'hotels'</span>)
+    .select(<span class="st">`
+      *,
+      dog_policy:hotel_dog_policies(*),
+      amenities:hotel_amenities(amenity:amenities(name, slug)),
+      images:hotel_images(url, alt_text).filter(is_main.eq.true)
+    `</span>)
+    .eq(<span class="st">'is_published'</span>, true)
+
+  <span class="cm">// 都道府県フィルタ</span>
+  <span class="kw">if</span> (prefectureSlug) {
+    <span class="kw">const</span> { data: pref } = <span class="kw">await</span> supabase
+      .from(<span class="st">'prefectures'</span>).select(<span class="st">'id'</span>)
+      .eq(<span class="st">'slug'</span>, prefectureSlug).single()
+    <span class="kw">if</span> (pref) query = query.eq(<span class="st">'prefecture_id'</span>, pref.id)
+  }
+
+  <span class="kw">const</span> { data } = <span class="kw">await</span> query.order(<span class="st">'featured_order'</span>, { ascending: true, nullsFirst: false })
+  <span class="kw">return</span> data ?? []
+}</pre>
+
+<h3>5-3. JSON-LD生成コンポーネント</h3>
+<pre><span class="cm">// components/seo/HotelJsonLd.tsx</span>
+<span class="kw">import type</span> { <span class="ty">Hotel</span> } <span class="kw">from</span> <span class="st">'@/types/hotel'</span>
+
+<span class="kw">export function</span> <span class="fn">HotelJsonLd</span>({ hotel }: { hotel: <span class="ty">Hotel</span> }) {
+  <span class="kw">const</span> jsonLd = {
+    <span class="st">'@context'</span>: <span class="st">'https://schema.org'</span>,
+    <span class="st">'@type'</span>: <span class="st">'LodgingBusiness'</span>,
+    name: hotel.name,
+    description: hotel.description,
+    url: <span class="st">`https://www.inutabi-biyori.jp/hotel/${hotel.slug}`</span>,
+    image: hotel.images?.map(img =&gt; img.url),
+    address: {
+      <span class="st">'@type'</span>: <span class="st">'PostalAddress'</span>,
+      addressRegion: hotel.prefecture?.name,
+      streetAddress: hotel.address,
+      postalCode: hotel.postal_code,
+      addressCountry: <span class="st">'JP'</span>,
+    },
+    geo: hotel.lat &amp;&amp; hotel.lng ? {
+      <span class="st">'@type'</span>: <span class="st">'GeoCoordinates'</span>,
+      latitude: hotel.lat,
+      longitude: hotel.lng,
+    } : undefined,
+    telephone: hotel.phone,
+    checkinTime: hotel.checkin_time,
+    checkoutTime: hotel.checkout_time,
+    numberOfRooms: hotel.room_count,
+    petsAllowed: true,
+    <span class="cm">// 犬用設備を amenityFeature に変換</span>
+    amenityFeature: hotel.amenities?.map(ha =&gt; ({
+      <span class="st">'@type'</span>: <span class="st">'LocationFeatureSpecification'</span>,
+      name: ha.amenity.name,
+      value: true,
+    })),
+    <span class="cm">// 犬特化データを additionalProperty に変換</span>
+    additionalProperty: hotel.dog_policy ? [
+      {
+        <span class="st">'@type'</span>: <span class="st">'PropertyValue'</span>,
+        name: <span class="st">'acceptedDogSize'</span>,
+        value: hotel.dog_policy.accepted_sizes.join(<span class="st">','</span>),
+      },
+      {
+        <span class="st">'@type'</span>: <span class="st">'PropertyValue'</span>,
+        name: <span class="st">'maxDogsPerRoom'</span>,
+        value: String(hotel.dog_policy.max_dogs),
+      },
+      hotel.dog_policy.max_weight_kg &amp;&amp; {
+        <span class="st">'@type'</span>: <span class="st">'PropertyValue'</span>,
+        name: <span class="st">'maxDogWeight'</span>,
+        value: String(hotel.dog_policy.max_weight_kg),
+        unitCode: <span class="st">'KGM'</span>,
+      },
+      hotel.dog_policy.dog_fee != null &amp;&amp; {
+        <span class="st">'@type'</span>: <span class="st">'PropertyValue'</span>,
+        name: <span class="st">'dogFeePerNight'</span>,
+        value: String(hotel.dog_policy.dog_fee),
+        unitCode: <span class="st">'JPY'</span>,
+      },
+      {
+        <span class="st">'@type'</span>: <span class="st">'PropertyValue'</span>,
+        name: <span class="st">'dogFreeInRoom'</span>,
+        value: String(hotel.dog_policy.dog_free_in_room),
+      },
+    ].filter(Boolean) : [],
+  }
+
+  <span class="kw">return</span> (
+    &lt;script
+      type=<span class="st">"application/ld+json"</span>
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    /&gt;
+  )
+}</pre>
+
+<h3>5-4. 宿詳細ページ (App Router)</h3>
+<pre><span class="cm">// app/hotel/[slug]/page.tsx</span>
+<span class="kw">import</span> { notFound } <span class="kw">from</span> <span class="st">'next/navigation'</span>
+<span class="kw">import</span> { <span class="fn">getHotelBySlug</span> } <span class="kw">from</span> <span class="st">'@/lib/queries/hotels'</span>
+<span class="kw">import</span> { <span class="fn">HotelJsonLd</span> } <span class="kw">from</span> <span class="st">'@/components/seo/HotelJsonLd'</span>
+<span class="kw">import</span> { <span class="fn">FaqJsonLd</span> } <span class="kw">from</span> <span class="st">'@/components/seo/FaqJsonLd'</span>
+<span class="kw">import</span> { <span class="fn">BreadcrumbJsonLd</span> } <span class="kw">from</span> <span class="st">'@/components/seo/BreadcrumbJsonLd'</span>
+
+<span class="cm">// ISR: 1時間ごとに再生成</span>
+<span class="kw">export const</span> revalidate = <span class="nu">3600</span>
+
+<span class="cm">// 全宿ページを事前生成 (SSG)</span>
+<span class="kw">export async function</span> <span class="fn">generateStaticParams</span>() {
+  <span class="kw">const</span> { data } = <span class="kw">await</span> supabase
+    .from(<span class="st">'hotels'</span>).select(<span class="st">'slug'</span>).eq(<span class="st">'is_published'</span>, true)
+  <span class="kw">return</span> data?.map(h =&gt; ({ slug: h.slug })) ?? []
+}
+
+<span class="cm">// メタデータ生成</span>
+<span class="kw">export async function</span> <span class="fn">generateMetadata</span>({ params }: { params: { slug: <span class="ty">string</span> }}) {
+  <span class="kw">const</span> hotel = <span class="kw">await</span> <span class="fn">getHotelBySlug</span>(params.slug)
+  <span class="kw">if</span> (!hotel) <span class="kw">return</span> {}
+
+  <span class="kw">const</span> sizes = hotel.dog_policy?.accepted_sizes?.join(<span class="st">'・'</span>) ?? <span class="st">''</span>
+  <span class="kw">return</span> {
+    title: <span class="st">`${hotel.name} | 犬旅日和`</span>,
+    description: <span class="st">`${hotel.name}の犬連れ宿泊情報。${sizes}OK、最大${hotel.dog_policy?.max_dogs}頭。${hotel.prefecture?.name}。`</span>,
+    openGraph: {
+      images: hotel.images?.[<span class="nu">0</span>]?.url,
+    },
+  }
+}
+
+<span class="cm">// ページコンポーネント</span>
+<span class="kw">export default async function</span> <span class="fn">HotelPage</span>({ params }: { params: { slug: <span class="ty">string</span> }}) {
+  <span class="kw">const</span> hotel = <span class="kw">await</span> <span class="fn">getHotelBySlug</span>(params.slug)
+  <span class="kw">if</span> (!hotel) notFound()
+
+  <span class="kw">const</span> breadcrumbs = [
+    { name: <span class="st">'トップ'</span>, url: <span class="st">'/'</span> },
+    { name: hotel.prefecture?.region?.name, url: <span class="st">`/area/${hotel.prefecture?.region?.slug}`</span> },
+    { name: hotel.prefecture?.name, url: <span class="st">`/area/${hotel.prefecture?.slug}`</span> },
+    { name: hotel.name },
+  ]
+
+  <span class="kw">return</span> (
+    &lt;&gt;
+      &lt;<span class="fn">HotelJsonLd</span> hotel={hotel} /&gt;
+      &lt;<span class="fn">FaqJsonLd</span> faqs={hotel.faqs} /&gt;
+      &lt;<span class="fn">BreadcrumbJsonLd</span> items={breadcrumbs} /&gt;
+
+      &lt;main&gt;
+        &lt;<span class="fn">Breadcrumb</span> items={breadcrumbs} /&gt;
+        &lt;<span class="fn">HotelDetail</span> hotel={hotel} /&gt;
+      &lt;/main&gt;
+    &lt;/&gt;
+  )
+}</pre>
+
+<h3>5-5. 検索API Route</h3>
+<pre><span class="cm">// app/api/search/route.ts</span>
+<span class="kw">import</span> { NextRequest, NextResponse } <span class="kw">from</span> <span class="st">'next/server'</span>
+<span class="kw">import</span> { supabase } <span class="kw">from</span> <span class="st">'@/lib/supabase'</span>
+
+<span class="kw">export async function</span> <span class="fn">GET</span>(request: <span class="ty">NextRequest</span>) {
+  <span class="kw">const</span> { searchParams } = <span class="kw">new</span> URL(request.url)
+  <span class="kw">const</span> q = searchParams.get(<span class="st">'q'</span>) ?? <span class="st">''</span>
+  <span class="kw">const</span> prefecture = searchParams.get(<span class="st">'prefecture'</span>)
+  <span class="kw">const</span> sizes = searchParams.getAll(<span class="st">'size'</span>)    <span class="cm">// 大型犬 etc.</span>
+  <span class="kw">const</span> amenities = searchParams.getAll(<span class="st">'amenity'</span>)
+  <span class="kw">const</span> minDogs = searchParams.get(<span class="st">'min_dogs'</span>)
+  <span class="kw">const</span> page = Number(searchParams.get(<span class="st">'page'</span>) ?? <span class="st">'1'</span>)
+  <span class="kw">const</span> perPage = <span class="nu">20</span>
+
+  <span class="kw">let</span> query = supabase
+    .from(<span class="st">'hotels'</span>)
+    .select(<span class="st">`
+      *, dog_policy:hotel_dog_policies(*),
+      amenities:hotel_amenities(amenity:amenities(name,slug)),
+      images:hotel_images(url).filter(is_main.eq.true),
+      prefecture:prefectures(name,slug)
+    `</span>, { count: <span class="st">'exact'</span> })
+    .eq(<span class="st">'is_published'</span>, true)
+
+  <span class="cm">// フリーワード検索</span>
+  <span class="kw">if</span> (q) {
+    query = query.textSearch(<span class="st">'name'</span>, q, { type: <span class="st">'websearch'</span> })
+  }
+
+  <span class="cm">// ページネーション</span>
+  <span class="kw">const</span> from = (page - <span class="nu">1</span>) * perPage
+  query = query.range(from, from + perPage - <span class="nu">1</span>)
+
+  <span class="kw">const</span> { data, count, error } = <span class="kw">await</span> query
+  <span class="kw">if</span> (error) <span class="kw">return</span> NextResponse.json({ error: error.message }, { status: <span class="nu">500</span> })
+
+  <span class="kw">return</span> NextResponse.json({
+    hotels: data,
+    total: count,
+    page,
+    totalPages: Math.ceil((count ?? <span class="nu">0</span>) / perPage),
+  })
+}</pre>
+
+<h3>5-6. tailwind.config.ts（デザインシステム統合）</h3>
+<pre><span class="cm">// tailwind.config.ts</span>
+<span class="kw">import type</span> { Config } <span class="kw">from</span> <span class="st">'tailwindcss'</span>
+
+<span class="kw">const</span> config: <span class="ty">Config</span> = {
+  content: [<span class="st">'./app/**/*.{ts,tsx}'</span>, <span class="st">'./components/**/*.{ts,tsx}'</span>],
+  theme: {
+    extend: {
+      colors: {
+        primary: {
+          DEFAULT: <span class="st">'#C75200'</span>,
+          text: <span class="st">'#B84A00'</span>,
+          light: <span class="st">'#FFF4EC'</span>,
+          hover: <span class="st">'#FFD4B0'</span>,
+          accent: <span class="st">'#FF8C42'</span>,
+        },
+        secondary: {
+          DEFAULT: <span class="st">'#1A6BC4'</span>,
+          dark: <span class="st">'#0E5299'</span>,
+          light: <span class="st">'#EBF5FF'</span>,
+        },
+        ok: { DEFAULT: <span class="st">'#0A7B3E'</span>, light: <span class="st">'#E8FAF0'</span> },
+        warn: { DEFAULT: <span class="st">'#7A5B0F'</span>, light: <span class="st">'#FFF8E1'</span> },
+        error: { DEFAULT: <span class="st">'#B22626'</span>, light: <span class="st">'#FFF0F0'</span> },
+        premium: { DEFAULT: <span class="st">'#5B3BA0'</span>, light: <span class="st">'#F5F0FF'</span> },
+        gray: {
+          <span class="nu">50</span>: <span class="st">'#FAFAF8'</span>, <span class="nu">100</span>: <span class="st">'#F3F2EE'</span>, <span class="nu">200</span>: <span class="st">'#E5E4DF'</span>,
+          <span class="nu">400</span>: <span class="st">'#B5B3AC'</span>, <span class="nu">600</span>: <span class="st">'#5C5A55'</span>, <span class="nu">900</span>: <span class="st">'#2D2C28'</span>,
+        },
+      },
+      fontFamily: {
+        sans: [<span class="st">'Inter'</span>, <span class="st">'Noto Sans JP'</span>, <span class="st">'Hiragino Sans'</span>, <span class="st">'sans-serif'</span>],
+        mono: [<span class="st">'JetBrains Mono'</span>, <span class="st">'SF Mono'</span>, <span class="st">'monospace'</span>],
+      },
+      borderRadius: {
+        sm: <span class="st">'4px'</span>, md: <span class="st">'8px'</span>, lg: <span class="st">'12px'</span>, xl: <span class="st">'16px'</span>,
+      },
+      boxShadow: {
+        sm: <span class="st">'0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)'</span>,
+        md: <span class="st">'0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04)'</span>,
+        lg: <span class="st">'0 8px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.04)'</span>,
+      },
+    },
+  },
+  plugins: [],
+}
+<span class="kw">export default</span> config</pre>
+
+<!-- ======================== 6. ENV ======================== -->
+<h2 id="env">6. 環境変数・セットアップ手順</h2>
+
+<h3>6-1. 必要な環境変数</h3>
+<pre><span class="cm"># .env.local</span>
+
+<span class="cm"># Supabase</span>
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...
+
+<span class="cm"># Prisma (同じSupabaseのPostgreSQL)</span>
+DATABASE_URL=postgresql://postgres:xxxxx@db.xxxxx.supabase.co:5432/postgres
+
+<span class="cm"># サイト情報</span>
+NEXT_PUBLIC_SITE_URL=https://www.inutabi-biyori.jp
+NEXT_PUBLIC_SITE_NAME=犬旅日和
+
+<span class="cm"># ISR再検証シークレット</span>
+REVALIDATION_SECRET=your-secret-key
+
+<span class="cm"># Google Analytics</span>
+NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX</pre>
+
+<h3>6-2. 初期セットアップ手順</h3>
+<div class="card">
+<table>
+  <thead><tr><th>Step</th><th>コマンド / 作業</th><th>説明</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td><code>npx create-next-app@latest inutabi-biyori --typescript --tailwind --app --src-dir=false</code></td><td>Next.jsプロジェクト作成</td></tr>
+    <tr><td>2</td><td><code>npm install @supabase/supabase-js prisma @prisma/client</code></td><td>DB関連パッケージ</td></tr>
+    <tr><td>3</td><td><code>npm install next-mdx-remote</code></td><td>MDX記事処理</td></tr>
+    <tr><td>4</td><td>Supabaseプロジェクト作成</td><td>supabase.com でプロジェクト作成</td></tr>
+    <tr><td>5</td><td>SQLマイグレーション実行</td><td>Supabase SQL Editorで上記SQLを実行</td></tr>
+    <tr><td>6</td><td><code>npx prisma db pull</code></td><td>既存DBからPrismaスキーマ生成</td></tr>
+    <tr><td>7</td><td><code>npx supabase gen types typescript</code></td><td>TypeScript型定義自動生成</td></tr>
+    <tr><td>8</td><td>.env.local に環境変数設定</td><td>Supabaseダッシュボードからキー取得</td></tr>
+    <tr><td>9</td><td>Vercelプロジェクト作成・GitHub連携</td><td>自動デプロイ設定</td></tr>
+    <tr><td>10</td><td><code>npm run dev</code></td><td>ローカル開発サーバー起動</td></tr>
+  </tbody>
+</table>
+</div>
+
+<!-- ======================== 7. DEPLOY ======================== -->
+<h2 id="deploy">7. デプロイ・CI/CD</h2>
+
+<h3>Vercel設定</h3>
+<table>
+  <thead><tr><th>設定項目</th><th>値</th><th>備考</th></tr></thead>
+  <tbody>
+    <tr><td>Framework Preset</td><td>Next.js</td><td>自動検出</td></tr>
+    <tr><td>Build Command</td><td><code>next build</code></td><td>デフォルト</td></tr>
+    <tr><td>Output Directory</td><td><code>.next</code></td><td>デフォルト</td></tr>
+    <tr><td>Node.js Version</td><td>20.x</td><td>LTS推奨</td></tr>
+    <tr><td>Environment Variables</td><td>.env.local と同じ</td><td>Vercelダッシュボードで設定</td></tr>
+    <tr><td>Domain</td><td>www.inutabi-biyori.jp</td><td>カスタムドメイン設定</td></tr>
+    <tr><td>ISR</td><td>有効</td><td>宿ページ: revalidate=3600</td></tr>
+  </tbody>
+</table>
+
+<h3>CI/CDフロー</h3>
+<div class="card">
+  <p style="font-size:13px;line-height:2;">
+    <strong>1.</strong> GitHubにpush → <strong>2.</strong> Vercelが自動ビルド → <strong>3.</strong> プレビューデプロイ（PRごと）→ <strong>4.</strong> mainマージで本番デプロイ → <strong>5.</strong> ISRで宿ページは1時間ごとに再生成
+  </p>
+</div>
+
+<div class="note">
+  <strong>ISR再検証の仕組み:</strong> Supabaseの宿データが更新されたら、Webhook経由で <code>/api/revalidate</code> にPOSTリクエストを送信。対象ページのキャッシュを即時再生成。手動更新を待たずに最新データを反映。
+</div>
+
+</div>
+</body>
+</html>

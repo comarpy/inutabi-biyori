@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>犬旅日和 技術設計書 v2 — Supabase + Next.js + 自動更新エージェント</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Inter", "Noto Sans JP", "Hiragino Sans", sans-serif; color: #2D2C28; background: #FAFAF8; line-height: 1.7; }
+.container { max-width: 980px; margin: 0 auto; padding: 40px 24px; }
+h1 { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+.subtitle { font-size: 14px; color: #5C5A55; margin-bottom: 8px; }
+.meta { display: flex; gap: 16px; font-size: 12px; color: #8A877F; margin-bottom: 32px; flex-wrap: wrap; }
+h2 { font-size: 20px; font-weight: 700; margin: 56px 0 8px; padding-bottom: 8px; border-bottom: 3px solid #C75200; }
+h3 { font-size: 16px; font-weight: 600; margin: 32px 0 8px; }
+h4 { font-size: 14px; font-weight: 600; margin: 20px 0 6px; color: #5C5A55; }
+p { margin-bottom: 12px; font-size: 14px; }
+ul, ol { padding-left: 22px; margin-bottom: 12px; }
+li { font-size: 14px; margin-bottom: 4px; }
+.desc { font-size: 13px; color: #5C5A55; margin-bottom: 16px; }
+.toc { background: #fff; border: 1px solid #E5E4DF; border-radius: 12px; padding: 20px 24px; margin-bottom: 40px; }
+.toc h3 { margin: 0 0 10px; font-size: 14px; }
+.toc ol { padding-left: 20px; }
+.toc li { font-size: 13px; margin-bottom: 6px; }
+.toc a { color: #1A6BC4; text-decoration: none; }
+.card { background: #fff; border: 1px solid #E5E4DF; border-radius: 12px; padding: 24px; margin: 12px 0; }
+pre { background: #1e1e1e; color: #d4d4d4; border-radius: 8px; padding: 16px; font-size: 12px; font-family: "JetBrains Mono", "SF Mono", monospace; overflow-x: auto; line-height: 1.6; margin: 8px 0; }
+pre .cm { color: #6A9955; }
+pre .kw { color: #569CD6; }
+pre .st { color: #CE9178; }
+pre .fn { color: #DCDCAA; }
+pre .ty { color: #4EC9B0; }
+pre .nu { color: #B5CEA8; }
+code { font-size: 12px; background: #F3F2EE; padding: 2px 6px; border-radius: 4px; font-family: "JetBrains Mono", "SF Mono", monospace; }
+.note { font-size: 12px; color: #5C5A55; margin-top: 8px; padding: 10px 14px; background: #FFF4EC; border-radius: 6px; border-left: 3px solid #C75200; }
+.note-blue { background: #EBF5FF; border-left-color: #1A6BC4; }
+.note-warn { background: #FFF8E1; border-left-color: #B89200; }
+.note-bad { background: #FFF0F0; border-left-color: #B22626; }
+table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0; }
+th { text-align: left; padding: 8px 12px; background: #F3F2EE; font-weight: 600; border-bottom: 2px solid #E5E4DF; }
+td { padding: 8px 12px; border-bottom: 1px solid #E5E4DF; vertical-align: top; }
+.tree { font-family: "JetBrains Mono", monospace; font-size: 12px; line-height: 1.8; padding: 16px; background: #fff; border: 1px solid #E5E4DF; border-radius: 8px; }
+.tree .dir { color: #1A6BC4; font-weight: 600; }
+.tree .file { color: #2D2C28; }
+.tree .new { color: #0A7B3E; font-weight: 600; }
+.tree .comment { color: #8A877F; }
+.diagram { font-family: "JetBrains Mono", monospace; font-size: 12px; line-height: 1.6; padding: 20px; background: #fff; border: 1px solid #E5E4DF; border-radius: 8px; white-space: pre; overflow-x: auto; }
+.badge { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 999px; font-weight: 600; }
+.badge-stack { background: #EBF5FF; color: #0E5299; }
+.badge-new { background: #E8FAF0; color: #0A7B3E; }
+.badge-fix { background: #FFF4EC; color: #B84A00; }
+.badge-removed { background: #FFF0F0; color: #B22626; }
+.changelog { background: #fff; border: 1px solid #E5E4DF; border-radius: 12px; padding: 16px 24px; margin-bottom: 40px; }
+.changelog h3 { margin-top: 0; }
+.changelog ul { font-size: 13px; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+@media (max-width: 720px) { .two-col { grid-template-columns: 1fr; } }
+@media print { body { background: #fff; } .card { break-inside: avoid; } h2 { break-before: page; } }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>犬旅日和 技術設計書 v2</h1>
+<p class="subtitle">Supabase + Next.js 15（App Router）+ 週次自動更新エージェント</p>
+<div class="meta">
+  <span>作成日: 2026年4月27日</span>
+  <span>v1からの大幅改訂</span>
+  <span>5月8日ミーティング向け</span>
+</div>
+
+<!-- ======================== CHANGELOG ======================== -->
+<div class="changelog">
+  <h3>v1 からの主な変更点</h3>
+  <ul>
+    <li><span class="badge badge-new">追加</span> <strong>自動更新フロー全章を新設</strong>（エージェントA/B、GitHub Actions、Slack、discovery_queue）— v1で完全欠落していた本題</li>
+    <li><span class="badge badge-removed">削除</span> <strong>Prisma を撤去</strong> — supabase-js だけで完結。型生成・マイグレ・RLSの三重複雑性を解消</li>
+    <li><span class="badge badge-fix">修正</span> v1のコードバグ多数（<code>.filter(is_main.eq.true)</code> という存在しない構文、Next 15 で <code>params</code> が Promise になった件への未対応、anon key だけのSupabaseクライアント、<code>generateStaticParams</code> での import漏れ、1:1 リレーションを単数で扱うバグ等）</li>
+    <li><span class="badge badge-fix">修正</span> <code>to_tsvector('japanese', ...)</code> はPostgresに存在しない設定 → <code>pg_trgm</code> + ILIKE 構成に変更</li>
+    <li><span class="badge badge-new">追加</span> <strong>出典管理 (<code>hotel_sources</code>)・更新履歴 (<code>hotel_revisions</code>)・重複判定ハッシュ・<code>status</code> 列</strong></li>
+    <li><span class="badge badge-new">追加</span> <strong>URL移行計画</strong>（<code>/hotel/[id]</code> → <code>/hotel/[slug]</code> の301設計）</li>
+    <li><span class="badge badge-new">追加</span> <strong>5/8 までのロードマップ</strong>（11日間の段取り）</li>
+    <li><span class="badge badge-fix">修正</span> ディレクトリ構成を既存 <code>src/app</code> ベースに揃えた</li>
+  </ul>
+</div>
+
+<div class="toc">
+  <h3>目次</h3>
+  <ol>
+    <li><a href="#goals">ゴールと設計方針</a></li>
+    <li><a href="#stack">技術スタック</a></li>
+    <li><a href="#overview">システム全体図</a></li>
+    <li><a href="#structure">ディレクトリ構成</a></li>
+    <li><a href="#db">DBスキーマ（Supabase PostgreSQL）</a></li>
+    <li><a href="#sql">SQLマイグレーション</a></li>
+    <li><a href="#auto">自動更新フロー設計 ⭐</a></li>
+    <li><a href="#code">主要コード例（バグ修正済み）</a></li>
+    <li><a href="#migrate">URL移行計画（[id] → [slug]）</a></li>
+    <li><a href="#env">環境変数・セットアップ手順</a></li>
+    <li><a href="#deploy">デプロイ・CI/CD</a></li>
+    <li><a href="#roadmap">5/8までのロードマップ</a></li>
+  </ol>
+</div>
+
+<!-- ======================== 1. GOALS ======================== -->
+<h2 id="goals">1. ゴールと設計方針</h2>
+
+<h3>1-1. プロジェクトのゴール</h3>
+<ul>
+  <li>犬OK宿の検索メディア「犬旅日和」を、SEOで上位を獲得できる構造に改修する</li>
+  <li><strong>週1回の自動更新</strong>で新規宿を発見し、人手は最終承認だけに絞る</li>
+  <li>エンジニア1名＋編集1名の2名体制でも回る運用設計</li>
+  <li>5月8日の社内ミーティングまでに方針を固め、第1スプリント（DB＋移行＋エージェントA最小実装）まで着手する</li>
+</ul>
+
+<h3>1-2. 設計の根本方針</h3>
+<table>
+  <thead><tr><th>原則</th><th>具体</th></tr></thead>
+  <tbody>
+    <tr><td>シンプル最優先</td><td>ライブラリは最小。Prisma併用なし、Supabaseに一本化。複雑性は運用工数になる。</td></tr>
+    <tr><td>AIが書きやすい構造</td><td>正規化テーブル、UNIQUE制約による冪等性、status列で人間レビューを強制。</td></tr>
+    <tr><td>追跡可能性</td><td>すべてのレコードに「いつ・誰（or どのエージェント）が・どこから取得したか」を記録。</td></tr>
+    <tr><td>段階的移行</td><td>microCMSは即時廃止せず、Supabaseに移行後しばらく並行稼働。読み出しはSupabase優先で切り替え。</td></tr>
+    <tr><td>SEO非破壊</td><td>既存URL <code>/hotel/[id]</code> から <code>/hotel/[slug]</code> への切替は301で連続性を保つ。</td></tr>
+  </tbody>
+</table>
+
+<!-- ======================== 2. STACK ======================== -->
+<h2 id="stack">2. 技術スタック</h2>
+<table>
+  <thead><tr><th>カテゴリ</th><th>採用</th><th>選定理由 / v1からの変更</th></tr></thead>
+  <tbody>
+    <tr><td>フレームワーク</td><td>Next.js 15.x (App Router) <span class="badge badge-stack">既存</span></td><td>SSG/ISRでSEO、API Routes内蔵。<code>params</code> がPromiseに変わった点に注意。</td></tr>
+    <tr><td>言語</td><td>TypeScript 5.x <span class="badge badge-stack">既存</span></td><td>Supabaseの型自動生成と相性◎</td></tr>
+    <tr><td>スタイル</td><td>Tailwind CSS 4.x <span class="badge badge-stack">既存</span></td><td>そのまま継続</td></tr>
+    <tr><td>DB</td><td>Supabase (PostgreSQL) <span class="badge badge-new">新規</span></td><td>無料枠500MB / Auth / Storage / Edge Functions / Realtime統合</td></tr>
+    <tr><td>DBアクセス</td><td><strong>supabase-js のみ</strong> <span class="badge badge-fix">v1から変更</span></td><td>v1の Prisma 併用は撤回。型生成・マイグレ・RLSの整合性が崩れる。</td></tr>
+    <tr><td>マイグレ管理</td><td>Supabase CLI (<code>supabase migration new</code>)</td><td>Git管理されたSQLファイル。Supabase Studio直書きは禁止運用。</td></tr>
+    <tr><td>編集UI（暫定）</td><td>Supabase Studio</td><td>編集者はTable Editorで直接編集。RLS＋Authで権限分離。</td></tr>
+    <tr><td>全文検索</td><td><code>pg_trgm</code> + ILIKE <span class="badge badge-fix">v1から変更</span></td><td>v1の <code>to_tsvector('japanese', ...)</code> は素のPostgresに存在しないため不可。pg_trgmはSupabaseにデフォルト導入済み。</td></tr>
+    <tr><td>地理検索</td><td>PostGIS <code>geography(POINT, 4326)</code></td><td>近傍検索（〇km圏内の宿）が必要なら必須。<code>lat/lng</code>のdecimalだけだと自前計算になる。</td></tr>
+    <tr><td>画像</td><td>Supabase Storage + next/image</td><td>WebP変換は <code>next/image</code> 任せ。Storageには path だけ保存、URLはクエリ時に組み立て。</td></tr>
+    <tr><td>ホスティング</td><td>Vercel <span class="badge badge-stack">既存</span></td><td>Hobbyプラン継続。ISR利用。</td></tr>
+    <tr><td>自動収集ランタイム</td><td>GitHub Actions（schedule cron）<span class="badge badge-new">新規</span></td><td>週次バッチ。Playwright公式アクションあり。月2000分無料。</td></tr>
+    <tr><td>Slack連携</td><td>Slack App + Vercel API Routes <span class="badge badge-new">新規</span></td><td>3秒以内応答 → 重い処理は GitHub <code>repository_dispatch</code> に逃がす。</td></tr>
+    <tr><td>分析</td><td>GA4 + Search Console</td><td>変更なし</td></tr>
+    <tr><td>記事</td><td>Supabase内テーブル（Markdown）</td><td>v1のMDX案は撤回。100本規模ならMarkdownで十分、編集者はSupabase Studioで編集。</td></tr>
+  </tbody>
+</table>
+
+<!-- ======================== 3. OVERVIEW ======================== -->
+<h2 id="overview">3. システム全体図</h2>
+<p class="desc">読み取り経路（ユーザー）と書き込み経路（自動更新）を分けた構成。</p>
+
+<div class="diagram">
+┌─────────────────────────── ユーザー（読み取り） ───────────────────────────┐
+│                                                                            │
+│   ブラウザ ─→ Vercel (Next.js / ISR)                                        │
+│                  │                                                         │
+│                  ├─→ Supabase PostgREST  (一覧・詳細・検索)                  │
+│                  └─→ Supabase Storage    (画像)                             │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────── 自動更新（週1 / Slackコマンド） ────────────────────────┐
+│                                                                            │
+│   ① 週1 cron (GitHub Actions schedule)                                     │
+│        ↓                                                                   │
+│   エージェントA: 楽天API + じゃらんスクレイピング                              │
+│        ↓                                                                   │
+│   重複判定 (dedup_hash) → discovery_queue へINSERT                          │
+│        ↓                                                                   │
+│   Slack通知 (Block Kit: 追加 / スキップ ボタン)                              │
+│                                                                            │
+│   ② Slack「@犬旅bot 〇〇宿を追加」                                            │
+│        ↓                                                                   │
+│   Vercel /api/slack/events ── 3秒以内に200 ─→ GitHub repository_dispatch    │
+│        ↓                                                                   │
+│   エージェントB: 詳細スクレイピング → hotels INSERT (status=draft)           │
+│        ↓                                                                   │
+│   Slack通知 → 編集者がSupabase Studioで承認 → status=published               │
+│                                                                            │
+└────────────────────────────────────────────────────────────────────────────┘
+</div>
+
+<div class="note note-blue"><strong>重要:</strong> ユーザー読み取り経路と自動更新経路は完全に分離。読み取りはRLSで <code>status='published'</code> のみ公開、書き込みはservice_roleで行う。</div>
+
+<!-- ======================== 4. STRUCTURE ======================== -->
+<h2 id="structure">4. ディレクトリ構成</h2>
+<p class="desc">既存の <code>src/app</code> 構成を維持しつつ、自動収集スクリプトを <code>scripts/agents/</code> 配下に追加。</p>
+
+<div class="tree">
+<span class="dir">Inutabi-biyori/</span>
+├── <span class="dir">src/</span>
+│   ├── <span class="dir">app/</span>                           <span class="comment">← 既存</span>
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   ├── <span class="dir">hotel/[id]/</span>                <span class="comment">← 当面残す（→[slug]へ301）</span>
+│   │   ├── <span class="new">hotel/[slug]/</span>              <span class="comment">← 新URL（移行先）</span>
+│   │   ├── <span class="dir">area/[slug]/</span>
+│   │   ├── <span class="dir">search/</span>
+│   │   ├── faq/, contact/, privacy/, terms/
+│   │   └── <span class="dir">api/</span>
+│   │       ├── <span class="dir">search-hotels/</span>         <span class="comment">← 既存</span>
+│   │       ├── <span class="dir">hotel/[id]/</span>            <span class="comment">← 既存</span>
+│   │       ├── <span class="new">slack/events/</span>          <span class="comment">← 新規（@mention受信）</span>
+│   │       ├── <span class="new">slack/interactivity/</span>   <span class="comment">← 新規（ボタン押下受信）</span>
+│   │       └── <span class="new">revalidate/</span>            <span class="comment">← 新規（Webhook受け）</span>
+│   ├── <span class="dir">components/</span>
+│   ├── <span class="dir">lib/</span>
+│   │   ├── microcms.ts                  <span class="comment">← 当面残す（フォールバック）</span>
+│   │   ├── rakuten.ts                   <span class="comment">← 既存</span>
+│   │   ├── <span class="new">supabase/client.ts</span>          <span class="comment">← anon: ブラウザ・SSG用</span>
+│   │   ├── <span class="new">supabase/server.ts</span>          <span class="comment">← service_role: API・エージェント用</span>
+│   │   ├── <span class="new">queries/hotels.ts</span>
+│   │   ├── <span class="new">queries/discovery.ts</span>
+│   │   └── <span class="new">slack/sign.ts</span>               <span class="comment">← Slack署名検証</span>
+│   └── <span class="new">types/database.ts</span>               <span class="comment">← supabase gen types で自動生成</span>
+├── <span class="new">scripts/</span>
+│   └── <span class="new">agents/</span>
+│       ├── <span class="new">discovery.ts</span>                <span class="comment">← エージェントA（週次）</span>
+│       ├── <span class="new">enrich.ts</span>                   <span class="comment">← エージェントB（個別宿の詳細取得）</span>
+│       ├── <span class="new">lib/dedup.ts</span>                <span class="comment">← 重複判定ハッシュ</span>
+│       ├── <span class="new">lib/normalize.ts</span>            <span class="comment">← 住所・宿名の正規化</span>
+│       └── <span class="new">sources/</span>
+│           ├── <span class="new">rakuten.ts</span>              <span class="comment">← 楽天トラベルAPI</span>
+│           └── <span class="new">jalan.ts</span>                <span class="comment">← じゃらんスクレイピング</span>
+├── <span class="new">supabase/</span>
+│   ├── <span class="new">migrations/</span>                     <span class="comment">← Git管理されたSQL</span>
+│   │   ├── 20260427000000_init.sql
+│   │   ├── 20260427000001_auto_update.sql
+│   │   └── ...
+│   └── <span class="new">seed.sql</span>                        <span class="comment">← 都道府県マスタ等</span>
+├── <span class="new">.github/workflows/</span>
+│   ├── <span class="new">discovery.yml</span>                   <span class="comment">← 週次cron（毎週月曜9時 JST）</span>
+│   └── <span class="new">enrich.yml</span>                      <span class="comment">← repository_dispatch起動</span>
+├── public/
+├── package.json
+├── next.config.js
+└── .env.local
+</div>
+
+<!-- ======================== 5. DB ======================== -->
+<h2 id="db">5. DBスキーマ（Supabase PostgreSQL）</h2>
+
+<h3>5-1. テーブル一覧</h3>
+<table>
+  <thead><tr><th>テーブル</th><th>説明</th><th>レコード数</th><th>v1からの変更</th></tr></thead>
+  <tbody>
+    <tr><td><code>regions</code></td><td>地方マスタ</td><td>8</td><td>変更なし</td></tr>
+    <tr><td><code>prefectures</code></td><td>都道府県マスタ</td><td>47</td><td><code>hotel_count</code> 削除（VIEWで集計）</td></tr>
+    <tr><td><code>hotels</code></td><td>宿マスタ ⭐</td><td>500+</td><td><code>status</code>, <code>dedup_hash</code>, <code>geo</code>(PostGIS) 追加</td></tr>
+    <tr><td><code>hotel_dog_policies</code></td><td>犬の受入条件 (1:1)</td><td>500+</td><td>変更なし</td></tr>
+    <tr><td><code>amenities</code> / <code>hotel_amenities</code></td><td>設備マスタ＆中間</td><td>30 / 3000+</td><td>変更なし</td></tr>
+    <tr><td><code>hotel_images</code></td><td>画像（Storage path）</td><td>3000+</td><td>URL→pathに変更</td></tr>
+    <tr><td><code>booking_links</code></td><td>アフィリエイト出口</td><td>1500+</td><td>変更なし</td></tr>
+    <tr><td><code>hotel_faqs</code></td><td>宿ごとFAQ</td><td>2000+</td><td>変更なし</td></tr>
+    <tr><td><code>articles</code> / <code>article_hotels</code></td><td>記事＆中間</td><td>100+ / 500+</td><td>変更なし</td></tr>
+    <tr><td><span class="badge badge-new">新規</span> <code>hotel_sources</code></td><td>出典URL（楽天/じゃらん/るるぶ/一休/手動）</td><td>1500+</td><td>v1で欠落していた</td></tr>
+    <tr><td><span class="badge badge-new">新規</span> <code>hotel_revisions</code></td><td>変更履歴（誰が・何を・いつ）</td><td>増加型</td><td>v1で欠落していた</td></tr>
+    <tr><td><span class="badge badge-new">新規</span> <code>discovery_queue</code></td><td>エージェント発見・人間レビュー待ち</td><td>週20件程度</td><td>v1で欠落していた</td></tr>
+    <tr><td><span class="badge badge-new">新規</span> <code>agent_runs</code></td><td>エージェント実行ログ</td><td>増加型</td><td>運用観測用</td></tr>
+  </tbody>
+</table>
+
+<h3>5-2. <code>hotels</code> 主要カラム（v1からの差分）</h3>
+<table>
+  <thead><tr><th>カラム</th><th>型</th><th>説明</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>uuid PK</td><td>主キー</td></tr>
+    <tr><td><code>slug</code></td><td>varchar(200) UNIQUE</td><td>URL用。日本語からは <code>scripts/agents/lib/normalize.ts</code> でromaji変換</td></tr>
+    <tr><td><span class="badge badge-new">新規</span> <code>status</code></td><td>enum hotel_status</td><td><code>draft</code>（自動投入）/ <code>reviewing</code>（人間レビュー中）/ <code>published</code>（公開）/ <code>archived</code></td></tr>
+    <tr><td><span class="badge badge-new">新規</span> <code>dedup_hash</code></td><td>varchar(64) UNIQUE</td><td>SHA-256(正規化住所＋正規化宿名＋電話下4桁)。同名異住所・同住所別館を区別</td></tr>
+    <tr><td><span class="badge badge-new">新規</span> <code>geo</code></td><td>geography(POINT, 4326)</td><td>PostGIS。近傍検索用。<code>lat/lng</code>から自動算出</td></tr>
+    <tr><td><span class="badge badge-fix">変更</span> <code>is_published</code></td><td>削除</td><td><code>status</code> に統合</td></tr>
+  </tbody>
+</table>
+<div class="note"><strong>重複判定の根拠:</strong> 「住所のゆらぎ」「宿名の表記揺れ（株式会社／有限会社／〜ホテル／〜HOTEL）」を <code>normalize.ts</code> で正規化してからハッシュ化。電話番号下4桁を組み合わせることで、同名異住所（チェーン）を別レコードとして区別。</div>
+
+<h3>5-3. <code>hotel_sources</code>（出典管理）</h3>
+<table>
+  <thead><tr><th>カラム</th><th>型</th><th>説明</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>uuid PK</td><td></td></tr>
+    <tr><td><code>hotel_id</code></td><td>uuid FK</td><td>→ hotels(id) ON DELETE CASCADE</td></tr>
+    <tr><td><code>source_type</code></td><td>enum source_type</td><td><code>rakuten</code> / <code>jalan</code> / <code>rurubu</code> / <code>ikkyu</code> / <code>official</code> / <code>manual</code></td></tr>
+    <tr><td><code>source_url</code></td><td>text</td><td>取得元URL</td></tr>
+    <tr><td><code>source_id</code></td><td>varchar(100)</td><td>各社の宿ID（楽天hotelNo等）</td></tr>
+    <tr><td><code>affiliate_url</code></td><td>text</td><td>アフィリエイトリンク（バリューコマース等）</td></tr>
+    <tr><td><code>last_fetched_at</code></td><td>timestamptz</td><td>最終取得日時</td></tr>
+    <tr><td><code>last_fetch_status</code></td><td>varchar(20)</td><td>ok / 404 / blocked / error</td></tr>
+    <tr><td colspan="3" style="background:#FFF4EC"><code>UNIQUE(hotel_id, source_type)</code> — 1宿1ソース1レコード</td></tr>
+  </tbody>
+</table>
+
+<h3>5-4. <code>discovery_queue</code>（自動発見の人間レビュー待ち）</h3>
+<table>
+  <thead><tr><th>カラム</th><th>型</th><th>説明</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>uuid PK</td><td></td></tr>
+    <tr><td><code>dedup_hash</code></td><td>varchar(64) UNIQUE</td><td>同じ宿が二重キューインしないように</td></tr>
+    <tr><td><code>candidate_name</code></td><td>varchar(200)</td><td>発見した宿名</td></tr>
+    <tr><td><code>candidate_address</code></td><td>varchar(300)</td><td>住所</td></tr>
+    <tr><td><code>raw_payload</code></td><td>jsonb</td><td>取得した生データ（楽天APIレスポンス等）</td></tr>
+    <tr><td><code>discovered_by</code></td><td>varchar(50)</td><td><code>agent_a</code> / <code>agent_b</code> / <code>manual</code></td></tr>
+    <tr><td><code>discovered_from</code></td><td>varchar(50)</td><td><code>rakuten_search</code> 等</td></tr>
+    <tr><td><code>status</code></td><td>enum queue_status</td><td><code>pending</code> / <code>approved</code> / <code>skipped</code> / <code>merged</code></td></tr>
+    <tr><td><code>slack_message_ts</code></td><td>varchar(50)</td><td>Slack通知のタイムスタンプ（更新用）</td></tr>
+    <tr><td><code>resolved_hotel_id</code></td><td>uuid FK</td><td>承認後に作成された hotels.id</td></tr>
+    <tr><td><code>resolved_at</code></td><td>timestamptz</td><td></td></tr>
+    <tr><td><code>created_at</code></td><td>timestamptz</td><td></td></tr>
+  </tbody>
+</table>
+
+<h3>5-5. <code>hotel_revisions</code>（変更履歴）</h3>
+<table>
+  <thead><tr><th>カラム</th><th>型</th><th>説明</th></tr></thead>
+  <tbody>
+    <tr><td><code>id</code></td><td>bigserial PK</td><td>増加型なのでbigserial</td></tr>
+    <tr><td><code>hotel_id</code></td><td>uuid FK</td><td></td></tr>
+    <tr><td><code>changed_by</code></td><td>varchar(50)</td><td><code>agent_a</code> / <code>agent_b</code> / <code>user:&lt;email&gt;</code></td></tr>
+    <tr><td><code>change_type</code></td><td>varchar(20)</td><td><code>create</code> / <code>update</code> / <code>publish</code> / <code>archive</code></td></tr>
+    <tr><td><code>diff</code></td><td>jsonb</td><td>変更前後の差分（前値・後値のペア）</td></tr>
+    <tr><td><code>created_at</code></td><td>timestamptz</td><td></td></tr>
+  </tbody>
+</table>
+
+<!-- ======================== 6. SQL ======================== -->
+<h2 id="sql">6. SQLマイグレーション</h2>
+<p class="desc">Supabase CLIで管理。<code>supabase migration new init</code> で生成したファイルに以下を記述。</p>
+
+<pre><span class="cm">-- ========================================</span>
+<span class="cm">-- supabase/migrations/20260427000000_init.sql</span>
+<span class="cm">-- ========================================</span>
+
+<span class="cm">-- 拡張</span>
+<span class="kw">CREATE EXTENSION IF NOT EXISTS</span> <span class="st">"uuid-ossp"</span>;
+<span class="kw">CREATE EXTENSION IF NOT EXISTS</span> pg_trgm;       <span class="cm">-- 部分一致検索（日本語OK）</span>
+<span class="kw">CREATE EXTENSION IF NOT EXISTS</span> postgis;       <span class="cm">-- 地理検索</span>
+<span class="kw">CREATE EXTENSION IF NOT EXISTS</span> pgcrypto;      <span class="cm">-- gen_random_uuid, sha256</span>
+
+<span class="cm">-- ENUMs</span>
+<span class="kw">CREATE TYPE</span> hotel_type <span class="kw">AS ENUM</span> (
+  <span class="st">'hotel'</span>, <span class="st">'ryokan'</span>, <span class="st">'pension'</span>, <span class="st">'cottage'</span>,
+  <span class="st">'glamping'</span>, <span class="st">'minshuku'</span>, <span class="st">'resort'</span>, <span class="st">'other'</span>
+);
+<span class="kw">CREATE TYPE</span> hotel_status <span class="kw">AS ENUM</span> (
+  <span class="st">'draft'</span>, <span class="st">'reviewing'</span>, <span class="st">'published'</span>, <span class="st">'archived'</span>
+);
+<span class="kw">CREATE TYPE</span> dog_size <span class="kw">AS ENUM</span> (
+  <span class="st">'extra_small'</span>, <span class="st">'small'</span>, <span class="st">'medium'</span>, <span class="st">'large'</span>, <span class="st">'extra_large'</span>
+);
+<span class="kw">CREATE TYPE</span> source_type <span class="kw">AS ENUM</span> (
+  <span class="st">'rakuten'</span>, <span class="st">'jalan'</span>, <span class="st">'rurubu'</span>, <span class="st">'ikkyu'</span>, <span class="st">'official'</span>, <span class="st">'manual'</span>
+);
+<span class="kw">CREATE TYPE</span> queue_status <span class="kw">AS ENUM</span> (
+  <span class="st">'pending'</span>, <span class="st">'approved'</span>, <span class="st">'skipped'</span>, <span class="st">'merged'</span>
+);
+
+<span class="cm">-- マスタ</span>
+<span class="kw">CREATE TABLE</span> regions (
+  id          uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  name        varchar(<span class="nu">50</span>) <span class="kw">NOT NULL</span>,
+  slug        varchar(<span class="nu">50</span>) <span class="kw">NOT NULL UNIQUE</span>,
+  sort_order  int <span class="kw">NOT NULL DEFAULT</span> <span class="nu">0</span>
+);
+
+<span class="kw">CREATE TABLE</span> prefectures (
+  id          uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  region_id   uuid <span class="kw">NOT NULL REFERENCES</span> regions(id),
+  name        varchar(<span class="nu">20</span>) <span class="kw">NOT NULL</span>,
+  slug        varchar(<span class="nu">50</span>) <span class="kw">NOT NULL UNIQUE</span>,
+  lat         decimal(<span class="nu">10</span>,<span class="nu">7</span>),
+  lng         decimal(<span class="nu">10</span>,<span class="nu">7</span>)
+);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- hotels（マスター）</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> hotels (
+  id              uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  prefecture_id   uuid <span class="kw">NOT NULL REFERENCES</span> prefectures(id),
+  name            varchar(<span class="nu">200</span>) <span class="kw">NOT NULL</span>,
+  slug            varchar(<span class="nu">200</span>) <span class="kw">NOT NULL UNIQUE</span>,
+  description     text,
+  postal_code     varchar(<span class="nu">10</span>),
+  address         varchar(<span class="nu">300</span>) <span class="kw">NOT NULL</span>,
+  lat             decimal(<span class="nu">10</span>,<span class="nu">7</span>),
+  lng             decimal(<span class="nu">10</span>,<span class="nu">7</span>),
+  geo             geography(POINT, <span class="nu">4326</span>),
+  phone           varchar(<span class="nu">20</span>),
+  website_url     text,
+  hotel_type      hotel_type <span class="kw">NOT NULL DEFAULT</span> <span class="st">'other'</span>,
+  checkin_time    time,
+  checkout_time   time,
+  room_count      int,
+  pet_room_count  int,
+  parking         varchar(<span class="nu">100</span>),
+  access          text,
+  status          hotel_status <span class="kw">NOT NULL DEFAULT</span> <span class="st">'draft'</span>,
+  featured_order  int,
+  view_count      int <span class="kw">NOT NULL DEFAULT</span> <span class="nu">0</span>,
+  dedup_hash      varchar(<span class="nu">64</span>) <span class="kw">UNIQUE</span>,
+  created_at      timestamptz <span class="kw">DEFAULT</span> now(),
+  updated_at      timestamptz <span class="kw">DEFAULT</span> now()
+);
+
+<span class="cm">-- インデックス</span>
+<span class="kw">CREATE INDEX</span> idx_hotels_prefecture <span class="kw">ON</span> hotels(prefecture_id);
+<span class="kw">CREATE INDEX</span> idx_hotels_status     <span class="kw">ON</span> hotels(status) <span class="kw">WHERE</span> status = <span class="st">'published'</span>;
+<span class="kw">CREATE INDEX</span> idx_hotels_geo        <span class="kw">ON</span> hotels <span class="kw">USING</span> GIST(geo);
+<span class="cm">-- 部分一致検索（v1のtsvector('japanese')はPostgresに存在しないためtrgmで代替）</span>
+<span class="kw">CREATE INDEX</span> idx_hotels_name_trgm  <span class="kw">ON</span> hotels <span class="kw">USING</span> GIN(name gin_trgm_ops);
+<span class="kw">CREATE INDEX</span> idx_hotels_addr_trgm  <span class="kw">ON</span> hotels <span class="kw">USING</span> GIN(address gin_trgm_ops);
+
+<span class="cm">-- lat/lng → geo を自動同期するトリガー</span>
+<span class="kw">CREATE OR REPLACE FUNCTION</span> sync_hotel_geo() <span class="kw">RETURNS</span> trigger <span class="kw">AS</span> $$
+<span class="kw">BEGIN</span>
+  <span class="kw">IF</span> NEW.lat <span class="kw">IS NOT NULL AND</span> NEW.lng <span class="kw">IS NOT NULL THEN</span>
+    NEW.geo := ST_SetSRID(ST_MakePoint(NEW.lng, NEW.lat), <span class="nu">4326</span>)::geography;
+  <span class="kw">END IF</span>;
+  <span class="kw">RETURN</span> NEW;
+<span class="kw">END</span>;
+$$ <span class="kw">LANGUAGE</span> plpgsql;
+
+<span class="kw">CREATE TRIGGER</span> hotels_sync_geo
+  <span class="kw">BEFORE INSERT OR UPDATE OF</span> lat, lng <span class="kw">ON</span> hotels
+  <span class="kw">FOR EACH ROW EXECUTE FUNCTION</span> sync_hotel_geo();
+
+<span class="cm">-- updated_at 自動更新</span>
+<span class="kw">CREATE OR REPLACE FUNCTION</span> set_updated_at() <span class="kw">RETURNS</span> trigger <span class="kw">AS</span> $$
+<span class="kw">BEGIN</span> NEW.updated_at := now(); <span class="kw">RETURN</span> NEW; <span class="kw">END</span>;
+$$ <span class="kw">LANGUAGE</span> plpgsql;
+
+<span class="kw">CREATE TRIGGER</span> hotels_updated_at
+  <span class="kw">BEFORE UPDATE ON</span> hotels
+  <span class="kw">FOR EACH ROW EXECUTE FUNCTION</span> set_updated_at();
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- hotel_dog_policies (1:1)</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> hotel_dog_policies (
+  hotel_id              uuid <span class="kw">PRIMARY KEY REFERENCES</span> hotels(id) <span class="kw">ON DELETE CASCADE</span>,
+  accepted_sizes        dog_size[] <span class="kw">NOT NULL DEFAULT</span> <span class="st">'{}'</span>,
+  max_weight_kg         decimal(<span class="nu">5</span>,<span class="nu">1</span>),
+  max_dogs              int <span class="kw">NOT NULL DEFAULT</span> <span class="nu">1</span>,
+  breed_restriction     text,
+  dog_fee               int,
+  dog_fee_note          text,
+  dog_free_in_room      boolean <span class="kw">DEFAULT</span> false,
+  required_vaccinations text[],
+  dog_areas             text[],
+  notes                 text
+);
+<span class="kw">CREATE INDEX</span> idx_dog_policies_sizes <span class="kw">ON</span> hotel_dog_policies <span class="kw">USING</span> GIN(accepted_sizes);
+
+<span class="cm">-- amenities, hotel_amenities, hotel_images, booking_links, hotel_faqs は</span>
+<span class="cm">-- v1とほぼ同じだが、hotel_imagesはStorage path運用に変更</span>
+<span class="kw">CREATE TABLE</span> hotel_images (
+  id          uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  hotel_id    uuid <span class="kw">NOT NULL REFERENCES</span> hotels(id) <span class="kw">ON DELETE CASCADE</span>,
+  storage_path text <span class="kw">NOT NULL</span>,                <span class="cm">-- Supabase Storage内パス</span>
+  alt_text    varchar(<span class="nu">200</span>),
+  sort_order  int <span class="kw">DEFAULT</span> <span class="nu">0</span>,
+  is_main     boolean <span class="kw">DEFAULT</span> false
+);
+<span class="kw">CREATE INDEX</span> idx_images_hotel_main <span class="kw">ON</span> hotel_images(hotel_id) <span class="kw">WHERE</span> is_main = true;
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- hotel_sources（出典管理）★新規</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> hotel_sources (
+  id                uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  hotel_id          uuid <span class="kw">NOT NULL REFERENCES</span> hotels(id) <span class="kw">ON DELETE CASCADE</span>,
+  source_type       source_type <span class="kw">NOT NULL</span>,
+  source_url        text,
+  source_id         varchar(<span class="nu">100</span>),
+  affiliate_url     text,
+  last_fetched_at   timestamptz,
+  last_fetch_status varchar(<span class="nu">20</span>),
+  <span class="kw">UNIQUE</span>(hotel_id, source_type)
+);
+<span class="kw">CREATE INDEX</span> idx_sources_type_id <span class="kw">ON</span> hotel_sources(source_type, source_id);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- discovery_queue（自動発見の人間レビュー待ち）★新規</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> discovery_queue (
+  id                  uuid <span class="kw">PRIMARY KEY DEFAULT</span> gen_random_uuid(),
+  dedup_hash          varchar(<span class="nu">64</span>) <span class="kw">NOT NULL UNIQUE</span>,
+  candidate_name      varchar(<span class="nu">200</span>) <span class="kw">NOT NULL</span>,
+  candidate_address   varchar(<span class="nu">300</span>),
+  raw_payload         jsonb <span class="kw">NOT NULL</span>,
+  discovered_by       varchar(<span class="nu">50</span>) <span class="kw">NOT NULL</span>,
+  discovered_from     varchar(<span class="nu">50</span>) <span class="kw">NOT NULL</span>,
+  status              queue_status <span class="kw">NOT NULL DEFAULT</span> <span class="st">'pending'</span>,
+  slack_message_ts    varchar(<span class="nu">50</span>),
+  resolved_hotel_id   uuid <span class="kw">REFERENCES</span> hotels(id),
+  resolved_at         timestamptz,
+  created_at          timestamptz <span class="kw">DEFAULT</span> now()
+);
+<span class="kw">CREATE INDEX</span> idx_queue_status <span class="kw">ON</span> discovery_queue(status) <span class="kw">WHERE</span> status = <span class="st">'pending'</span>;
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- hotel_revisions（変更履歴）★新規</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> hotel_revisions (
+  id          bigserial <span class="kw">PRIMARY KEY</span>,
+  hotel_id    uuid <span class="kw">NOT NULL REFERENCES</span> hotels(id) <span class="kw">ON DELETE CASCADE</span>,
+  changed_by  varchar(<span class="nu">100</span>) <span class="kw">NOT NULL</span>,
+  change_type varchar(<span class="nu">20</span>) <span class="kw">NOT NULL</span>,
+  diff        jsonb <span class="kw">NOT NULL</span>,
+  created_at  timestamptz <span class="kw">DEFAULT</span> now()
+);
+<span class="kw">CREATE INDEX</span> idx_revisions_hotel <span class="kw">ON</span> hotel_revisions(hotel_id, created_at <span class="kw">DESC</span>);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- agent_runs（エージェント実行ログ）★新規</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">CREATE TABLE</span> agent_runs (
+  id            bigserial <span class="kw">PRIMARY KEY</span>,
+  agent_name    varchar(<span class="nu">50</span>) <span class="kw">NOT NULL</span>,        <span class="cm">-- agent_a / agent_b</span>
+  trigger_type  varchar(<span class="nu">20</span>) <span class="kw">NOT NULL</span>,        <span class="cm">-- schedule / slack / manual</span>
+  started_at    timestamptz <span class="kw">DEFAULT</span> now(),
+  finished_at   timestamptz,
+  status        varchar(<span class="nu">20</span>),                  <span class="cm">-- running / success / error</span>
+  stats         jsonb,                            <span class="cm">-- { fetched: 80, new: 5, dup: 75 }</span>
+  error_message text
+);
+
+<span class="cm">-- ========================================</span>
+<span class="cm">-- RLS（公開ポリシー）</span>
+<span class="cm">-- ========================================</span>
+<span class="kw">ALTER TABLE</span> hotels             <span class="kw">ENABLE ROW LEVEL SECURITY</span>;
+<span class="kw">ALTER TABLE</span> hotel_dog_policies <span class="kw">ENABLE ROW LEVEL SECURITY</span>;
+<span class="kw">ALTER TABLE</span> hotel_images       <span class="kw">ENABLE ROW LEVEL SECURITY</span>;
+<span class="kw">ALTER TABLE</span> booking_links      <span class="kw">ENABLE ROW LEVEL SECURITY</span>;
+
+<span class="cm">-- 公開: status=published のみ anon で読める</span>
+<span class="kw">CREATE POLICY</span> hotels_public_read <span class="kw">ON</span> hotels
+  <span class="kw">FOR SELECT TO</span> anon
+  <span class="kw">USING</span> (status = <span class="st">'published'</span>);
+
+<span class="cm">-- 子テーブルは親(hotel)が公開なら公開</span>
+<span class="kw">CREATE POLICY</span> dog_policies_public_read <span class="kw">ON</span> hotel_dog_policies
+  <span class="kw">FOR SELECT TO</span> anon
+  <span class="kw">USING</span> (<span class="kw">EXISTS</span> (<span class="kw">SELECT</span> <span class="nu">1</span> <span class="kw">FROM</span> hotels h <span class="kw">WHERE</span> h.id = hotel_id <span class="kw">AND</span> h.status = <span class="st">'published'</span>));
+
+<span class="cm">-- 同様に images / booking_links も</span>
+<span class="cm">-- discovery_queue, hotel_revisions, hotel_sources, agent_runs は anon 不可（service_roleのみ）</span>
+</pre>
+
+<div class="note note-warn"><strong>注意:</strong> v1のSQLを丸ごとSupabaseで実行すると <code>text search configuration "japanese" does not exist</code> エラーで止まります。本v2では pg_trgm に切り替えて回避。pgroongaが必要になったら別途追加マイグレーションで導入。</div>
+
+<!-- ======================== 7. AUTO ======================== -->
+<h2 id="auto">7. 自動更新フロー設計 ⭐</h2>
+
+<h3>7-1. エージェントA — 週次新規発見</h3>
+<table>
+  <thead><tr><th>項目</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>起動</td><td>GitHub Actions <code>schedule: cron: "0 0 * * 1"</code>（毎週月曜9時 JST = 月曜0時 UTC）</td></tr>
+    <tr><td>入力</td><td>都道府県47件 × 「ペット可」フィルタ</td></tr>
+    <tr><td>処理</td><td>(1) 楽天トラベルAPIで一覧取得 → (2) じゃらんスクレイピング（Playwright）→ (3) 結果を正規化 → (4) <code>dedup_hash</code> 算出 → (5) 既存 <code>hotels</code> または <code>discovery_queue</code> に同ハッシュがあればスキップ → (6) 新規分のみ <code>discovery_queue</code> に INSERT</td></tr>
+    <tr><td>出力</td><td>Slack <code>#inutabi-discovery</code> に「今週の新規候補 N件」サマリ＋各候補ごとに Block Kit メッセージ（追加/スキップ ボタン付き）</td></tr>
+    <tr><td>失敗時</td><td><code>agent_runs.status = 'error'</code> で記録、Slackにエラー通知</td></tr>
+  </tbody>
+</table>
+
+<h3>7-2. エージェントB — Slackからの個別追加・詳細補強</h3>
+<table>
+  <thead><tr><th>項目</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td>起動</td><td>(1) Slackボタン「追加」押下 / (2) Slackメンション「@犬旅bot 〇〇宿を追加」/ (3) 既存宿の詳細リフレッシュ</td></tr>
+    <tr><td>処理</td><td>(1) <code>discovery_queue</code> または ユーザー指定URLから対象を特定 → (2) 楽天/じゃらん/公式サイトから詳細取得 → (3) 犬条件を抽出（部屋OK/サイズ/料金/ドッグラン等）→ (4) <code>hotels</code> に <code>status='reviewing'</code> でINSERT → (5) <code>hotel_sources</code>, <code>hotel_dog_policies</code>, <code>hotel_images</code> に関連レコード → (6) <code>hotel_revisions</code> に変更履歴</td></tr>
+    <tr><td>出力</td><td>Slackに「✅ 〇〇宿を reviewing で登録しました。Supabase Studioで確認 → 公開」リンク付き</td></tr>
+    <tr><td>編集者の承認</td><td>Supabase Studio の Table Editor で内容を確認 → <code>status</code> を <code>published</code> に変更 → トリガーで <code>/api/revalidate</code> をWebhook起動</td></tr>
+  </tbody>
+</table>
+
+<h3>7-3. Slack App 設定</h3>
+<table>
+  <thead><tr><th>設定項目</th><th>値</th></tr></thead>
+  <tbody>
+    <tr><td>Bot User</td><td><code>@犬旅bot</code></td></tr>
+    <tr><td>Event Subscriptions</td><td>Request URL: <code>https://&lt;site&gt;/api/slack/events</code> / Subscribe to: <code>app_mention</code></td></tr>
+    <tr><td>Interactivity</td><td>Request URL: <code>https://&lt;site&gt;/api/slack/interactivity</code></td></tr>
+    <tr><td>OAuth Scopes (Bot)</td><td><code>app_mentions:read</code>, <code>chat:write</code>, <code>chat:write.public</code>, <code>channels:history</code>（必要時）</td></tr>
+    <tr><td>Signing Secret</td><td><code>SLACK_SIGNING_SECRET</code> として保存。リクエスト署名検証必須</td></tr>
+    <tr><td>Bot Token</td><td><code>SLACK_BOT_TOKEN</code> として保存（chat.postMessage用）</td></tr>
+  </tbody>
+</table>
+
+<h3>7-4. Slack ↔ Vercel ↔ GitHub Actions の3秒問題</h3>
+<div class="note note-bad"><strong>制約:</strong> Slackは Webhook受信後3秒以内に200を返さないとタイムアウト扱いになる。スクレイピングは数十秒〜数分かかるため、Vercelで処理を完結させてはいけない。</div>
+
+<p><strong>解決策:</strong></p>
+<ol>
+  <li>Vercel <code>/api/slack/events</code> は受信→署名検証→GitHub <code>repository_dispatch</code> APIをfire-and-forget→200を即返す（&lt;1秒）</li>
+  <li>GitHub Actionsの <code>workflow_dispatch</code>受け取り側でエージェントBを起動（数分かかってOK）</li>
+  <li>完了したら Slack chat.postMessage で結果を投稿</li>
+</ol>
+
+<h3>7-5. GitHub Actions ワークフロー例</h3>
+<pre><span class="cm"># .github/workflows/discovery.yml</span>
+<span class="kw">name</span>: Weekly Discovery (Agent A)
+<span class="kw">on</span>:
+  <span class="kw">schedule</span>:
+    - <span class="kw">cron</span>: <span class="st">'0 0 * * 1'</span>   <span class="cm"># 毎週月曜0時UTC = 9時JST</span>
+  <span class="kw">workflow_dispatch</span>:        <span class="cm"># 手動実行も許可</span>
+
+<span class="kw">jobs</span>:
+  <span class="kw">discover</span>:
+    <span class="kw">runs-on</span>: ubuntu-latest
+    <span class="kw">timeout-minutes</span>: <span class="nu">30</span>
+    <span class="kw">steps</span>:
+      - <span class="kw">uses</span>: actions/checkout@v4
+      - <span class="kw">uses</span>: actions/setup-node@v4
+        <span class="kw">with</span>: { node-version: <span class="st">'20'</span> }
+      - <span class="kw">run</span>: npm ci
+      - <span class="kw">run</span>: npx playwright install --with-deps chromium
+      - <span class="kw">run</span>: npx tsx scripts/agents/discovery.ts
+        <span class="kw">env</span>:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RAKUTEN_APP_ID: ${{ secrets.RAKUTEN_APP_ID }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_DISCOVERY_CHANNEL: <span class="st">'C0XXXXXX'</span>
+</pre>
+
+<pre><span class="cm"># .github/workflows/enrich.yml — Slackから起動</span>
+<span class="kw">name</span>: Enrich Hotel (Agent B)
+<span class="kw">on</span>:
+  <span class="kw">repository_dispatch</span>:
+    <span class="kw">types</span>: [enrich-hotel]
+
+<span class="kw">jobs</span>:
+  <span class="kw">enrich</span>:
+    <span class="kw">runs-on</span>: ubuntu-latest
+    <span class="kw">timeout-minutes</span>: <span class="nu">15</span>
+    <span class="kw">steps</span>:
+      - <span class="kw">uses</span>: actions/checkout@v4
+      - <span class="kw">uses</span>: actions/setup-node@v4
+        <span class="kw">with</span>: { node-version: <span class="st">'20'</span> }
+      - <span class="kw">run</span>: npm ci
+      - <span class="kw">run</span>: npx playwright install --with-deps chromium
+      - <span class="kw">run</span>: npx tsx scripts/agents/enrich.ts
+        <span class="kw">env</span>:
+          QUEUE_ID: ${{ github.event.client_payload.queue_id }}
+          TARGET_URL: ${{ github.event.client_payload.url }}
+          SLACK_THREAD_TS: ${{ github.event.client_payload.thread_ts }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+</pre>
+
+<h3>7-6. 重複判定ロジック</h3>
+<pre><span class="cm">// scripts/agents/lib/dedup.ts</span>
+<span class="kw">import</span> { createHash } <span class="kw">from</span> <span class="st">'node:crypto'</span>;
+<span class="kw">import</span> { normalizeAddress, normalizeHotelName } <span class="kw">from</span> <span class="st">'./normalize'</span>;
+
+<span class="kw">export function</span> <span class="fn">computeDedupHash</span>(input: {
+  name: <span class="ty">string</span>;
+  address: <span class="ty">string</span>;
+  phone?: <span class="ty">string</span>;
+}): <span class="ty">string</span> {
+  <span class="kw">const</span> name = <span class="fn">normalizeHotelName</span>(input.name);  <span class="cm">// 株式会社/ホテル/HOTEL等を除去</span>
+  <span class="kw">const</span> addr = <span class="fn">normalizeAddress</span>(input.address); <span class="cm">// 全角半角・丁目番地統一</span>
+  <span class="kw">const</span> tail = (input.phone ?? <span class="st">''</span>).replace(/\D/g, <span class="st">''</span>).slice(-<span class="nu">4</span>);
+  <span class="kw">return</span> createHash(<span class="st">'sha256'</span>).update(<span class="st">`${name}|${addr}|${tail}`</span>).digest(<span class="st">'hex'</span>);
+}
+</pre>
+
+<!-- ======================== 8. CODE ======================== -->
+<h2 id="code">8. 主要コード例（バグ修正済み）</h2>
+
+<h3>8-1. Supabaseクライアント — anon / service_role を分離</h3>
+<pre><span class="cm">// src/lib/supabase/client.ts — ブラウザ・SSG用 (anon)</span>
+<span class="kw">import</span> { createClient } <span class="kw">from</span> <span class="st">'@supabase/supabase-js'</span>;
+<span class="kw">import type</span> { <span class="ty">Database</span> } <span class="kw">from</span> <span class="st">'@/types/database'</span>;
+
+<span class="kw">export const</span> supabase = createClient&lt;<span class="ty">Database</span>&gt;(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+</pre>
+
+<pre><span class="cm">// src/lib/supabase/server.ts — API Routes・スクリプト用 (service_role)</span>
+<span class="cm">// ★service_roleはRLSをバイパスする。NEXT_PUBLIC_ で公開しないこと。</span>
+<span class="kw">import</span> { createClient } <span class="kw">from</span> <span class="st">'@supabase/supabase-js'</span>;
+<span class="kw">import type</span> { <span class="ty">Database</span> } <span class="kw">from</span> <span class="st">'@/types/database'</span>;
+
+<span class="kw">export function</span> <span class="fn">createServerClient</span>() {
+  <span class="kw">return</span> createClient&lt;<span class="ty">Database</span>&gt;(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { auth: { persistSession: <span class="kw">false</span> } }
+  );
+}
+</pre>
+
+<h3>8-2. 宿データ取得（v1のバグ修正）</h3>
+<pre><span class="cm">// src/lib/queries/hotels.ts</span>
+<span class="kw">import</span> { supabase } <span class="kw">from</span> <span class="st">'@/lib/supabase/client'</span>;
+
+<span class="kw">export async function</span> <span class="fn">getHotelBySlug</span>(slug: <span class="ty">string</span>) {
+  <span class="kw">const</span> { data, error } = <span class="kw">await</span> supabase
+    .from(<span class="st">'hotels'</span>)
+    .select(<span class="st">`
+      *,
+      prefecture:prefectures(*, region:regions(*)),
+      dog_policy:hotel_dog_policies(*),
+      hotel_amenities(amenity:amenities(*)),
+      hotel_images(*),
+      booking_links(*),
+      hotel_faqs(*)
+    `</span>)
+    .eq(<span class="st">'slug'</span>, slug)
+    .eq(<span class="st">'status'</span>, <span class="st">'published'</span>)
+    .maybeSingle();   <span class="cm">// ← .single() ではなく maybeSingle() で404を素直に扱う</span>
+
+  <span class="kw">if</span> (error) <span class="kw">throw</span> error;
+  <span class="kw">if</span> (!data) <span class="kw">return null</span>;
+
+  <span class="cm">// ★v1のバグ: 1:1リレーションでも配列で返ってくる場合がある</span>
+  <span class="cm">// hotel_dog_policies はPK=hotel_idなので Supabase はオブジェクトで返すが、</span>
+  <span class="cm">// 念のため両対応にしておく</span>
+  <span class="kw">const</span> dogPolicy = Array.isArray(data.dog_policy) ? data.dog_policy[<span class="nu">0</span>] : data.dog_policy;
+  <span class="kw">return</span> { ...data, dog_policy: dogPolicy };
+}
+
+<span class="cm">// メイン画像だけ欲しい場合は子テーブルにフィルタを掛ける別クエリ</span>
+<span class="cm">// （v1の `images:hotel_images(url).filter(is_main.eq.true)` は存在しない構文）</span>
+<span class="kw">export async function</span> <span class="fn">getHotelMainImage</span>(hotelId: <span class="ty">string</span>) {
+  <span class="kw">const</span> { data } = <span class="kw">await</span> supabase
+    .from(<span class="st">'hotel_images'</span>)
+    .select(<span class="st">'storage_path, alt_text'</span>)
+    .eq(<span class="st">'hotel_id'</span>, hotelId)
+    .eq(<span class="st">'is_main'</span>, <span class="kw">true</span>)
+    .maybeSingle();
+  <span class="kw">return</span> data;
+}
+
+<span class="cm">// 一覧でメイン画像も併せて欲しい場合は !inner で必須結合</span>
+<span class="kw">export async function</span> <span class="fn">listHotelsWithMainImage</span>(prefectureSlug: <span class="ty">string</span>) {
+  <span class="kw">const</span> { data: pref } = <span class="kw">await</span> supabase
+    .from(<span class="st">'prefectures'</span>).select(<span class="st">'id'</span>).eq(<span class="st">'slug'</span>, prefectureSlug).maybeSingle();
+  <span class="kw">if</span> (!pref) <span class="kw">return</span> [];
+
+  <span class="kw">const</span> { data } = <span class="kw">await</span> supabase
+    .from(<span class="st">'hotels'</span>)
+    .select(<span class="st">'*, hotel_images!inner(storage_path, alt_text)'</span>)
+    .eq(<span class="st">'prefecture_id'</span>, pref.id)
+    .eq(<span class="st">'status'</span>, <span class="st">'published'</span>)
+    .eq(<span class="st">'hotel_images.is_main'</span>, <span class="kw">true</span>);   <span class="cm">// ← 子テーブルへのフィルタはこの形</span>
+  <span class="kw">return</span> data ?? [];
+}
+</pre>
+
+<h3>8-3. 宿詳細ページ（Next 15対応・<code>params</code>はPromise）</h3>
+<pre><span class="cm">// src/app/hotel/[slug]/page.tsx</span>
+<span class="kw">import</span> { notFound } <span class="kw">from</span> <span class="st">'next/navigation'</span>;
+<span class="kw">import</span> { getHotelBySlug } <span class="kw">from</span> <span class="st">'@/lib/queries/hotels'</span>;
+<span class="kw">import</span> { supabase } <span class="kw">from</span> <span class="st">'@/lib/supabase/client'</span>;
+<span class="kw">import</span> { HotelJsonLd, FaqJsonLd, BreadcrumbJsonLd } <span class="kw">from</span> <span class="st">'@/components/seo'</span>;
+
+<span class="kw">export const</span> revalidate = <span class="nu">3600</span>;   <span class="cm">// ISR: 1時間</span>
+
+<span class="cm">// ★Next 15: params は Promise になった</span>
+<span class="kw">type</span> <span class="ty">PageProps</span> = { params: <span class="ty">Promise</span>&lt;{ slug: <span class="ty">string</span> }&gt; };
+
+<span class="kw">export async function</span> <span class="fn">generateStaticParams</span>() {
+  <span class="kw">const</span> { data } = <span class="kw">await</span> supabase
+    .from(<span class="st">'hotels'</span>)
+    .select(<span class="st">'slug'</span>)
+    .eq(<span class="st">'status'</span>, <span class="st">'published'</span>);
+  <span class="kw">return</span> data?.map(h =&gt; ({ slug: h.slug })) ?? [];
+}
+
+<span class="kw">export async function</span> <span class="fn">generateMetadata</span>({ params }: <span class="ty">PageProps</span>) {
+  <span class="kw">const</span> { slug } = <span class="kw">await</span> params;       <span class="cm">// ← await必須</span>
+  <span class="kw">const</span> hotel = <span class="kw">await</span> <span class="fn">getHotelBySlug</span>(slug);
+  <span class="kw">if</span> (!hotel) <span class="kw">return</span> {};
+
+  <span class="kw">const</span> sizes = hotel.dog_policy?.accepted_sizes?.join(<span class="st">'・'</span>) ?? <span class="st">''</span>;
+  <span class="kw">return</span> {
+    title: <span class="st">`${hotel.name} | 犬旅日和`</span>,
+    description: <span class="st">`${hotel.name}の犬連れ宿泊情報。${sizes}OK、最大${hotel.dog_policy?.max_dogs}頭。`</span>,
+  };
+}
+
+<span class="kw">export default async function</span> <span class="fn">HotelPage</span>({ params }: <span class="ty">PageProps</span>) {
+  <span class="kw">const</span> { slug } = <span class="kw">await</span> params;
+  <span class="kw">const</span> hotel = <span class="kw">await</span> <span class="fn">getHotelBySlug</span>(slug);
+  <span class="kw">if</span> (!hotel) notFound();
+
+  <span class="kw">return</span> (
+    &lt;&gt;
+      &lt;<span class="fn">HotelJsonLd</span> hotel={hotel} /&gt;
+      &lt;<span class="fn">FaqJsonLd</span> faqs={hotel.hotel_faqs} /&gt;
+      &lt;<span class="fn">BreadcrumbJsonLd</span> hotel={hotel} /&gt;
+      &lt;<span class="fn">HotelDetail</span> hotel={hotel} /&gt;
+    &lt;/&gt;
+  );
+}
+</pre>
+
+<h3>8-4. Slack Events エンドポイント（3秒以内応答）</h3>
+<pre><span class="cm">// src/app/api/slack/events/route.ts</span>
+<span class="kw">import</span> { NextRequest, NextResponse } <span class="kw">from</span> <span class="st">'next/server'</span>;
+<span class="kw">import</span> { verifySlackSignature } <span class="kw">from</span> <span class="st">'@/lib/slack/sign'</span>;
+
+<span class="kw">export async function</span> <span class="fn">POST</span>(req: <span class="ty">NextRequest</span>) {
+  <span class="kw">const</span> raw = <span class="kw">await</span> req.text();
+  <span class="kw">if</span> (!<span class="fn">verifySlackSignature</span>(req.headers, raw)) {
+    <span class="kw">return new</span> NextResponse(<span class="st">'unauthorized'</span>, { status: <span class="nu">401</span> });
+  }
+
+  <span class="kw">const</span> body = JSON.parse(raw);
+
+  <span class="cm">// SlackのURL検証チャレンジ</span>
+  <span class="kw">if</span> (body.type === <span class="st">'url_verification'</span>) {
+    <span class="kw">return</span> NextResponse.json({ challenge: body.challenge });
+  }
+
+  <span class="cm">// app_mention → エージェントBをGitHub Actionsで起動（fire and forget）</span>
+  <span class="kw">if</span> (body.event?.type === <span class="st">'app_mention'</span>) {
+    <span class="kw">const</span> text = body.event.text <span class="kw">as</span> <span class="ty">string</span>;
+    <span class="cm">// 「@犬旅bot 〇〇宿を追加 https://...」のようなパターン</span>
+    <span class="kw">const</span> url = text.match(/https?:\/\/\S+/)?.[<span class="nu">0</span>];
+
+    <span class="cm">// awaitせずfire-and-forget。3秒以内に200を返す。</span>
+    <span class="fn">fetch</span>(<span class="st">`https://api.github.com/repos/${process.env.GH_OWNER}/${process.env.GH_REPO}/dispatches`</span>, {
+      method: <span class="st">'POST'</span>,
+      headers: {
+        Authorization: <span class="st">`Bearer ${process.env.GH_DISPATCH_TOKEN}`</span>,
+        Accept: <span class="st">'application/vnd.github+json'</span>,
+      },
+      body: JSON.stringify({
+        event_type: <span class="st">'enrich-hotel'</span>,
+        client_payload: { url, thread_ts: body.event.ts, channel: body.event.channel },
+      }),
+    }).catch(console.error);
+  }
+
+  <span class="kw">return</span> NextResponse.json({ ok: <span class="kw">true</span> });
+}
+</pre>
+
+<h3>8-5. JSON-LD（dog_policyの単数化を反映）</h3>
+<pre><span class="cm">// src/components/seo/HotelJsonLd.tsx</span>
+<span class="kw">export function</span> <span class="fn">HotelJsonLd</span>({ hotel }: { hotel: <span class="ty">HotelDetail</span> }) {
+  <span class="kw">const</span> dp = hotel.dog_policy;   <span class="cm">// ← getHotelBySlug で正規化済み</span>
+
+  <span class="kw">const</span> json = {
+    <span class="st">'@context'</span>: <span class="st">'https://schema.org'</span>,
+    <span class="st">'@type'</span>: <span class="st">'LodgingBusiness'</span>,
+    name: hotel.name,
+    description: hotel.description,
+    url: <span class="st">`https://www.inutabi-biyori.jp/hotel/${hotel.slug}`</span>,
+    address: {
+      <span class="st">'@type'</span>: <span class="st">'PostalAddress'</span>,
+      addressRegion: hotel.prefecture?.name,
+      streetAddress: hotel.address,
+      postalCode: hotel.postal_code,
+      addressCountry: <span class="st">'JP'</span>,
+    },
+    geo: hotel.lat &amp;&amp; hotel.lng
+      ? { <span class="st">'@type'</span>: <span class="st">'GeoCoordinates'</span>, latitude: hotel.lat, longitude: hotel.lng }
+      : <span class="kw">undefined</span>,
+    telephone: hotel.phone,
+    petsAllowed: <span class="kw">true</span>,
+    additionalProperty: dp ? [
+      { <span class="st">'@type'</span>: <span class="st">'PropertyValue'</span>, name: <span class="st">'acceptedDogSize'</span>, value: dp.accepted_sizes.join(<span class="st">','</span>) },
+      { <span class="st">'@type'</span>: <span class="st">'PropertyValue'</span>, name: <span class="st">'maxDogsPerRoom'</span>, value: <span class="ty">String</span>(dp.max_dogs) },
+      dp.max_weight_kg &amp;&amp; { <span class="st">'@type'</span>: <span class="st">'PropertyValue'</span>, name: <span class="st">'maxDogWeight'</span>, value: <span class="ty">String</span>(dp.max_weight_kg), unitCode: <span class="st">'KGM'</span> },
+      dp.dog_fee != <span class="kw">null</span> &amp;&amp; { <span class="st">'@type'</span>: <span class="st">'PropertyValue'</span>, name: <span class="st">'dogFeePerNight'</span>, value: <span class="ty">String</span>(dp.dog_fee), unitCode: <span class="st">'JPY'</span> },
+    ].filter(<span class="ty">Boolean</span>) : [],
+  };
+
+  <span class="kw">return</span> &lt;script type=<span class="st">"application/ld+json"</span> dangerouslySetInnerHTML={{ __html: <span class="ty">JSON</span>.stringify(json) }} /&gt;;
+}
+</pre>
+
+<!-- ======================== 9. URL MIGRATION ======================== -->
+<h2 id="migrate">9. URL移行計画（[id] → [slug]）</h2>
+<p class="desc">現状 <code>/hotel/[id]</code> で公開されているページから、SEOフレンドリーな <code>/hotel/[slug]</code> へ移行する。検索インデックスの連続性を保つため301リダイレクトを設定。</p>
+
+<h3>9-1. 切替手順</h3>
+<ol>
+  <li><strong>microCMS → Supabase の移行スクリプト</strong>（<code>scripts/migrate-from-microcms.ts</code>）を作成。各レコードに <code>slug</code> を生成して保存。<code>id</code>（microCMSのcontentId）も <code>hotel_sources</code> に <code>source_type='manual'</code> + <code>source_id=&lt;contentId&gt;</code> として保存。</li>
+  <li><code>/hotel/[slug]/page.tsx</code> を新規実装（v2の8-3）</li>
+  <li><code>/hotel/[id]/page.tsx</code> をリダイレクトプロキシに改修：</li>
+</ol>
+
+<pre><span class="cm">// src/app/hotel/[id]/page.tsx — 移行期間中はリダイレクト</span>
+<span class="kw">import</span> { redirect, notFound } <span class="kw">from</span> <span class="st">'next/navigation'</span>;
+<span class="kw">import</span> { createServerClient } <span class="kw">from</span> <span class="st">'@/lib/supabase/server'</span>;
+
+<span class="kw">type</span> <span class="ty">Props</span> = { params: <span class="ty">Promise</span>&lt;{ id: <span class="ty">string</span> }&gt; };
+
+<span class="kw">export default async function</span> <span class="fn">LegacyHotelPage</span>({ params }: <span class="ty">Props</span>) {
+  <span class="kw">const</span> { id } = <span class="kw">await</span> params;
+  <span class="kw">const</span> sb = <span class="fn">createServerClient</span>();
+
+  <span class="cm">// microCMS時代のidからslugを引く</span>
+  <span class="kw">const</span> { data } = <span class="kw">await</span> sb
+    .from(<span class="st">'hotel_sources'</span>)
+    .select(<span class="st">'hotel:hotels(slug, status)'</span>)
+    .eq(<span class="st">'source_type'</span>, <span class="st">'manual'</span>)
+    .eq(<span class="st">'source_id'</span>, id)
+    .maybeSingle();
+
+  <span class="kw">const</span> hotel = data?.hotel;
+  <span class="kw">if</span> (!hotel || hotel.status !== <span class="st">'published'</span>) notFound();
+
+  redirect(<span class="st">`/hotel/${hotel.slug}`</span>);   <span class="cm">// next/navigation の redirect は307。301にしたい場合は↓</span>
+}
+</pre>
+
+<p>301（永続移転）にしたい場合は <code>next.config.js</code> 側で <code>redirects()</code> を使うか、middleware で <code>308</code>（Permanent Redirect）にする。SEO的には301／308 が望ましい。</p>
+
+<pre><span class="cm">// src/middleware.ts</span>
+<span class="kw">import</span> { NextResponse } <span class="kw">from</span> <span class="st">'next/server'</span>;
+<span class="kw">import type</span> { <span class="ty">NextRequest</span> } <span class="kw">from</span> <span class="st">'next/server'</span>;
+<span class="kw">import</span> { createServerClient } <span class="kw">from</span> <span class="st">'@/lib/supabase/server'</span>;
+
+<span class="kw">export async function</span> <span class="fn">middleware</span>(req: <span class="ty">NextRequest</span>) {
+  <span class="kw">const</span> match = req.nextUrl.pathname.match(/^\/hotel\/([^\/]+)$/);
+  <span class="kw">if</span> (!match) <span class="kw">return</span> NextResponse.<span class="fn">next</span>();
+  <span class="kw">const</span> seg = match[<span class="nu">1</span>];
+
+  <span class="cm">// すでにslug形式（英数ハイフン）なら通す</span>
+  <span class="kw">if</span> (/^[a-z0-9\-]+$/.<span class="fn">test</span>(seg)) <span class="kw">return</span> NextResponse.<span class="fn">next</span>();
+
+  <span class="cm">// それ以外（microCMSのcontentId等）はSupabaseで引いて301</span>
+  <span class="kw">const</span> sb = <span class="fn">createServerClient</span>();
+  <span class="kw">const</span> { data } = <span class="kw">await</span> sb
+    .from(<span class="st">'hotel_sources'</span>)
+    .select(<span class="st">'hotel:hotels(slug)'</span>)
+    .eq(<span class="st">'source_id'</span>, seg)
+    .maybeSingle();
+
+  <span class="kw">if</span> (data?.hotel?.slug) {
+    <span class="kw">const</span> url = req.nextUrl.<span class="fn">clone</span>();
+    url.pathname = <span class="st">`/hotel/${data.hotel.slug}`</span>;
+    <span class="kw">return</span> NextResponse.<span class="fn">redirect</span>(url, <span class="nu">301</span>);
+  }
+
+  <span class="kw">return</span> NextResponse.<span class="fn">next</span>();
+}
+
+<span class="kw">export const</span> config = { matcher: [<span class="st">'/hotel/:path*'</span>] };
+</pre>
+
+<div class="note note-warn"><strong>注意:</strong> middlewareでDBアクセスはレイテンシ増。matcherを <code>/hotel/:path*</code> に絞っているので影響範囲は限定的だが、Vercel Edge Runtime ではsupabase-jsのfetch互換動作要確認。</div>
+
+<!-- ======================== 10. ENV ======================== -->
+<h2 id="env">10. 環境変数・セットアップ手順</h2>
+
+<h3>10-1. 環境変数</h3>
+<pre><span class="cm"># .env.local（Vercelにも同じものを設定）</span>
+
+<span class="cm"># Supabase</span>
+NEXT_PUBLIC_SUPABASE_URL=https://xxxxx.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...
+SUPABASE_URL=https://xxxxx.supabase.co            <span class="cm"># サーバー側用（同じ値）</span>
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGci...             <span class="cm"># ★公開禁止</span>
+
+<span class="cm"># 既存（楽天）</span>
+RAKUTEN_APP_ID=xxxxx
+
+<span class="cm"># Slack</span>
+SLACK_SIGNING_SECRET=xxxxx
+SLACK_BOT_TOKEN=xoxb-xxxxx
+SLACK_DISCOVERY_CHANNEL=C0XXXXXX                  <span class="cm"># #inutabi-discovery</span>
+
+<span class="cm"># GitHub Actions起動用 (Personal Access Token: repo + workflow scope)</span>
+GH_OWNER=motohiro
+GH_REPO=Inutabi-biyori
+GH_DISPATCH_TOKEN=ghp_xxxxx
+
+<span class="cm"># サイト</span>
+NEXT_PUBLIC_SITE_URL=https://www.inutabi-biyori.jp
+REVALIDATION_SECRET=xxxxx
+
+<span class="cm"># microCMS（移行期間中のみ）</span>
+MICROCMS_SERVICE_DOMAIN=xxxxx
+MICROCMS_API_KEY=xxxxx
+MICROCMS_DOG_HOTELS_ENDPOINT=dog-hotels
+</pre>
+
+<h3>10-2. セットアップ手順</h3>
+<table>
+  <thead><tr><th>Step</th><th>作業</th><th>備考</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Supabaseプロジェクト作成（Tokyo region）</td><td>無料枠で開始</td></tr>
+    <tr><td>2</td><td><code>npm i -D supabase</code> + <code>npx supabase init</code></td><td>CLI導入</td></tr>
+    <tr><td>3</td><td><code>npx supabase link --project-ref xxxxx</code></td><td>プロジェクト連携</td></tr>
+    <tr><td>4</td><td><code>npx supabase migration new init</code></td><td>本v2の §6のSQLを貼り付け</td></tr>
+    <tr><td>5</td><td><code>npx supabase db push</code></td><td>本番DBに適用</td></tr>
+    <tr><td>6</td><td><code>npx supabase gen types typescript --linked &gt; src/types/database.ts</code></td><td>型生成</td></tr>
+    <tr><td>7</td><td><code>npm i @supabase/supabase-js</code></td><td>クライアント追加</td></tr>
+    <tr><td>8</td><td>都道府県マスタを <code>supabase/seed.sql</code> で投入</td><td>固定47件</td></tr>
+    <tr><td>9</td><td>microCMSからの移行スクリプト実行</td><td>既存宿のslug生成・hotel_sourcesへ記録</td></tr>
+    <tr><td>10</td><td>GitHub Actionsシークレット設定</td><td>Settings → Secrets and variables → Actions</td></tr>
+    <tr><td>11</td><td>Slack App作成・OAuth設定・Webhook URL登録</td><td>本番デプロイ後にURL確定</td></tr>
+    <tr><td>12</td><td>エージェントAをworkflow_dispatchで手動実行→動作確認</td><td>cron稼働は最後</td></tr>
+  </tbody>
+</table>
+
+<!-- ======================== 11. DEPLOY ======================== -->
+<h2 id="deploy">11. デプロイ・CI/CD</h2>
+
+<table>
+  <thead><tr><th>項目</th><th>設定</th></tr></thead>
+  <tbody>
+    <tr><td>Vercel</td><td>既存プロジェクト継続。Node.js 20.x。環境変数を §10-1 にあわせて追加。</td></tr>
+    <tr><td>ISR</td><td><code>/hotel/[slug]</code> は <code>revalidate = 3600</code>。Supabaseの宿更新時に <code>/api/revalidate?path=/hotel/&lt;slug&gt;</code> をWebhookで叩く。</td></tr>
+    <tr><td>Edge Runtime</td><td>middlewareは Edge。supabase-js は Edge互換あり、ただし service_role での重い操作は API Routes (Node) 側に置く。</td></tr>
+    <tr><td>GitHub Actions</td><td><code>schedule</code> + <code>repository_dispatch</code> + <code>workflow_dispatch</code>（手動）3経路で起動可。</td></tr>
+    <tr><td>Supabase Webhook</td><td>Database → Webhooks で <code>hotels</code> テーブルの UPDATE → Vercelの <code>/api/revalidate</code> に POST。</td></tr>
+  </tbody>
+</table>
+
+<!-- ======================== 12. ROADMAP ======================== -->
+<h2 id="roadmap">12. 5/8までのロードマップ（11日間）</h2>
+
+<table>
+  <thead><tr><th>期間</th><th>マイルストーン</th><th>成果物</th></tr></thead>
+  <tbody>
+    <tr><td>4/27（日）<br>本日</td><td>本v2をレビュー・方針確定</td><td>5/8発表用の方針合意</td></tr>
+    <tr><td>4/28〜4/30<br>3日</td><td><strong>S1: DB構築</strong></td><td>Supabaseプロジェクト作成、§6のマイグレーション適用、都道府県マスタ投入、型生成</td></tr>
+    <tr><td>5/1〜5/3<br>3日</td><td><strong>S2: 移行＋読み取り切替</strong></td><td>microCMS→Supabase移行スクリプト、<code>/hotel/[slug]</code> 新ページ、<code>/hotel/[id]</code>→[slug] リダイレクト middleware</td></tr>
+    <tr><td>5/4〜5/6<br>3日</td><td><strong>S3: エージェントA最小実装</strong></td><td>scripts/agents/discovery.ts（楽天APIのみ、じゃらんは後回し）、<code>discovery_queue</code>へのINSERT、Slack通知（ボタンなし版）</td></tr>
+    <tr><td>5/7（水）<br>1日</td><td><strong>S4: ローカル動作確認＋デモ準備</strong></td><td>workflow_dispatchで手動実行、Slackに実通知が届くデモ</td></tr>
+    <tr><td>5/8（木）</td><td>社内ミーティング</td><td>方針承認＋デモ</td></tr>
+  </tbody>
+</table>
+
+<h3>5/8以降の第2スプリント（参考）</h3>
+<ul>
+  <li>エージェントB（Slackからの個別追加）</li>
+  <li>Slack Block Kitボタン（追加/スキップ）と <code>/api/slack/interactivity</code></li>
+  <li>じゃらんスクレイピング追加（規約・robots確認後）</li>
+  <li>編集者向け簡易管理UI（必要なら）</li>
+  <li>るるぶ・一休のバリューコマース連携</li>
+  <li>microCMS完全廃止</li>
+</ul>
+
+<div class="note note-blue"><strong>5/8で決めるべきこと:</strong> (1) Supabase移行GO/NOGO、(2) URL構造を <code>[slug]</code> に変えるGO/NOGO、(3) じゃらんスクレイピングの法務確認、(4) 編集者の管理画面要件、(5) Slack専用チャンネル名と権限。</div>
+
+<p style="text-align:center;margin-top:48px;font-size:11px;color:#8A877F;">— v2終わり —</p>
+
+</div>
+</body>
+</html>
