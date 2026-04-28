@@ -6,6 +6,31 @@ import { buildRejectionModal } from '@/lib/slack/modal';
 
 export const runtime = 'nodejs';
 
+// ブラウザで開いた時に環境変数の状態を確認できる診断用エンドポイント
+// 機密情報は返さない（長さと先頭3文字のみ）
+export async function GET() {
+  const secret = process.env.SLACK_SIGNING_SECRET;
+  const token = process.env.SLACK_BOT_TOKEN;
+  const supaUrl = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supaKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return NextResponse.json({
+    deploy_check: 'ok',
+    deployed_at: new Date().toISOString(),
+    env: {
+      SLACK_SIGNING_SECRET: secret
+        ? { set: true, len: secret.length, prefix: secret.slice(0, 3) }
+        : { set: false },
+      SLACK_BOT_TOKEN: token
+        ? { set: true, len: token.length, prefix: token.slice(0, 5) }
+        : { set: false },
+      SUPABASE_URL: supaUrl ? { set: true, value: supaUrl } : { set: false },
+      SUPABASE_SERVICE_ROLE_KEY: supaKey
+        ? { set: true, len: supaKey.length, prefix: supaKey.slice(0, 5) }
+        : { set: false },
+    },
+  });
+}
+
 interface SlackPayload {
   type: 'block_actions' | 'view_submission' | string;
   actions?: Array<{ action_id: string; value: string }>;
