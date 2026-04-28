@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
-import { verifySlackSignature } from '@/lib/slack/sign';
+import { verifySlackSignatureDetailed } from '@/lib/slack/sign';
 import { viewsOpen, chatPostMessage } from '@/lib/slack/api';
 import { buildRejectionModal } from '@/lib/slack/modal';
 
@@ -28,13 +28,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'config' }, { status: 500 });
   }
 
-  const ok = verifySlackSignature({
+  const verifyResult = verifySlackSignatureDetailed({
     signingSecret: sigSecret,
     timestamp: req.headers.get('x-slack-request-timestamp'),
     body: rawBody,
     signature: req.headers.get('x-slack-signature'),
   });
-  if (!ok) {
+  if (!verifyResult.ok) {
+    console.error('[slack/interactivity] verify failed:', JSON.stringify({
+      reason: verifyResult.reason,
+      debug: verifyResult.debug,
+      sig_secret_set: !!sigSecret,
+      sig_secret_len: sigSecret?.length,
+      sig_secret_prefix: sigSecret?.slice(0, 4),
+      timestamp_header: req.headers.get('x-slack-request-timestamp'),
+      signature_header_prefix: req.headers.get('x-slack-signature')?.slice(0, 12),
+      body_len: rawBody.length,
+      body_first_60: rawBody.slice(0, 60),
+    }));
     return new NextResponse('unauthorized', { status: 401 });
   }
 
