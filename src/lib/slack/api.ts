@@ -24,7 +24,16 @@ async function call(method: string, body: Record<string, unknown>): Promise<Slac
     },
     body: JSON.stringify(body),
   });
-  return (await res.json()) as SlackResponse;
+  const json = (await res.json()) as SlackResponse;
+  if (!json.ok) {
+    console.error(`[slack/api] ${method} failed:`, JSON.stringify({
+      error: json.error,
+      response_metadata: json.response_metadata,
+      needed: (json as { needed?: string }).needed,
+      provided: (json as { provided?: string }).provided,
+    }));
+  }
+  return json;
 }
 
 export async function viewsOpen(triggerId: string, view: object): Promise<SlackResponse> {
