@@ -1,12 +1,23 @@
 // 却下理由を入力するモーダル
+// private_metadata に元メッセージ更新に必要な情報を JSON で詰める
 export function buildRejectionModal(args: {
   queueId: string;
   candidateName: string;
+  candidateAddress?: string;
+  channelId?: string;
+  messageTs?: string;
 }) {
+  const metadata = JSON.stringify({
+    qid: args.queueId,
+    name: args.candidateName,
+    addr: args.candidateAddress ?? '',
+    ch: args.channelId ?? '',
+    ts: args.messageTs ?? '',
+  });
   return {
     type: 'modal',
     callback_id: 'rejection_modal',
-    private_metadata: args.queueId,
+    private_metadata: metadata,
     title: { type: 'plain_text', text: '却下理由' },
     submit: { type: 'plain_text', text: '送信' },
     close: { type: 'plain_text', text: 'キャンセル' },

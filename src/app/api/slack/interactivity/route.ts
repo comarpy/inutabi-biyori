@@ -1,8 +1,49 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase/server';
 import { verifySlackSignatureDetailed } from '@/lib/slack/sign';
-import { viewsOpen, chatPostMessage } from '@/lib/slack/api';
+import { viewsOpen, chatPostMessage, chatUpdate } from '@/lib/slack/api';
 import { buildRejectionModal } from '@/lib/slack/modal';
+
+const REJECTION_LABELS: Record<string, string> = {
+  business_hotel: '🏢 ビジネスホテル',
+  closed_or_uncertain: '🚫 閉店・営業停止疑い',
+  not_dog_friendly: '🐶 犬対応が形式的・不十分',
+  bad_data: '📋 情報が不正確・不完全',
+  duplicate: '🔁 既存と重複',
+  other: '🤷 その他',
+};
+
+function jstNow(): string {
+  return new Date().toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' });
+}
+
+function buildDecidedMessage(args: {
+  decision: 'approved' | 'rejected';
+  candidateName: string;
+  candidateAddress?: string;
+  userId: string;
+  category?: string;
+  reason?: string;
+}) {
+  const head =
+    args.decision === 'approved'
+      ? `✅ *承認済* — ${args.candidateName}`
+      : `❌ *却下済* — ${args.candidateName}`;
+
+  const parts: string[] = [];
+  if (args.candidateAddress) parts.push(`📍 ${args.candidateAddress}`);
+  if (args.category) parts.push(`カテゴリ: ${REJECTION_LABELS[args.category] ?? args.category}`);
+  if (args.reason) parts.push(`理由: ${args.reason}`);
+  parts.push(`by <@${args.userId}> @ ${jstNow()}`);
+
+  return {
+    text: head,
+    blocks: [
+      { type: 'section', text: { type: 'mrkdwn', text: head } },
+      { type: 'context', elements: [{ type: 'mrkdwn', text: parts.join('  ・  ') }] },
+    ],
+  };
+}
 
 export const runtime = 'nodejs';
 
@@ -107,6 +148,14 @@ async function handleBlockActions(payload: SlackPayload): Promise<NextResponse> 
 
   // ✅ 追加 = approve
   if (action.action_id === 'approve_candidate') {
+    // DB情報も取得（メッセージ更新で住所等を表示するため）
+    const { data: row } = await sb
+      .from('discovery_queue')
+      .select('candidate_name, candidate_address')
+      .eq('id', queueId)
+      .maybeSingle();
+    const candidate = row as { candidate_name?: string; candidate_address?: string } | null;
+
     const { error } = await sb
       .from('discovery_queue')
       .update({
@@ -117,13 +166,30 @@ async function handleBlockActions(payload: SlackPayload): Promise<NextResponse> 
       .eq('id', queueId)
       .eq('status', 'pending');
 
-    if (payload.channel?.id && payload.message?.ts) {
-      await chatPostMessage({
+    if (error) {
+      if (payload.channel?.id && payload.message?.ts) {
+        await chatPostMessage({
+          channel: payload.channel.id,
+          thread_ts: payload.message.ts,
+          text: `❗ 承認失敗: ${error.message}`,
+        });
+      }
+      return NextResponse.json({ ok: true });
+    }
+
+    // 元メッセージを「承認済」表示に書き換える（ボタンも消える）
+    if (payload.channel?.id && payload.message?.ts && candidate?.candidate_name) {
+      const updated = buildDecidedMessage({
+        decision: 'approved',
+        candidateName: candidate.candidate_name,
+        candidateAddress: candidate.candidate_address,
+        userId: payload.user?.id ?? '',
+      });
+      await chatUpdate({
         channel: payload.channel.id,
-        thread_ts: payload.message.ts,
-        text: error
-          ? `❗ 承認失敗: ${error.message}`
-          : `✅ <@${payload.user?.id}> が承認しました（DBで status=approved に更新）`,
+        ts: payload.message.ts,
+        text: updated.text,
+        blocks: updated.blocks,
       });
     }
     return NextResponse.json({ ok: true });
@@ -137,12 +203,21 @@ async function handleBlockActions(payload: SlackPayload): Promise<NextResponse> 
 
     const { data } = await sb
       .from('discovery_queue')
-      .select('candidate_name')
+      .select('candidate_name, candidate_address')
       .eq('id', queueId)
       .maybeSingle();
-    const candidateName = (data as { candidate_name?: string } | null)?.candidate_name ?? '(候補)';
+    const candidate = data as { candidate_name?: string; candidate_address?: string } | null;
 
-    await viewsOpen(payload.trigger_id, buildRejectionModal({ queueId, candidateName }));
+    await viewsOpen(
+      payload.trigger_id,
+      buildRejectionModal({
+        queueId,
+        candidateName: candidate?.candidate_name ?? '(候補)',
+        candidateAddress: candidate?.candidate_address,
+        channelId: payload.channel?.id,
+        messageTs: payload.message?.ts,
+      }),
+    );
     return NextResponse.json({ ok: true });
   }
 
@@ -154,7 +229,15 @@ async function handleViewSubmission(payload: SlackPayload): Promise<NextResponse
     return NextResponse.json({ ok: true });
   }
 
-  const queueId = payload.view.private_metadata;
+  // private_metadata は JSON 形式に拡張済み
+  let meta: { qid?: string; name?: string; addr?: string; ch?: string; ts?: string } = {};
+  try {
+    meta = JSON.parse(payload.view.private_metadata ?? '{}');
+  } catch {
+    // 旧形式（queue_idの文字列だけ）の互換
+    meta = { qid: payload.view.private_metadata };
+  }
+  const queueId = meta.qid;
   if (!queueId) return NextResponse.json({ error: 'no queue_id' }, { status: 400 });
 
   const values = payload.view.state?.values ?? {};
@@ -189,6 +272,23 @@ async function handleViewSubmission(payload: SlackPayload): Promise<NextResponse
     });
   }
 
-  // モーダルを閉じる
+  // 元メッセージを「却下済」表示に書き換える
+  if (meta.ch && meta.ts && meta.name) {
+    const updated = buildDecidedMessage({
+      decision: 'rejected',
+      candidateName: meta.name,
+      candidateAddress: meta.addr,
+      userId: payload.user?.id ?? '',
+      category,
+      reason: reason ?? undefined,
+    });
+    await chatUpdate({
+      channel: meta.ch,
+      ts: meta.ts,
+      text: updated.text,
+      blocks: updated.blocks,
+    });
+  }
+
   return NextResponse.json({ response_action: 'clear' });
 }
