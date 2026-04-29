@@ -18,21 +18,16 @@ const VC_PIDS: Record<Exclude<OtaProvider, 'rakuten'>, string> = {
   ikkyu:        '892603757',
 };
 
-// 各OTAの「宿名検索」URL（vc_urlでラップする対象）
-// 注意: 多くのOTAは検索ページのURLが安定していない or form POST必須のため
-// Yahoo!トラベル・一休 のようにURLパラメータで keyword を受けるサイトのみ検索URLを使い、
-// 他はトップページ（→ ユーザーが自分で検索する想定）にフォールバック
+// 各OTAのトップページ（vc_urlでラップする対象）
+// 各OTAの検索URLは form POST 必須 or 動的構造のため外部から直接叩けない。
+// トップページに飛ばし、ユーザーが自分で検索する運用に統一。
+// 5/8デモ後に Phase 3 で「宿固有URLマッピング batch」を実装予定。
 const SEARCH_URL_BUILDERS: Record<Exclude<OtaProvider, 'rakuten'>, (q: string) => string> = {
-  // じゃらんはトップで検索ボックスに入力する仕様のためトップを返す
   jalan:        () => `https://www.jalan.net/`,
-  // るるぶも同様
   rurubu:       () => `https://travel.rurubu.com/`,
-  // Yahoo!トラベルは keyword パラメータが効く
-  yahoo_travel: (q) => `https://travel.yahoo.co.jp/search/keyword/?keyword=${encodeURIComponent(q)}`,
-  // JTBはトップへ
+  yahoo_travel: () => `https://travel.yahoo.co.jp/`,
   jtb:          () => `https://www.jtb.co.jp/kokunai-hotel/`,
-  // 一休はキーワード検索が効く
-  ikkyu:        (q) => `https://www.ikyu.com/search/?text=${encodeURIComponent(q)}`,
+  ikkyu:        () => `https://www.ikyu.com/`,
 };
 
 // 各OTAの表示ラベル（UI用）
