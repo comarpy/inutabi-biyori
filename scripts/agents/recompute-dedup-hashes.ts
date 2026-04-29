@@ -1,12 +1,12 @@
 /**
- * 既存hotels.dedup_hash を新しい正規化で再計算する
+ * 既存hotels の dedup_hash / address_dedup_hash / phone_dedup_hash を再計算
  *   npx tsx scripts/agents/recompute-dedup-hashes.ts            # dry-run
  *   npx tsx scripts/agents/recompute-dedup-hashes.ts --apply    # UPDATE実行
  */
 import 'dotenv/config';
 import { config as loadEnv } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-import { computeDedupHash } from './lib/dedup';
+import { computeDedupHash, computeAddressHash, computePhoneHash } from './lib/dedup';
 
 loadEnv({ path: '.env.local' });
 
@@ -23,6 +23,8 @@ interface HotelRow {
   address: string;
   phone: string | null;
   dedup_hash: string | null;
+  address_dedup_hash: string | null;
+  phone_dedup_hash: string | null;
 }
 
 async function fetchAll(): Promise<HotelRow[]> {
@@ -31,7 +33,7 @@ async function fetchAll(): Promise<HotelRow[]> {
   for (let off = 0; ; off += PAGE) {
     const { data, error } = await sb
       .from('hotels')
-      .select('id, name, address, phone, dedup_hash')
+      .select('id, name, address, phone, dedup_hash, address_dedup_hash, phone_dedup_hash')
       .range(off, off + PAGE - 1);
     if (error || !data || data.length === 0) break;
     all.push(...(data as HotelRow[]));
@@ -46,62 +48,71 @@ async function main() {
   const hotels = await fetchAll();
   console.log(`📦 対象: ${hotels.length}件`);
 
-  let changed = 0;
-  let unchanged = 0;
-  const newHashSeen = new Map<string, string>(); // hash → hotelId 重複検出用
-  const collisions: Array<{ id: string; name: string; collidesWith: string }> = [];
+  let nameChanged = 0;
+  let addrChanged = 0;
+  let phoneChanged = 0;
 
-  const updates: Array<{ id: string; newHash: string }> = [];
+  // 衝突分析（同じ住所/電話を持つ既存ホテルがあるか）
+  const addrCount = new Map<string, number>();
+  const phoneCount = new Map<string, number>();
+
+  const updates: Array<{
+    id: string;
+    dedup_hash: string;
+    address_dedup_hash: string | null;
+    phone_dedup_hash: string | null;
+  }> = [];
+
   for (const h of hotels) {
-    const newHash = computeDedupHash({
-      name: h.name,
-      address: h.address,
-      phone: h.phone,
-    });
-    if (newHashSeen.has(newHash)) {
-      collisions.push({ id: h.id, name: h.name, collidesWith: newHashSeen.get(newHash)! });
-    } else {
-      newHashSeen.set(newHash, h.id);
-    }
-    if (newHash !== h.dedup_hash) {
-      updates.push({ id: h.id, newHash });
-      changed++;
-    } else {
-      unchanged++;
+    const newName = computeDedupHash({ name: h.name, address: h.address, phone: h.phone });
+    const newAddr = computeAddressHash(h.address);
+    const newPhone = computePhoneHash(h.phone);
+
+    if (newAddr) addrCount.set(newAddr, (addrCount.get(newAddr) ?? 0) + 1);
+    if (newPhone) phoneCount.set(newPhone, (phoneCount.get(newPhone) ?? 0) + 1);
+
+    const changed =
+      newName !== h.dedup_hash ||
+      newAddr !== h.address_dedup_hash ||
+      newPhone !== h.phone_dedup_hash;
+
+    if (changed) {
+      if (newName !== h.dedup_hash) nameChanged++;
+      if (newAddr !== h.address_dedup_hash) addrChanged++;
+      if (newPhone !== h.phone_dedup_hash) phoneChanged++;
+      updates.push({
+        id: h.id,
+        dedup_hash: newName,
+        address_dedup_hash: newAddr,
+        phone_dedup_hash: newPhone,
+      });
     }
   }
 
-  console.log(`📊 変更あり: ${changed}件 / 変更なし: ${unchanged}件`);
-  console.log(`🔄 ハッシュ衝突（同じ宿として認識されるペア）: ${collisions.length}件`);
+  console.log(`📊 変更: name=${nameChanged}, address=${addrChanged}, phone=${phoneChanged} 件`);
 
-  if (collisions.length > 0) {
-    console.log('\n衝突例（先頭10件）:');
-    for (const c of collisions.slice(0, 10)) {
-      const partner = hotels.find((x) => x.id === c.collidesWith);
-      console.log(`  - "${c.name}" vs "${partner?.name}"`);
-    }
-  }
+  // 衝突件数
+  const addrCollisions = [...addrCount.values()].filter((v) => v > 1).length;
+  const phoneCollisions = [...phoneCount.values()].filter((v) => v > 1).length;
+  console.log(`🔄 既存内 衝突: address同一 ${addrCollisions}件 / phone同一 ${phoneCollisions}件`);
+  console.log('   （これらは別館・支店の可能性あり）');
 
   if (!APPLY) {
     console.log('\n--apply で実反映します');
     return;
   }
 
-  // 衝突がある場合は片方を archived にして UNIQUE 制約を回避
-  // (今回は同じ宿のはずなので、後から見つけたほうを archived)
-  if (collisions.length > 0) {
-    console.log(`\n🗑️  衝突 ${collisions.length}件を archived 化します（後から検出したほう）`);
-    for (const c of collisions) {
-      await sb.from('hotels').update({ status: 'archived', dedup_hash: null }).eq('id', c.id);
-    }
-  }
-
-  // バッチ UPDATE（1件ずつ。Supabase上限を考慮）
   console.log(`\n🔄 ${updates.length}件のhash更新中...`);
   let done = 0;
   for (const u of updates) {
-    if (collisions.find((c) => c.id === u.id)) continue; // archived済みはスキップ
-    const { error } = await sb.from('hotels').update({ dedup_hash: u.newHash }).eq('id', u.id);
+    const { error } = await sb
+      .from('hotels')
+      .update({
+        dedup_hash: u.dedup_hash,
+        address_dedup_hash: u.address_dedup_hash,
+        phone_dedup_hash: u.phone_dedup_hash,
+      })
+      .eq('id', u.id);
     if (error) {
       console.error(`❌ ${u.id}:`, error.message);
     } else {

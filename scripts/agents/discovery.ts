@@ -15,7 +15,7 @@
 import 'dotenv/config';
 import { config as loadEnv } from 'dotenv';
 import { createClient } from '@supabase/supabase-js';
-import { computeDedupHash } from './lib/dedup';
+import { computeDedupHash, computeAddressHash, computePhoneHash } from './lib/dedup';
 import { isSlackConfigured, postSlackMessage, buildCandidateBlocks } from './lib/slack';
 
 loadEnv({ path: '.env.local' });
@@ -168,29 +168,54 @@ async function main() {
   const knownRakutenNos = await knownRakutenHotelNos();
   console.log(`📋 既存rakutenソース: ${knownRakutenNos.size}件`);
 
-  // 3. 既存 dedup_hash を取得（hotels + discovery_queue両方）
-  const knownHashes = new Set<string>();
+  // 3. 既存 dedup hash を取得（hotels + discovery_queue両方）
+  // - knownNameHashes: name+address+phone の厳密ハッシュ
+  // - knownAddrHashes: 住所ハッシュ（名前違いでも住所一致なら同じ宿）
+  // - knownPhoneHashes: 電話ハッシュ（住所表記揺れにも強い）
+  const knownNameHashes = new Set<string>();
+  const knownAddrHashes = new Set<string>();
+  const knownPhoneHashes = new Set<string>();
   {
     const PAGE = 1000;
     for (let off = 0; ; off += PAGE) {
-      const { data, error } = await sb.from('hotels').select('dedup_hash').range(off, off + PAGE - 1);
+      const { data, error } = await sb
+        .from('hotels')
+        .select('dedup_hash, address_dedup_hash, phone_dedup_hash')
+        .range(off, off + PAGE - 1);
       if (error || !data || data.length === 0) break;
-      for (const r of data) if (r.dedup_hash) knownHashes.add(r.dedup_hash);
+      for (const r of data) {
+        if (r.dedup_hash) knownNameHashes.add(r.dedup_hash);
+        if (r.address_dedup_hash) knownAddrHashes.add(r.address_dedup_hash);
+        if (r.phone_dedup_hash) knownPhoneHashes.add(r.phone_dedup_hash);
+      }
       if (data.length < PAGE) break;
     }
-    const { data: q } = await sb.from('discovery_queue').select('dedup_hash');
-    for (const r of q ?? []) if (r.dedup_hash) knownHashes.add(r.dedup_hash);
+    const { data: q } = await sb
+      .from('discovery_queue')
+      .select('dedup_hash, address_dedup_hash, phone_dedup_hash');
+    for (const r of q ?? []) {
+      if (r.dedup_hash) knownNameHashes.add(r.dedup_hash);
+      if (r.address_dedup_hash) knownAddrHashes.add(r.address_dedup_hash);
+      if (r.phone_dedup_hash) knownPhoneHashes.add(r.phone_dedup_hash);
+    }
   }
-  console.log(`📋 既存dedup_hash: ${knownHashes.size}件`);
+  console.log(`📋 既存hash: name=${knownNameHashes.size} / address=${knownAddrHashes.size} / phone=${knownPhoneHashes.size}`);
 
   // 4. 候補をフィルタ
   const newCandidates: Array<{
     hit: RakutenHit;
     hash: string;
+    addrHash: string | null;
+    phoneHash: string | null;
     fullAddress: string;
   }> = [];
 
-  const stats = { dup_hash: 0, dup_rakuten_no: 0, fresh: 0 };
+  const stats = {
+    dup_name: 0,
+    dup_addr_phone: 0,
+    dup_rakuten_no: 0,
+    fresh: 0,
+  };
   for (const hit of allHits.values()) {
     const fullAddress = `${hit.address1}${hit.address2}`.trim();
     if (knownRakutenNos.has(hit.hotelNo)) {
@@ -202,17 +227,32 @@ async function main() {
       address: fullAddress,
       phone: hit.telephoneNo,
     });
-    if (knownHashes.has(hash)) {
-      stats.dup_hash++;
+    const addrHash = computeAddressHash(fullAddress);
+    const phoneHash = computePhoneHash(hit.telephoneNo);
+
+    // 既存ハッシュとの突合（2層）
+    // 1) 名前+住所+電話の厳密ハッシュ
+    // 2) 住所+電話 両方一致（強い信号）
+    // ※ phone-only は誤検知が多い（チェーン店・貸別荘管理会社） → 採用せず
+    if (knownNameHashes.has(hash)) {
+      stats.dup_name++;
       continue;
     }
-    knownHashes.add(hash); // バッチ内重複も防ぐ
-    newCandidates.push({ hit, hash, fullAddress });
+    if (addrHash && phoneHash && knownAddrHashes.has(addrHash) && knownPhoneHashes.has(phoneHash)) {
+      stats.dup_addr_phone++;
+      continue;
+    }
+
+    knownNameHashes.add(hash);
+    if (addrHash) knownAddrHashes.add(addrHash);
+    if (phoneHash) knownPhoneHashes.add(phoneHash);
+    newCandidates.push({ hit, hash, addrHash, phoneHash, fullAddress });
     stats.fresh++;
   }
 
   console.log('---');
-  console.log(`🆕 新規候補: ${stats.fresh}件 / 重複(hash): ${stats.dup_hash}件 / 重複(rakuten_no): ${stats.dup_rakuten_no}件`);
+  console.log(`🆕 新規候補: ${stats.fresh}件`);
+  console.log(`   重複: name=${stats.dup_name} / addr+phone=${stats.dup_addr_phone} / rakuten_no=${stats.dup_rakuten_no}`);
 
   // 5. discovery_queue へINSERT
   if (newCandidates.length === 0) {
@@ -231,6 +271,8 @@ async function main() {
     console.log('💾 discovery_queueへINSERT中...');
     const insertRows = newCandidates.map((c) => ({
       dedup_hash: c.hash,
+      address_dedup_hash: c.addrHash,
+      phone_dedup_hash: c.phoneHash,
       candidate_name: c.hit.hotelName,
       candidate_address: c.fullAddress.slice(0, 300),
       raw_payload: c.hit as unknown as Record<string, unknown>,
@@ -261,7 +303,7 @@ async function main() {
           {
             type: 'context',
             elements: [
-              { type: 'mrkdwn', text: `集計: 🆕 ${stats.fresh} / 重複 ${stats.dup_hash + stats.dup_rakuten_no} / 走査 ${allHits.size}` },
+              { type: 'mrkdwn', text: `集計: 🆕 ${stats.fresh} / 重複 ${stats.dup_name + stats.dup_addr_phone + stats.dup_rakuten_no} / 走査 ${allHits.size}` },
             ],
           },
         ],

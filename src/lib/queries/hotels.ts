@@ -54,14 +54,31 @@ const HOTEL_SELECT = `
   images:hotel_images(storage_path, is_main, sort_order)
 `;
 
-// レガシーID（microCMSのcontentId）からSupabase経由で宿を取得
+// URL のパスから宿を取得する（複数のルート方法を試す）
+//   - "item123" 形式（microCMS contentId）→ hotel_sources の source_type='manual' から逆引き
+//   - "rakuten-12345" 形式（楽天昇格分）→ hotels.slug 直接マッチ
+//   - 任意のslug → hotels.slug 直接マッチ
+//
+// 関数名は後方互換のため getHotelByLegacyId のまま残す
 export async function getHotelByLegacyId(legacyId: string): Promise<DogHotelInfo | null> {
   try {
     const sb = createServerClient();
+
+    // 1. まず hotels.slug 直接マッチで試す（rakuten- 系や将来の任意slug）
+    const bySlug = await sb
+      .from('hotels')
+      .select(HOTEL_SELECT)
+      .eq('slug', legacyId)
+      .eq('status', 'published')
+      .maybeSingle();
+    if (bySlug.data) {
+      return toDogHotelInfo(bySlug.data as SbHotelRow, legacyId);
+    }
+
+    // 2. 旧URLとの互換: hotel_sources（microCMS contentId）から逆引き
     const { data, error } = await sb
       .from('hotel_sources')
       .select(`hotel:hotels(${HOTEL_SELECT})`)
-      .eq('source_type', 'manual')
       .eq('source_id', legacyId)
       .maybeSingle();
 
