@@ -1,6 +1,7 @@
 import type { ComponentType, SVGProps } from 'react';
 import { fetchRakutenHotels, RakutenHotel, fetchRakutenHotelDetail, withAffiliate, searchRakutenByKeyword, buildRakutenSearchUrl } from './rakuten';
 import { getDogHotels, getDogHotelById, searchDogHotelsByPrefecture, DogHotelInfo } from './microcms';
+import { getHotelByLegacyId } from './queries/hotels';
 import { Dog, Car, Bath, UtensilsCrossed } from 'lucide-react';
 import { devLog, devWarn } from './logger';
 
@@ -696,14 +697,21 @@ export async function getHotelById(id: string): Promise<HotelDetail | null> {
       return null;
     }
 
-    // microCMSから単一レコード取得（効率的）
+    // 1. Supabase（移行先）から取得を試みる
+    const fromSupabase = await getHotelByLegacyId(id);
+    if (fromSupabase) {
+      devLog('Supabaseでホテルが見つかりました:', fromSupabase.hotelName);
+      return await convertMicroCMSToHotelDetail(fromSupabase);
+    }
+
+    // 2. microCMSから単一レコード取得（移行漏れ・新規追加分のフォールバック）
     const direct = await getDogHotelById(id);
     if (direct) {
       devLog('microCMSでホテルが見つかりました:', direct.hotelName);
       return await convertMicroCMSToHotelDetail(direct);
     }
 
-    // フォールバック: 全件取得して find
+    // 3. フォールバック: 全件取得して find
     const microCMSHotels = await getDogHotels();
     const microCMSHotel = microCMSHotels.find(h => h.id === id);
     if (microCMSHotel) {
