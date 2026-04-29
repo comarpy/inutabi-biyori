@@ -83,6 +83,28 @@ export async function postSlackMessage(args: PostMessageArgs): Promise<PostMessa
   return { ok: false, error: lastError };
 }
 
+// 既存メッセージの本文を書き換える（ロールバック等で利用）
+export async function chatUpdate(args: {
+  channel: string;
+  ts: string;
+  text: string;
+  blocks?: Block[];
+}): Promise<PostMessageResponse | null> {
+  const { token } = getEnv();
+  if (!token) return null;
+  const res = await fetch('https://slack.com/api/chat.update', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': 'application/json; charset=utf-8',
+    },
+    body: JSON.stringify(args),
+  });
+  const json = (await res.json()) as PostMessageResponse;
+  if (!json.ok) console.error('❌ Slack chat.update エラー:', json.error);
+  return json;
+}
+
 // ホテル候補1件あたりのBlock Kitメッセージを構築
 export function buildCandidateBlocks(args: {
   name: string;
