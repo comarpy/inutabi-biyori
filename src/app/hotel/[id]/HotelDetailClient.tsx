@@ -7,6 +7,7 @@ import { XIcon } from '../../../components/XIcon';
 import Link from 'next/link';
 import Image from 'next/image';
 import type { HotelDetail } from '@/lib/hotelService';
+import { buildVcBookingLinks } from '@/lib/affiliate';
 
 export default function HotelDetailClient({ hotel }: { hotel: HotelDetail }) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -345,6 +346,28 @@ export default function HotelDetailClient({ hotel }: { hotel: HotelDetail }) {
                       準備中
                     </button>
                   )}
+                </div>
+
+                {/* 他のOTA予約サイト（じゃらん・るるぶ・Yahoo!トラベル・JTB・一休）*/}
+                <div className="bg-white border border-gray-200 rounded-xl p-4">
+                  <p className="text-sm font-bold text-gray-700 mb-3">他の予約サイトでも探す</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {buildVcBookingLinks(hotel.name).map((link) => (
+                      <a
+                        key={link.provider}
+                        href={link.url}
+                        target="_blank"
+                        rel="nofollow noopener noreferrer sponsored"
+                        className="flex items-center justify-between px-3 py-2 border border-gray-200 rounded-lg hover:border-[#FF5A5F] hover:shadow-sm transition-all text-sm"
+                      >
+                        <span className="font-bold text-gray-700">{link.label}</span>
+                        <span className="text-xs text-gray-500">で見る →</span>
+                      </a>
+                    ))}
+                  </div>
+                  <p className="text-xs text-gray-500 mt-3">
+                    宿名で各サイトを検索します。当サイトはアフィリエイトリンクで運営されています。
+                  </p>
                 </div>
               </div>
             </div>

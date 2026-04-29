@@ -1,0 +1,44 @@
+name: Weekly Discovery (Agent A)
+
+on:
+  # 毎週月曜 0:00 UTC = 9:00 JST に自動実行
+  schedule:
+    - cron: '0 0 * * 1'
+  # 手動実行も許可（Actionsタブから "Run workflow" ボタン）
+  workflow_dispatch:
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run discovery agent
+        run: npx tsx scripts/agents/discovery.ts --apply
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RAKUTEN_APPLICATION_ID: ${{ secrets.RAKUTEN_APPLICATION_ID }}
+          RAKUTEN_AFFILIATE_ID: ${{ secrets.RAKUTEN_AFFILIATE_ID }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_DISCOVERY_CHANNEL: ${{ secrets.SLACK_DISCOVERY_CHANNEL }}
+
+      - name: Notify Slack on failure
+        if: failure()
+        run: |
+          curl -s -X POST https://slack.com/api/chat.postMessage \
+            -H "Authorization: Bearer ${{ secrets.SLACK_BOT_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"channel\":\"${{ secrets.SLACK_DISCOVERY_CHANNEL }}\",\"text\":\":warning: Discovery agent failed. <https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|Run logs>\"}" \
+            > /dev/null
