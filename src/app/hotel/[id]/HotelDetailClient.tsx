@@ -80,13 +80,14 @@ export default function HotelDetailClient({
         {/* SP: single photo */}
         <div className="md:hidden">
           <div
-            className="relative w-full overflow-hidden cursor-pointer"
+            className="relative w-full overflow-hidden"
             style={{
               height: 240,
               borderRadius: 'var(--r-md)',
               background: 'var(--surface-2)',
+              cursor: hotel.images.length > 1 ? 'pointer' : 'default',
             }}
-            onClick={() => setIsImageModalOpen(true)}
+            onClick={() => hotel.images.length > 1 && setIsImageModalOpen(true)}
           >
             <Image
               src={hotel.images[0]}
@@ -96,75 +97,99 @@ export default function HotelDetailClient({
               priority
               className="object-cover"
             />
-            <div
-              className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5"
-              style={{
-                background: 'rgba(0,0,0,0.55)',
-                color: '#fff',
-                borderRadius: 'var(--r-pill)',
-                fontSize: 12,
-              }}
-            >
-              <Camera className="w-3.5 h-3.5" />
-              写真 {hotel.images.length}枚
-            </div>
+            {hotel.images.length > 1 && (
+              <div
+                className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 px-3 py-1.5"
+                style={{
+                  background: 'rgba(0,0,0,0.55)',
+                  color: '#fff',
+                  borderRadius: 'var(--r-pill)',
+                  fontSize: 12,
+                }}
+              >
+                <Camera className="w-3.5 h-3.5" />
+                写真 {hotel.images.length}枚
+              </div>
+            )}
           </div>
         </div>
 
-        {/* PC: grid layout */}
-        <div className="hidden md:grid gap-2" style={{ gridTemplateColumns: '2fr 1fr 1fr', gridTemplateRows: '200px 200px' }}>
-          <div
-            className="relative cursor-pointer overflow-hidden"
-            style={{
-              gridRow: 'span 2',
-              borderRadius: 'var(--r-md)',
-              background: 'var(--surface-2)',
-            }}
-            onClick={() => setIsImageModalOpen(true)}
-          >
-            <Image
-              src={hotel.images[0]}
-              alt={hotel.name}
-              fill
-              sizes="50vw"
-              priority
-              className="object-cover"
-            />
-          </div>
-          {hotel.images.slice(1, 5).map((img, i) => (
+        {/* PC: 画像枚数で分岐 */}
+        {hotel.images.length === 1 ? (
+          <div className="hidden md:block">
             <div
-              key={i}
-              className="relative cursor-pointer overflow-hidden"
+              className="relative w-full overflow-hidden"
               style={{
+                height: 408,
                 borderRadius: 'var(--r-md)',
                 background: 'var(--surface-2)',
               }}
-              onClick={() => {
-                setSelectedImageIndex(i + 1);
-                setIsImageModalOpen(true);
-              }}
             >
               <Image
-                src={img}
-                alt={`${hotel.name} 写真${i + 2}`}
+                src={hotel.images[0]}
+                alt={hotel.name}
                 fill
-                sizes="25vw"
+                sizes="100vw"
+                priority
                 className="object-cover"
               />
-              {i === 3 && hotel.images.length > 5 && (
-                <div
-                  className="absolute inset-0 flex items-center justify-center"
-                  style={{ background: 'rgba(0,0,0,0.55)', color: '#fff' }}
-                >
-                  <div className="text-center">
-                    <Camera className="w-5 h-5 mx-auto mb-1" />
-                    <span className="text-sm font-medium">+ {hotel.images.length - 5}枚</span>
-                  </div>
-                </div>
-              )}
             </div>
-          ))}
-        </div>
+          </div>
+        ) : (
+          <div className="hidden md:grid gap-2" style={{ gridTemplateColumns: '2fr 1fr 1fr', gridTemplateRows: '200px 200px' }}>
+            <div
+              className="relative cursor-pointer overflow-hidden"
+              style={{
+                gridRow: 'span 2',
+                borderRadius: 'var(--r-md)',
+                background: 'var(--surface-2)',
+              }}
+              onClick={() => setIsImageModalOpen(true)}
+            >
+              <Image
+                src={hotel.images[0]}
+                alt={hotel.name}
+                fill
+                sizes="50vw"
+                priority
+                className="object-cover"
+              />
+            </div>
+            {hotel.images.slice(1, 5).map((img, i) => (
+              <div
+                key={i}
+                className="relative cursor-pointer overflow-hidden"
+                style={{
+                  borderRadius: 'var(--r-md)',
+                  background: 'var(--surface-2)',
+                }}
+                onClick={() => {
+                  setSelectedImageIndex(i + 1);
+                  setIsImageModalOpen(true);
+                }}
+              >
+                <Image
+                  src={img}
+                  alt={`${hotel.name} 写真${i + 2}`}
+                  fill
+                  sizes="25vw"
+                  className="object-cover"
+                />
+                {i === 3 && hotel.images.length > 5 && (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center"
+                    style={{ background: 'rgba(0,0,0,0.55)', color: '#fff' }}
+                  >
+                    <div className="text-center">
+                      <Camera className="w-5 h-5 mx-auto mb-1" />
+                      <span className="text-sm font-medium">+ {hotel.images.length - 5}枚</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Title (PC) */}
