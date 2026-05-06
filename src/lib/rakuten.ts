@@ -466,28 +466,40 @@ export async function fetchRakutenHotelDetail(hotelNo: string): Promise<any | nu
   }
 }
 
-// 楽天詳細APIレスポンスから画像URLを再帰的に抽出
-// （basicInfo の5フィールド以外にも roomInfo / planInfo / facilitiesInfo に画像が紛れている）
-function extractImageUrlsFromDetail(detail: unknown, found: Set<string> = new Set()): string[] {
-  if (!detail) return Array.from(found);
-  const isRakutenImageHost = (s: string) =>
-    s.includes('img.travel.rakuten.co.jp') || s.includes('trvimg.r10s.jp');
-  const isImageExt = (s: string) => /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(s);
+// 楽天詳細APIレスポンスから「対象宿の画像のみ」を厳格に抽出
+// 採用条件:
+//  - 楽天画像ホスト (img.travel.rakuten.co.jp / trvimg.r10s.jp)
+//  - URL に対象 hotelNo を含む（別宿の "おすすめ" 画像を除外）
+//  - 拡張子 .jpg/.jpeg/.png/.webp（gif=地図 / API リダイレクトを除外）
+//  - クエリパラメータなし（API リダイレクト除外）
+//  - "map." を含まない（地図画像除外）
+function isValidHotelImageUrl(s: string, hotelNo: string): boolean {
+  if (!s || !s.startsWith('http')) return false;
+  if (!s.includes('img.travel.rakuten.co.jp') && !s.includes('trvimg.r10s.jp')) return false;
+  if (!s.includes(hotelNo)) return false;
+  if (s.includes('map.')) return false;
+  if (s.includes('?')) return false;
+  if (!/\.(jpg|jpeg|png|webp)$/i.test(s)) return false;
+  return true;
+}
 
+function extractImageUrlsFromDetail(
+  detail: unknown,
+  hotelNo: string,
+  found: Set<string> = new Set()
+): string[] {
+  if (!detail) return Array.from(found);
   if (typeof detail === 'string') {
-    const s = detail.trim();
-    if (s.startsWith('http') && (isRakutenImageHost(s) || isImageExt(s))) {
-      found.add(s);
-    }
+    if (isValidHotelImageUrl(detail.trim(), hotelNo)) found.add(detail.trim());
     return Array.from(found);
   }
   if (Array.isArray(detail)) {
-    for (const item of detail) extractImageUrlsFromDetail(item, found);
+    for (const item of detail) extractImageUrlsFromDetail(item, hotelNo, found);
     return Array.from(found);
   }
   if (typeof detail === 'object') {
     for (const key of Object.keys(detail as Record<string, unknown>)) {
-      extractImageUrlsFromDetail((detail as Record<string, unknown>)[key], found);
+      extractImageUrlsFromDetail((detail as Record<string, unknown>)[key], hotelNo, found);
     }
   }
   return Array.from(found);
@@ -504,7 +516,7 @@ export async function fetchRakutenHotelImages(hotelNo: string): Promise<string[]
   if (cached && now - cached.cachedAt < DETAIL_IMAGES_TTL) return cached.urls;
 
   const detail = await fetchRakutenHotelDetail(hotelNo).catch(() => null);
-  const urls = detail ? extractImageUrlsFromDetail(detail) : [];
+  const urls = detail ? extractImageUrlsFromDetail(detail, hotelNo) : [];
   detailImagesCache.set(hotelNo, { urls, cachedAt: now });
   return urls;
 }
