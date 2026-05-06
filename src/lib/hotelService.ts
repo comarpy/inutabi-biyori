@@ -1,5 +1,5 @@
 import type { ComponentType, SVGProps } from 'react';
-import { fetchRakutenHotels, RakutenHotel, fetchRakutenHotelDetail, withAffiliate, searchRakutenByKeyword, buildRakutenSearchUrl } from './rakuten';
+import { fetchRakutenHotels, RakutenHotel, fetchRakutenHotelDetail, fetchRakutenHotelImages, withAffiliate, searchRakutenByKeyword, buildRakutenSearchUrl } from './rakuten';
 import { getDogHotels, getDogHotelById, searchDogHotelsByPrefecture, DogHotelInfo } from './microcms';
 import { getHotelByLegacyId } from './queries/hotels';
 import { Dog, Car, Bath, UtensilsCrossed } from 'lucide-react';
@@ -674,7 +674,15 @@ async function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): Promis
         .filter((u): u is string => !!u && typeof u === 'string');
       for (const url of candidates) {
         if (!images.includes(url)) images.push(url);
-        if (images.length >= 5) break;
+        if (images.length >= 8) break;
+      }
+      // 楽天詳細APIから追加画像を取得（roomInfo / facilitiesInfo 等に画像URLが紛れている）
+      if (matched.hotelNo && images.length < 8) {
+        const moreUrls = await fetchRakutenHotelImages(matched.hotelNo);
+        for (const u of moreUrls) {
+          if (!images.includes(u)) images.push(u);
+          if (images.length >= 8) break;
+        }
       }
       if (!rakutenUrl) rakutenUrl = withAffiliate(matched.planListUrl || matched.dpPlanListUrl) || undefined;
     }
@@ -690,7 +698,15 @@ async function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): Promis
         .filter((u): u is string => !!u && typeof u === 'string');
       for (const url of candidates) {
         if (!images.includes(url)) images.push(url);
-        if (images.length >= 5) break;
+        if (images.length >= 8) break;
+      }
+      // 同じく詳細APIから追加画像
+      if (best.hotelNo && images.length < 8) {
+        const moreUrls = await fetchRakutenHotelImages(best.hotelNo);
+        for (const u of moreUrls) {
+          if (!images.includes(u)) images.push(u);
+          if (images.length >= 8) break;
+        }
       }
       if (!rakutenUrl) rakutenUrl = withAffiliate(best.planListUrl || best.dpPlanListUrl) || undefined;
       devLog(`${microCMSHotel.hotelName}: キーワード検索で楽天データを取得`);

@@ -464,7 +464,50 @@ export async function fetchRakutenHotelDetail(hotelNo: string): Promise<any | nu
     console.error('楽天ホテル詳細API 例外:', error);
     return null;
   }
-} 
+}
+
+// 楽天詳細APIレスポンスから画像URLを再帰的に抽出
+// （basicInfo の5フィールド以外にも roomInfo / planInfo / facilitiesInfo に画像が紛れている）
+function extractImageUrlsFromDetail(detail: unknown, found: Set<string> = new Set()): string[] {
+  if (!detail) return Array.from(found);
+  const isRakutenImageHost = (s: string) =>
+    s.includes('img.travel.rakuten.co.jp') || s.includes('trvimg.r10s.jp');
+  const isImageExt = (s: string) => /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(s);
+
+  if (typeof detail === 'string') {
+    const s = detail.trim();
+    if (s.startsWith('http') && (isRakutenImageHost(s) || isImageExt(s))) {
+      found.add(s);
+    }
+    return Array.from(found);
+  }
+  if (Array.isArray(detail)) {
+    for (const item of detail) extractImageUrlsFromDetail(item, found);
+    return Array.from(found);
+  }
+  if (typeof detail === 'object') {
+    for (const key of Object.keys(detail as Record<string, unknown>)) {
+      extractImageUrlsFromDetail((detail as Record<string, unknown>)[key], found);
+    }
+  }
+  return Array.from(found);
+}
+
+// 楽天 hotelNo から取れるすべての画像URLを返す（キャッシュ付き）
+const detailImagesCache = new Map<string, { urls: string[]; cachedAt: number }>();
+const DETAIL_IMAGES_TTL = 24 * 60 * 60 * 1000;
+
+export async function fetchRakutenHotelImages(hotelNo: string): Promise<string[]> {
+  if (!hotelNo) return [];
+  const now = Date.now();
+  const cached = detailImagesCache.get(hotelNo);
+  if (cached && now - cached.cachedAt < DETAIL_IMAGES_TTL) return cached.urls;
+
+  const detail = await fetchRakutenHotelDetail(hotelNo).catch(() => null);
+  const urls = detail ? extractImageUrlsFromDetail(detail) : [];
+  detailImagesCache.set(hotelNo, { urls, cachedAt: now });
+  return urls;
+}
 
 // 指定エリア（都道府県/地方）で楽天ホテル配列をフィルタ
 function filterHotelsByArea(hotels: RakutenHotel[], area: string): RakutenHotel[] {
