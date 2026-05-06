@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { ChevronRight } from 'lucide-react';
 
 import SiteHeader from '@/components/site/SiteHeader';
@@ -34,6 +33,14 @@ export default async function HomePage() {
   const allHotels = await getMicroCMSHotels().catch(() => []);
   const featured = allHotels.slice(0, 6);
 
+  // 地方ごとの宿件数（hotel.location の冒頭が region.areas のいずれかと一致するかで集計）
+  const regionCounts: Record<string, number> = {};
+  for (const region of REGION_SHORTCUTS) {
+    regionCounts[region.name] = allHotels.filter((h) =>
+      region.areas.some((pref) => h.location.startsWith(pref))
+    ).length;
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <SiteHeader />
@@ -50,32 +57,16 @@ export default async function HomePage() {
           style={{
             height: 'clamp(360px, 60vw, 520px)',
             overflow: 'hidden',
+            background:
+              'linear-gradient(135deg, oklch(0.42 0.14 45) 0%, oklch(0.28 0.04 60) 100%)',
           }}
         >
-          {/* Background image */}
-          <Image
-            src="/images/画像2.jpeg"
-            alt=""
-            fill
-            sizes="100vw"
-            priority
-            className="object-cover"
-            style={{ objectPosition: 'center 35%' }}
-          />
-          {/* Gradient overlay (orange/charcoal) */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                'linear-gradient(135deg, rgba(166,69,0,0.78) 0%, rgba(56,38,18,0.85) 100%)',
-            }}
-          />
           {/* Diagonal pattern overlay */}
           <div
             className="absolute inset-0"
             style={{
               background:
-                'repeating-linear-gradient(135deg, rgba(255,255,255,0.05) 0 18px, transparent 18px 36px)',
+                'repeating-linear-gradient(135deg, rgba(255,255,255,0.06) 0 18px, transparent 18px 36px)',
               mixBlendMode: 'overlay',
             }}
           />
@@ -229,7 +220,7 @@ export default async function HomePage() {
                     {r.name}
                   </div>
                   <div className="mt-1" style={{ fontSize: 11, color: 'var(--text-soft)' }}>
-                    {r.areas.length}都道府県
+                    {regionCounts[r.name] ?? 0}件
                   </div>
                 </Link>
               );

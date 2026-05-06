@@ -10,8 +10,6 @@ import {
   Phone,
   Car,
   CreditCard,
-  Weight,
-  Gift,
   Bath,
   UtensilsCrossed,
   X,
@@ -26,18 +24,32 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
-import type { HotelDetail } from '@/lib/hotelService';
+import type { HotelDetail, Hotel } from '@/lib/hotelService';
 import { buildVcBookingLinks } from '@/lib/affiliate';
 import SiteHeader from '@/components/site/SiteHeader';
 import SiteFooter from '@/components/site/SiteFooter';
+import HotelCard from '@/components/site/HotelCard';
 
-export default function HotelDetailClient({ hotel }: { hotel: HotelDetail }) {
+export default function HotelDetailClient({
+  hotel,
+  related,
+}: {
+  hotel: HotelDetail;
+  related: Hotel[];
+}) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   const availableFeatures = hotel.dogFeatures.filter((f) => f.available);
-  const sizeAvailable = availableFeatures.find((f) => f.name.includes('大型') || f.name.includes('中型') || f.name.includes('小型'));
+  const sizeAvailable = availableFeatures.find(
+    (f) => f.name.includes('大型') || f.name.includes('中型') || f.name.includes('小型')
+  );
   const ota = buildVcBookingLinks(hotel.name);
+
+  // 「料金」項目: petFee の最初のセグメント(例: "小型犬: ¥3,000")を value、残りを sub に
+  const feeSegments = (hotel.petInfo.petFee || '').split('/').map((s) => s.trim()).filter(Boolean);
+  const feeMain = feeSegments[0] || hotel.petInfo.petFee || '要確認';
+  const feeSub = feeSegments.slice(1).join(' / ') || (feeSegments.length > 0 ? '料金は宿により変動' : '宿に直接ご確認ください');
 
   const featureIcon = (name: string) => {
     if (name.includes('温泉')) return Bath;
@@ -157,18 +169,18 @@ export default function HotelDetailClient({ hotel }: { hotel: HotelDetail }) {
 
       {/* Title (PC) */}
       <section className="hidden md:block max-w-7xl mx-auto px-4 md:px-8 mt-5">
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
           {sizeAvailable && (
             <span className="kt-pill kt-pill--ok">
               <Check className="w-3 h-3" />
               {sizeAvailable.name}
             </span>
           )}
-          {availableFeatures.find((f) => f.name === 'ドッグラン') && (
-            <span className="kt-pill kt-pill--accent">ドッグラン</span>
-          )}
-          {availableFeatures.find((f) => f.name === '温泉') && (
-            <span className="kt-pill kt-pill--accent">温泉</span>
+          {hotel.location && (
+            <span className="kt-pill kt-pill--accent">
+              {/* hotelType がある場合のみ表示。HotelDetail には直接の hotelType フィールドが無いため、location から推測しない */}
+              旅館・ホテル
+            </span>
           )}
         </div>
         <h1
@@ -211,16 +223,14 @@ export default function HotelDetailClient({ hotel }: { hotel: HotelDetail }) {
           <div>
             {/* Title (SP only) */}
             <div className="md:hidden mb-3">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 {sizeAvailable && (
                   <span className="kt-pill kt-pill--ok">
                     <Check className="w-3 h-3" />
                     {sizeAvailable.name}
                   </span>
                 )}
-                {availableFeatures.find((f) => f.name === 'ドッグラン') && (
-                  <span className="kt-pill kt-pill--accent">ドッグラン</span>
-                )}
+                <span className="kt-pill kt-pill--accent">旅館・ホテル</span>
               </div>
               <h1
                 className="font-bold mb-2"
@@ -247,7 +257,7 @@ export default function HotelDetailClient({ hotel }: { hotel: HotelDetail }) {
               </div>
             </div>
 
-            {/* Dog policy summary grid */}
+            {/* Dog policy 4-grid */}
             <Card>
               <div className="flex items-center gap-2 mb-3">
                 <Dog className="w-4 h-4" style={{ color: 'var(--primary)' }} />
@@ -255,22 +265,27 @@ export default function HotelDetailClient({ hotel }: { hotel: HotelDetail }) {
                   犬の受入れ条件
                 </h2>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-2 gap-2">
-                {[
-                  { label: 'サイズ', value: hotel.petInfo.sizes },
-                  { label: '頭数', value: hotel.petInfo.maxPets },
-                  { label: '料金', value: hotel.petInfo.petFee },
-                  { label: 'アメニティ', value: hotel.petInfo.amenities },
-                ].map((p) => (
-                  <div
-                    key={p.label}
-                    className="px-3 py-2.5"
-                    style={{ background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}
-                  >
-                    <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-soft)' }}>{p.label}</div>
-                    <div className="text-[13px] font-bold" style={{ color: 'var(--text)' }}>{p.value}</div>
-                  </div>
-                ))}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <PolicyItem
+                  label="サイズ"
+                  value={hotel.petInfo.sizes}
+                  sub={availableFeatures.find((f) => f.name.includes('大型')) ? '〜大型犬OK' : ''}
+                />
+                <PolicyItem
+                  label="頭数"
+                  value={hotel.petInfo.maxPets}
+                  sub="1室あたり"
+                />
+                <PolicyItem
+                  label="犬種制限"
+                  value="要確認"
+                  sub="ワクチン接種証明書要"
+                />
+                <PolicyItem
+                  label="料金"
+                  value={feeMain}
+                  sub={feeSub}
+                />
               </div>
             </Card>
 
@@ -294,63 +309,52 @@ export default function HotelDetailClient({ hotel }: { hotel: HotelDetail }) {
               </Card>
             )}
 
-            {/* Basic info */}
-            <Card>
-              <div className="flex items-center gap-2 mb-3">
-                <Info className="w-4 h-4" style={{ color: 'var(--primary)' }} />
-                <h2 className="text-[14px] font-bold" style={{ color: 'var(--text)' }}>
-                  宿の基本情報
-                </h2>
-              </div>
-              <div
-                className="grid gap-y-3 gap-x-4 text-[13px]"
-                style={{ gridTemplateColumns: '110px 1fr' }}
-              >
-                <Row label="住所" value={hotel.location} />
-                <Row label="アクセス" value={hotel.access || '情報なし'} />
-                <Row label="チェックイン / アウト" value={`${hotel.checkin} / ${hotel.checkout}`} />
-                <Row
-                  label="駐車場"
-                  value={
-                    <span className="flex items-center gap-1">
-                      <Car className="w-3.5 h-3.5" style={{ color: 'var(--text-soft)' }} />
-                      {hotel.parking}
-                    </span>
-                  }
-                />
-                <Row
-                  label="決済情報"
-                  value={
-                    <span className="flex items-center gap-1">
-                      <CreditCard className="w-3.5 h-3.5" style={{ color: 'var(--text-soft)' }} />
-                      {hotel.payment}
-                    </span>
-                  }
-                />
-                <Row
-                  label="電話番号"
-                  value={
-                    <span className="flex items-center gap-1">
-                      <Phone className="w-3.5 h-3.5" style={{ color: 'var(--text-soft)' }} />
-                      {hotel.phone}
-                    </span>
-                  }
-                />
-              </div>
-            </Card>
-
-            {/* Pet info detail */}
-            <Card>
-              <h2 className="text-[14px] font-bold mb-3" style={{ color: 'var(--text)' }}>
-                ペット宿泊情報
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <PetInfoRow icon={Weight} label="宿泊可能サイズ" value={hotel.petInfo.sizes} />
-                <PetInfoRow icon={Dog} label="宿泊可能頭数" value={hotel.petInfo.maxPets} />
-                <PetInfoRow label="ペット宿泊料金" value={hotel.petInfo.petFee} valuePrefix="¥" />
-                <PetInfoRow icon={Gift} label="わんちゃん用アメニティ" value={hotel.petInfo.amenities} />
-              </div>
-            </Card>
+            {/* SP: Basic info card (PC は本文下に全幅) */}
+            <div className="md:hidden">
+              <Card>
+                <div className="flex items-center gap-2 mb-3">
+                  <Info className="w-4 h-4" style={{ color: 'var(--primary)' }} />
+                  <h2 className="text-[14px] font-bold" style={{ color: 'var(--text)' }}>
+                    宿の基本情報
+                  </h2>
+                </div>
+                <div
+                  className="grid gap-y-3 gap-x-4 text-[13px]"
+                  style={{ gridTemplateColumns: '110px 1fr' }}
+                >
+                  <Row label="住所" value={hotel.location} />
+                  <Row label="アクセス" value={hotel.access || '情報なし'} />
+                  <Row label="チェックイン / アウト" value={`${hotel.checkin} / ${hotel.checkout}`} />
+                  <Row
+                    label="駐車場"
+                    value={
+                      <span className="flex items-center gap-1">
+                        <Car className="w-3.5 h-3.5" style={{ color: 'var(--text-soft)' }} />
+                        {hotel.parking}
+                      </span>
+                    }
+                  />
+                  <Row
+                    label="決済情報"
+                    value={
+                      <span className="flex items-center gap-1">
+                        <CreditCard className="w-3.5 h-3.5" style={{ color: 'var(--text-soft)' }} />
+                        {hotel.payment}
+                      </span>
+                    }
+                  />
+                  <Row
+                    label="電話番号"
+                    value={
+                      <span className="flex items-center gap-1">
+                        <Phone className="w-3.5 h-3.5" style={{ color: 'var(--text-soft)' }} />
+                        {hotel.phone}
+                      </span>
+                    }
+                  />
+                </div>
+              </Card>
+            </div>
 
             {/* Notes */}
             {hotel.notes && (
@@ -379,23 +383,16 @@ export default function HotelDetailClient({ hotel }: { hotel: HotelDetail }) {
                 boxShadow: 'var(--sh-md)',
               }}
             >
-              <div className="flex items-center gap-2 mb-2">
-                <CalendarCheck className="w-4 h-4" style={{ color: 'var(--primary)' }} />
-                <span className="text-[12px] font-bold" style={{ color: 'var(--text)' }}>
-                  宿泊予約
-                </span>
-              </div>
               <div className="text-[11px]" style={{ color: 'var(--text-soft)' }}>
-                1泊2食 / 2名利用の目安
+                1泊2食 / 2名利用
               </div>
-              <div className="text-[24px] font-bold leading-tight" style={{ color: 'var(--primary)' }}>
+              <div className="text-[26px] font-bold leading-tight mb-1" style={{ color: 'var(--primary)' }}>
                 ¥{hotel.price.toLocaleString()}〜
               </div>
               <div className="text-[11px] mb-3" style={{ color: 'var(--text-soft)' }}>
-                ※プラン・期間により変動
+                + 犬料金: {feeMain}
               </div>
 
-              {/* Primary: Rakuten */}
               {hotel.rakutenUrl ? (
                 <a
                   href={hotel.rakutenUrl}
@@ -417,7 +414,6 @@ export default function HotelDetailClient({ hotel }: { hotel: HotelDetail }) {
                 </button>
               )}
 
-              {/* OTAs (5社) */}
               <div className="grid grid-cols-1 gap-2">
                 {ota.map((link) => (
                   <a
@@ -434,7 +430,6 @@ export default function HotelDetailClient({ hotel }: { hotel: HotelDetail }) {
                 ))}
               </div>
 
-              {/* Official */}
               {hotel.website && (
                 <a
                   href={hotel.website}
@@ -477,6 +472,78 @@ export default function HotelDetailClient({ hotel }: { hotel: HotelDetail }) {
           </div>
         </div>
       </section>
+
+      {/* PC: full-width Basic Info */}
+      <section className="hidden md:block max-w-7xl mx-auto px-4 md:px-8 pb-6">
+        <div
+          className="p-6"
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--line)',
+            borderRadius: 'var(--r-md)',
+          }}
+        >
+          <div className="flex items-center gap-2 mb-4">
+            <Info className="w-4 h-4" style={{ color: 'var(--primary)' }} />
+            <h2 className="text-[15px] font-bold" style={{ color: 'var(--text)' }}>
+              宿の基本情報
+            </h2>
+          </div>
+          <div
+            className="grid gap-y-4 gap-x-6 text-[13px]"
+            style={{ gridTemplateColumns: 'repeat(6, 1fr)' }}
+          >
+            {[
+              ['宿タイプ', '旅館・ホテル'],
+              ['チェックイン', hotel.checkin || '15:00'],
+              ['チェックアウト', hotel.checkout || '10:00'],
+              ['駐車場', hotel.parking || '要確認'],
+              ['住所', hotel.location],
+              ['アクセス', hotel.access || '情報なし'],
+            ].map(([l, v]) => (
+              <div key={l} style={{ paddingBottom: 10, borderBottom: '1px solid var(--line-soft)' }}>
+                <div
+                  className="mb-1"
+                  style={{
+                    fontSize: 10,
+                    color: 'var(--text-soft)',
+                    letterSpacing: '0.05em',
+                  }}
+                >
+                  {l}
+                </div>
+                <div style={{ fontWeight: 600, color: 'var(--text)', wordBreak: 'break-word' }}>{v}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Related (近くの犬OK宿) */}
+      {related.length > 0 && (
+        <section
+          className="py-8 md:py-10"
+          style={{ background: 'var(--surface-2)', borderTop: '1px solid var(--line)' }}
+        >
+          <div className="max-w-7xl mx-auto px-4 md:px-8">
+            <h3
+              className="font-bold mb-4"
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 'clamp(16px, 2.5vw, 20px)',
+                color: 'var(--text)',
+              }}
+            >
+              近くの犬OK宿
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {related.map((h) => (
+                <HotelCard key={h.id} hotel={h} layout="vert" />
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <SiteFooter />
 
@@ -610,31 +677,25 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-function PetInfoRow({
-  icon: Icon,
+function PolicyItem({
   label,
   value,
-  valuePrefix,
+  sub,
 }: {
-  icon?: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
   label: string;
   value: string;
-  valuePrefix?: string;
+  sub?: string;
 }) {
   return (
     <div
-      className="px-3 py-3"
+      className="px-3 py-2.5"
       style={{ background: 'var(--surface-2)', borderRadius: 'var(--r-sm)' }}
     >
-      <div
-        className="flex items-center gap-1.5 text-[12px] font-bold mb-1"
-        style={{ color: 'var(--text-muted)' }}
-      >
-        {Icon ? <Icon className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} /> : null}
-        {valuePrefix ? <span style={{ color: 'var(--primary)' }}>{valuePrefix}</span> : null}
-        {label}
-      </div>
-      <div className="text-[13px]" style={{ color: 'var(--text)' }}>{value}</div>
+      <div className="text-[10px] mb-0.5" style={{ color: 'var(--text-soft)' }}>{label}</div>
+      <div className="text-[13px] font-bold" style={{ color: 'var(--text)', wordBreak: 'break-word' }}>{value}</div>
+      {sub && (
+        <div className="text-[10px] mt-0.5" style={{ color: 'var(--text-soft)' }}>{sub}</div>
+      )}
     </div>
   );
 }

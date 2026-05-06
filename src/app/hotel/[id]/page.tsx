@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { getHotelById } from '@/lib/hotelService';
+import { getHotelById, getMicroCMSHotels, type Hotel } from '@/lib/hotelService';
 import { getDogHotels } from '@/lib/microcms';
 import HotelDetailClient from './HotelDetailClient';
 
@@ -20,6 +20,12 @@ export async function generateStaticParams(): Promise<Array<{ id: string }>> {
   }
 }
 
+// hotel.location ("神奈川県 鎌倉...") から都道府県を抽出
+function extractPrefecture(location: string): string | null {
+  const match = location.match(/^(\S+?[都道府県])/);
+  return match ? match[1] : null;
+}
+
 export default async function HotelDetailPage({
   params,
 }: {
@@ -28,5 +34,14 @@ export default async function HotelDetailPage({
   const { id } = await params;
   const hotel = await getHotelById(id);
   if (!hotel) notFound();
-  return <HotelDetailClient hotel={hotel} />;
+
+  // 同じ都道府県の他の宿を3件取得（「近くの犬OK宿」用）
+  let related: Hotel[] = [];
+  const prefecture = extractPrefecture(hotel.location);
+  if (prefecture) {
+    const sameArea = await getMicroCMSHotels(prefecture).catch(() => [] as Hotel[]);
+    related = sameArea.filter((h) => h.id !== hotel.id).slice(0, 3);
+  }
+
+  return <HotelDetailClient hotel={hotel} related={related} />;
 }
