@@ -3,11 +3,7 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Waves,
   Dog,
-  Bone,
-  Heart,
-  ParkingCircle,
   ArrowLeft,
   ArrowRight,
   Map as MapIcon,
@@ -15,11 +11,8 @@ import {
   AlertCircle,
   ChevronDown,
   Settings2,
-  Search,
-  ShoppingBag,
-  TreePine,
-  Camera,
   Filter as FilterIcon,
+  X,
 } from 'lucide-react';
 import dynamic from 'next/dynamic';
 import { Hotel } from '@/lib/hotelService';
@@ -55,27 +48,20 @@ const HotelMap = dynamic(() => import('./components/HotelMap'), {
   ),
 });
 
-const AREA_DATA: Record<string, string[]> = {
-  北海道: ['北海道'],
-  東北: ['青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県'],
-  北関東: ['茨城県', '栃木県', '群馬県'],
-  首都圏: ['埼玉県', '千葉県', '東京都', '神奈川県'],
-  '伊豆・箱根': ['静岡県（伊豆）', '神奈川県（箱根）'],
-  甲信越: ['山梨県', '長野県', '新潟県'],
-  北陸: ['富山県', '石川県', '福井県'],
-  東海: ['岐阜県', '静岡県', '愛知県'],
-  近畿: ['三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県'],
-  中国: ['鳥取県', '島根県', '岡山県', '広島県', '山口県'],
-  四国: ['徳島県', '香川県', '愛媛県', '高知県'],
-  九州: ['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県'],
-  沖縄: ['沖縄県'],
-};
-
-interface DetailFilterDef {
-  key: keyof DetailFiltersState;
-  label: string;
-  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
-}
+// 地方区分: サイドバーに表示する単位
+const REGIONS: { name: string; areas: string[] }[] = [
+  { name: '北海道', areas: ['北海道'] },
+  { name: '東北', areas: ['青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県'] },
+  { name: '関東', areas: ['茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県'] },
+  { name: '甲信越', areas: ['山梨県', '長野県', '新潟県'] },
+  { name: '北陸', areas: ['富山県', '石川県', '福井県'] },
+  { name: '東海', areas: ['岐阜県', '静岡県', '愛知県'] },
+  { name: '近畿', areas: ['三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県'] },
+  { name: '中国', areas: ['鳥取県', '島根県', '岡山県', '広島県', '山口県'] },
+  { name: '四国', areas: ['徳島県', '香川県', '愛媛県', '高知県'] },
+  { name: '九州', areas: ['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県'] },
+  { name: '沖縄', areas: ['沖縄県'] },
+];
 
 interface DetailFiltersState {
   dogRun: boolean;
@@ -92,20 +78,6 @@ interface DetailFiltersState {
   roomDogRun: boolean;
   grooming: boolean;
 }
-
-const DETAIL_FILTERS: DetailFilterDef[] = [
-  { key: 'dogRun', label: 'ドッグラン', icon: Bone },
-  { key: 'smallDog', label: '小型犬OK', icon: Dog },
-  { key: 'mediumDog', label: '中型犬OK', icon: Dog },
-  { key: 'largeDog', label: '大型犬OK', icon: Dog },
-  { key: 'hotSpring', label: '温泉', icon: Waves },
-  { key: 'parking', label: '駐車場あり', icon: ParkingCircle },
-  { key: 'multipleDogs', label: '複数頭OK', icon: Heart },
-  { key: 'petAmenities', label: 'ペット用品', icon: ShoppingBag },
-  { key: 'dogMenu', label: '犬用メニュー', icon: Bone },
-  { key: 'roomDogRun', label: '客室ドッグラン', icon: TreePine },
-  { key: 'grooming', label: 'グルーミング', icon: Camera },
-];
 
 function SearchContent() {
   const router = useRouter();
@@ -129,12 +101,31 @@ function SearchContent() {
 
   const [searchFilters, setSearchFilters] = useState({
     areas: searchParams.get('areas')?.split(',').filter(Boolean) || [],
-    checkIn: searchParams.get('checkIn') || '',
-    checkOut: searchParams.get('checkOut') || '',
   });
 
   const toggleDetailFilter = (key: keyof DetailFiltersState) => {
     setDetailFilters((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const toggleRegion = (regionName: string) => {
+    const region = REGIONS.find((r) => r.name === regionName);
+    if (!region) return;
+    const allSelected = region.areas.every((p) => searchFilters.areas.includes(p));
+    setSearchFilters((prev) => ({
+      ...prev,
+      areas: allSelected
+        ? prev.areas.filter((a) => !region.areas.includes(a))
+        : Array.from(new Set([...prev.areas, ...region.areas])),
+    }));
+  };
+
+  const clearAll = () => {
+    setSearchFilters({ areas: [] });
+    setDetailFilters({
+      dogRun: false, smallDog: false, mediumDog: false, largeDog: false, xlDog: false,
+      hotSpring: false, parking: false, multipleDogs: false, petAmenities: false,
+      dogMenu: false, roomDining: false, roomDogRun: false, grooming: false,
+    });
   };
 
   const [hotels, setHotels] = useState<Hotel[]>([]);
@@ -143,20 +134,8 @@ function SearchContent() {
   const [sortBy, setSortBy] = useState('人気順');
   const [currentPage, setCurrentPage] = useState(1);
   const [viewMode, setViewMode] = useState<'list' | 'map'>('list');
-  const [showAreaDropdown, setShowAreaDropdown] = useState(false);
-  const [showDetailFilters, setShowDetailFilters] = useState(false);
+  const [showSpFilters, setShowSpFilters] = useState(false);
   const PAGE_SIZE = 9;
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (showAreaDropdown && !target.closest('.area-dropdown-container')) {
-        setShowAreaDropdown(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showAreaDropdown]);
 
   const searchHotels = async () => {
     setIsLoading(true);
@@ -165,8 +144,6 @@ function SearchContent() {
     try {
       const queryParams = new URLSearchParams({
         areas: searchFilters.areas.join(','),
-        checkinDate: searchFilters.checkIn,
-        checkoutDate: searchFilters.checkOut,
         ...Object.fromEntries(
           Object.entries(detailFilters).filter(([, value]) => value)
         ),
@@ -194,12 +171,19 @@ function SearchContent() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { searchHotels(); }, []);
 
+  // フィルタ変更時に自動で再検索（debounce 350ms）
+  useEffect(() => {
+    const t = setTimeout(() => {
+      searchHotels();
+    }, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(searchFilters), JSON.stringify(detailFilters)]);
+
   useEffect(() => {
     const total = Math.max(1, Math.ceil((hotels || []).length / PAGE_SIZE));
     if (currentPage > total) setCurrentPage(total);
   }, [hotels, currentPage]);
-
-  const handleSearch = () => searchHotels();
 
   const handleHotelSelect = (hotel: Hotel) => {
     router.push(`/hotel/${hotel.id}`);
@@ -208,6 +192,11 @@ function SearchContent() {
   const activeFilterCount = Object.values(detailFilters).filter(Boolean).length;
   const totalPages = Math.max(1, Math.ceil((hotels || []).length / PAGE_SIZE));
   const visibleHotels = (hotels || []).slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  // 選択中の地方表示用
+  const selectedRegions = REGIONS.filter((r) =>
+    r.areas.some((p) => searchFilters.areas.includes(p))
+  );
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
@@ -227,35 +216,67 @@ function SearchContent() {
             現在の検索条件
           </div>
           <div className="flex-1 flex gap-2 flex-wrap items-center">
-            <span
-              className="inline-flex items-center gap-1.5"
-              style={{
-                background: 'var(--surface-2)',
-                border: '1px solid var(--line)',
-                borderRadius: 'var(--r-pill)',
-                padding: '5px 12px',
-                fontSize: 12,
-              }}
-            >
-              <span style={{ fontSize: 10, color: 'var(--text-soft)' }}>エリア:</span>
-              <span style={{ fontWeight: 600 }}>
-                {searchFilters.areas.length > 0 ? searchFilters.areas.join(', ') : '全国'}
-              </span>
-            </span>
-            {activeFilterCount > 0 && (
+            {selectedRegions.length === 0 && activeFilterCount === 0 ? (
               <span
                 className="inline-flex items-center gap-1.5"
                 style={{
-                  background: 'var(--primary-soft)',
-                  color: 'var(--primary)',
+                  background: 'var(--surface-2)',
+                  border: '1px solid var(--line)',
                   borderRadius: 'var(--r-pill)',
                   padding: '5px 12px',
                   fontSize: 12,
-                  fontWeight: 600,
+                  color: 'var(--text-muted)',
                 }}
               >
-                条件 {activeFilterCount}件
+                すべての宿
               </span>
+            ) : (
+              <>
+                {selectedRegions.map((r) => (
+                  <span
+                    key={r.name}
+                    className="inline-flex items-center gap-1.5"
+                    style={{
+                      background: 'var(--primary-soft)',
+                      color: 'var(--primary)',
+                      borderRadius: 'var(--r-pill)',
+                      padding: '5px 12px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                    }}
+                  >
+                    {r.name}
+                  </span>
+                ))}
+                {activeFilterCount > 0 && (
+                  <span
+                    className="inline-flex items-center gap-1.5"
+                    style={{
+                      background: 'var(--accent-soft)',
+                      color: 'var(--accent)',
+                      borderRadius: 'var(--r-pill)',
+                      padding: '5px 12px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                    }}
+                  >
+                    条件 {activeFilterCount}件
+                  </span>
+                )}
+                <button
+                  onClick={clearAll}
+                  className="inline-flex items-center gap-1"
+                  style={{
+                    fontSize: 11,
+                    color: 'var(--text-soft)',
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <X className="w-3 h-3" />
+                  すべてクリア
+                </button>
+              </>
             )}
           </div>
           <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>
@@ -264,428 +285,355 @@ function SearchContent() {
         </div>
       </div>
 
-      {/* ============== Main ============== */}
+      {/* ============== Main: Sidebar + Results ============== */}
       <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-8">
-        <div className="grid gap-6" style={{ gridTemplateColumns: '1fr' }}>
-          {/* Re-search box */}
-          <div
-            className="p-4 md:p-5"
-            style={{
-              background: 'var(--surface)',
-              border: '1px solid var(--line)',
-              borderRadius: 'var(--r-md)',
-              boxShadow: 'var(--sh-sm)',
-            }}
-          >
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_auto_auto] gap-3 items-end">
-              <div className="relative area-dropdown-container">
-                <label className="block text-[11px] mb-1" style={{ color: 'var(--text-soft)' }}>
-                  選択中のエリア
-                </label>
+        <div className="grid gap-6 lg:gap-8" style={{ gridTemplateColumns: '1fr' }}>
+          <div className="grid lg:grid-cols-[240px_1fr] gap-6 lg:gap-8">
+            {/* Sidebar (PC only) */}
+            <aside
+              className="hidden lg:block self-start"
+              style={{ position: 'sticky', top: 16 }}
+            >
+              <div
+                className="p-4"
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--r-md)',
+                  boxShadow: 'var(--sh-sm)',
+                }}
+              >
+                <div className="text-[13px] font-bold mb-3" style={{ color: 'var(--text)' }}>
+                  絞り込み
+                </div>
+
+                <FilterGroup title="エリア">
+                  {REGIONS.map((r) => {
+                    const active = r.areas.every((p) => searchFilters.areas.includes(p));
+                    return (
+                      <FilterCheckbox
+                        key={r.name}
+                        label={r.name}
+                        checked={active}
+                        onChange={() => toggleRegion(r.name)}
+                      />
+                    );
+                  })}
+                </FilterGroup>
+
+                <FilterGroup title="犬のサイズ">
+                  <FilterCheckbox label="小型犬" checked={detailFilters.smallDog} onChange={() => toggleDetailFilter('smallDog')} />
+                  <FilterCheckbox label="中型犬" checked={detailFilters.mediumDog} onChange={() => toggleDetailFilter('mediumDog')} />
+                  <FilterCheckbox label="大型犬" checked={detailFilters.largeDog} onChange={() => toggleDetailFilter('largeDog')} />
+                  <FilterCheckbox label="超大型犬" checked={detailFilters.xlDog} onChange={() => toggleDetailFilter('xlDog')} />
+                  <FilterCheckbox label="多頭OK" checked={detailFilters.multipleDogs} onChange={() => toggleDetailFilter('multipleDogs')} />
+                </FilterGroup>
+
+                <FilterGroup title="設備">
+                  <FilterCheckbox label="ドッグラン" checked={detailFilters.dogRun} onChange={() => toggleDetailFilter('dogRun')} />
+                  <FilterCheckbox label="客室ドッグラン" checked={detailFilters.roomDogRun} onChange={() => toggleDetailFilter('roomDogRun')} />
+                  <FilterCheckbox label="温泉" checked={detailFilters.hotSpring} onChange={() => toggleDetailFilter('hotSpring')} />
+                  <FilterCheckbox label="ペット同伴食事" checked={detailFilters.roomDining} onChange={() => toggleDetailFilter('roomDining')} />
+                  <FilterCheckbox label="駐車場" checked={detailFilters.parking} onChange={() => toggleDetailFilter('parking')} />
+                </FilterGroup>
+
+                {(activeFilterCount > 0 || searchFilters.areas.length > 0) && (
+                  <button
+                    onClick={clearAll}
+                    className="kt-btn kt-btn--ghost w-full mt-2"
+                    style={{ padding: '8px 12px', fontSize: 12 }}
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    条件をリセット
+                  </button>
+                )}
+              </div>
+            </aside>
+
+            {/* Right column: results */}
+            <div>
+              {/* SP: 絞り込みボタン */}
+              <div className="lg:hidden mb-4">
                 <button
-                  type="button"
-                  onClick={() => setShowAreaDropdown(!showAreaDropdown)}
+                  onClick={() => setShowSpFilters((v) => !v)}
+                  aria-expanded={showSpFilters}
                   className="w-full flex items-center justify-between"
                   style={{
-                    background: 'var(--surface-2)',
+                    background: 'var(--surface)',
                     border: '1px solid var(--line)',
                     borderRadius: 'var(--r-sm)',
-                    padding: '11px 14px',
-                    fontSize: 14,
-                    color: 'var(--text)',
-                    height: 44,
+                    padding: '10px 14px',
+                    color: 'var(--text-muted)',
+                    fontSize: 13,
+                    fontWeight: 600,
+                    cursor: 'pointer',
                   }}
                 >
-                  <span className="flex-1 min-w-0 truncate text-left">
-                    {searchFilters.areas.length > 0 ? searchFilters.areas.join(', ') : 'エリアを選択'}
+                  <span className="flex items-center gap-2">
+                    <Settings2 className="w-4 h-4" style={{ color: 'var(--primary)' }} />
+                    絞り込み
+                    {(activeFilterCount > 0 || searchFilters.areas.length > 0) && (
+                      <span
+                        className="px-2 py-0.5"
+                        style={{
+                          background: 'var(--primary-soft)',
+                          color: 'var(--primary)',
+                          borderRadius: 'var(--r-pill)',
+                          fontSize: 11,
+                        }}
+                      >
+                        {activeFilterCount + selectedRegions.length}
+                      </span>
+                    )}
                   </span>
                   <ChevronDown
-                    className={`w-4 h-4 transition-transform ${showAreaDropdown ? 'rotate-180' : ''}`}
-                    style={{ color: 'var(--text-soft)' }}
+                    className={`w-4 h-4 transition-transform ${showSpFilters ? 'rotate-180' : ''}`}
                   />
                 </button>
-
-                {showAreaDropdown && (
+                {showSpFilters && (
                   <div
-                    className="absolute top-full left-0 mt-2 w-[min(90vw,52rem)] max-w-[calc(100vw-2rem)] z-50 max-h-[70vh] flex flex-col"
+                    className="mt-3 p-4"
                     style={{
                       background: 'var(--surface)',
                       border: '1px solid var(--line)',
                       borderRadius: 'var(--r-md)',
-                      boxShadow: 'var(--sh-lg)',
                     }}
                   >
-                    <div className="flex-1 overflow-y-auto p-3">
-                      <div className="space-y-2">
-                        {Object.entries(AREA_DATA).map(([region, prefectures]) => {
-                          const currentAreas = searchFilters.areas;
-                          const allSelected = prefectures.every((p) => currentAreas.includes(p));
-                          const someSelected = prefectures.some((p) => currentAreas.includes(p));
-                          return (
-                            <div
-                              key={region}
-                              className="p-2"
-                              style={{ border: '1px solid var(--line-soft)', borderRadius: 'var(--r-sm)' }}
-                            >
-                              <label className="inline-flex items-center cursor-pointer p-1">
-                                <input
-                                  type="checkbox"
-                                  checked={allSelected}
-                                  ref={(el) => {
-                                    if (el) el.indeterminate = someSelected && !allSelected;
-                                  }}
-                                  onChange={() => {
-                                    const list = AREA_DATA[region];
-                                    const current = searchFilters.areas;
-                                    const nowAll = list.every((p) => current.includes(p));
-                                    const next = nowAll
-                                      ? current.filter((a) => !list.includes(a))
-                                      : Array.from(new Set([...current, ...list]));
-                                    setSearchFilters((prev) => ({ ...prev, areas: next }));
-                                  }}
-                                  className="form-checkbox h-4 w-4"
-                                />
-                                <span className="ml-2 text-sm font-bold" style={{ color: 'var(--primary)' }}>
-                                  {region}
-                                </span>
-                              </label>
-                              <div className="grid grid-cols-2 md:grid-cols-3 gap-1 pl-4 mt-1">
-                                {prefectures.map((pref) => (
-                                  <label key={pref} className="inline-flex items-center cursor-pointer p-1">
-                                    <input
-                                      type="checkbox"
-                                      checked={searchFilters.areas.includes(pref)}
-                                      onChange={() => {
-                                        const current = searchFilters.areas;
-                                        const next = current.includes(pref)
-                                          ? current.filter((a) => a !== pref)
-                                          : [...current, pref];
-                                        setSearchFilters((prev) => ({ ...prev, areas: next }));
-                                      }}
-                                      className="form-checkbox h-3 w-3"
-                                    />
-                                    <span className="ml-2 text-xs" style={{ color: 'var(--text-muted)' }}>
-                                      {pref}
-                                    </span>
-                                  </label>
-                                ))}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                    <div
-                      className="flex-shrink-0 px-3 py-2"
-                      style={{ background: 'var(--surface-2)', borderTop: '1px solid var(--line)' }}
-                    >
-                      <button
-                        onClick={() => { setShowAreaDropdown(false); searchHotels(); }}
-                        className="kt-btn kt-btn--primary w-full"
-                        style={{ padding: '9px 0', fontSize: 13 }}
-                      >
-                        決定
-                      </button>
-                    </div>
+                    <FilterGroup title="エリア">
+                      {REGIONS.map((r) => {
+                        const active = r.areas.every((p) => searchFilters.areas.includes(p));
+                        return (
+                          <FilterCheckbox key={r.name} label={r.name} checked={active} onChange={() => toggleRegion(r.name)} />
+                        );
+                      })}
+                    </FilterGroup>
+                    <FilterGroup title="犬のサイズ">
+                      <FilterCheckbox label="小型犬" checked={detailFilters.smallDog} onChange={() => toggleDetailFilter('smallDog')} />
+                      <FilterCheckbox label="中型犬" checked={detailFilters.mediumDog} onChange={() => toggleDetailFilter('mediumDog')} />
+                      <FilterCheckbox label="大型犬" checked={detailFilters.largeDog} onChange={() => toggleDetailFilter('largeDog')} />
+                      <FilterCheckbox label="超大型犬" checked={detailFilters.xlDog} onChange={() => toggleDetailFilter('xlDog')} />
+                      <FilterCheckbox label="多頭OK" checked={detailFilters.multipleDogs} onChange={() => toggleDetailFilter('multipleDogs')} />
+                    </FilterGroup>
+                    <FilterGroup title="設備">
+                      <FilterCheckbox label="ドッグラン" checked={detailFilters.dogRun} onChange={() => toggleDetailFilter('dogRun')} />
+                      <FilterCheckbox label="客室ドッグラン" checked={detailFilters.roomDogRun} onChange={() => toggleDetailFilter('roomDogRun')} />
+                      <FilterCheckbox label="温泉" checked={detailFilters.hotSpring} onChange={() => toggleDetailFilter('hotSpring')} />
+                      <FilterCheckbox label="ペット同伴食事" checked={detailFilters.roomDining} onChange={() => toggleDetailFilter('roomDining')} />
+                      <FilterCheckbox label="駐車場" checked={detailFilters.parking} onChange={() => toggleDetailFilter('parking')} />
+                    </FilterGroup>
                   </div>
                 )}
               </div>
-              <div>
-                <label className="block text-[11px] mb-1" style={{ color: 'var(--text-soft)' }}>チェックイン</label>
-                <input
-                  type="date"
-                  className="w-full"
-                  style={{
-                    background: 'var(--surface-2)',
-                    border: '1px solid var(--line)',
-                    borderRadius: 'var(--r-sm)',
-                    padding: '11px 12px',
-                    fontSize: 13,
-                    color: 'var(--text)',
-                    height: 44,
-                  }}
-                  value={searchFilters.checkIn}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, checkIn: e.target.value })}
-                  min={new Date().toISOString().split('T')[0]}
-                />
-              </div>
-              <div>
-                <label className="block text-[11px] mb-1" style={{ color: 'var(--text-soft)' }}>チェックアウト</label>
-                <input
-                  type="date"
-                  className="w-full"
-                  style={{
-                    background: 'var(--surface-2)',
-                    border: '1px solid var(--line)',
-                    borderRadius: 'var(--r-sm)',
-                    padding: '11px 12px',
-                    fontSize: 13,
-                    color: 'var(--text)',
-                    height: 44,
-                  }}
-                  value={searchFilters.checkOut}
-                  onChange={(e) => setSearchFilters({ ...searchFilters, checkOut: e.target.value })}
-                  min={searchFilters.checkIn || new Date().toISOString().split('T')[0]}
-                />
-              </div>
-              <button
-                onClick={handleSearch}
-                className="kt-btn kt-btn--primary"
-                style={{ height: 44, padding: '0 22px', fontSize: 14 }}
-              >
-                <Search className="w-4 h-4" />
-                再検索
-              </button>
-            </div>
 
-            {/* Detail filters toggle */}
-            <div className="mt-4">
-              <button
-                onClick={() => setShowDetailFilters((v) => !v)}
-                aria-expanded={showDetailFilters}
-                className="w-full flex items-center justify-between transition-colors"
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--line)',
-                  borderRadius: 'var(--r-sm)',
-                  padding: '9px 14px',
-                  color: 'var(--text-muted)',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                <span className="flex items-center gap-2">
-                  <Settings2 className="w-4 h-4" style={{ color: 'var(--primary)' }} />
-                  詳細条件
-                  {activeFilterCount > 0 && (
-                    <span
-                      className="px-2 py-0.5"
-                      style={{
-                        background: 'var(--primary-soft)',
-                        color: 'var(--primary)',
-                        borderRadius: 'var(--r-pill)',
-                        fontSize: 11,
-                      }}
-                    >
-                      {activeFilterCount}
-                    </span>
-                  )}
-                </span>
-                <ChevronDown
-                  className={`w-4 h-4 transition-transform ${showDetailFilters ? 'rotate-180' : ''}`}
-                />
-              </button>
-
-              {showDetailFilters && (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-3">
-                  {DETAIL_FILTERS.map(({ key, label, icon: Icon }) => {
-                    const active = detailFilters[key];
-                    return (
-                      <label
-                        key={key}
-                        className="flex items-center gap-2 cursor-pointer transition-all"
-                        style={{
-                          background: active ? 'var(--primary-soft)' : 'var(--surface)',
-                          border: `1px solid ${active ? 'var(--primary)' : 'var(--line)'}`,
-                          borderRadius: 'var(--r-sm)',
-                          padding: '9px 12px',
-                        }}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={active}
-                          onChange={() => toggleDetailFilter(key)}
-                          className="form-checkbox w-4 h-4"
-                        />
-                        <Icon
-                          className="w-4 h-4"
-                          style={{ color: active ? 'var(--primary)' : 'var(--text-soft)' }}
-                        />
-                        <span
-                          className="text-[13px] font-medium"
-                          style={{ color: active ? 'var(--primary)' : 'var(--text-muted)' }}
-                        >
-                          {label}
-                        </span>
-                      </label>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Sort + view toggle */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>並び順:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                style={{
-                  background: 'var(--surface)',
-                  border: '1px solid var(--line)',
-                  borderRadius: 'var(--r-sm)',
-                  padding: '8px 12px',
-                  fontSize: 13,
-                  color: 'var(--text)',
-                  cursor: 'pointer',
-                }}
-              >
-                <option>人気順</option>
-                <option>宿泊価格順</option>
-                <option>新着順</option>
-              </select>
-            </div>
-            <div
-              className="inline-flex p-1"
-              style={{
-                background: 'var(--surface)',
-                border: '1px solid var(--line)',
-                borderRadius: 'var(--r-sm)',
-              }}
-            >
-              {([
-                { key: 'list' as const, icon: List, label: 'リスト' },
-                { key: 'map' as const, icon: MapIcon, label: '地図' },
-              ]).map(({ key, icon: Icon, label }) => {
-                const active = viewMode === key;
-                return (
-                  <button
-                    key={key}
-                    onClick={() => setViewMode(key)}
-                    className="inline-flex items-center gap-1.5 transition-all"
+              {/* Sort + view toggle */}
+              <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-3">
+                  <span className="text-[12px]" style={{ color: 'var(--text-muted)' }}>並び順:</span>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
                     style={{
-                      padding: '7px 14px',
-                      borderRadius: 'var(--r-xs)',
-                      background: active ? 'var(--primary)' : 'transparent',
-                      color: active ? 'var(--on-primary)' : 'var(--text-muted)',
+                      background: 'var(--surface)',
+                      border: '1px solid var(--line)',
+                      borderRadius: 'var(--r-sm)',
+                      padding: '8px 12px',
                       fontSize: 13,
-                      fontWeight: 600,
+                      color: 'var(--text)',
                       cursor: 'pointer',
-                      border: 'none',
                     }}
                   >
-                    <Icon className="w-4 h-4" />
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Results */}
-          {isLoading ? (
-            <div className="text-center py-16">
-              <div
-                className="animate-spin rounded-full h-12 w-12 mx-auto mb-4"
-                style={{
-                  borderBottom: '2px solid var(--primary)',
-                  borderLeft: '2px solid transparent',
-                  borderRight: '2px solid transparent',
-                  borderTop: '2px solid transparent',
-                }}
-              />
-              <p style={{ color: 'var(--text-muted)' }}>検索中...</p>
-            </div>
-          ) : error ? (
-            <div className="text-center py-16">
-              <AlertCircle className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--primary)' }} />
-              <p className="mb-4" style={{ color: 'var(--text)' }}>{error}</p>
-              <button onClick={searchHotels} className="kt-btn kt-btn--primary">再試行</button>
-            </div>
-          ) : !hotels || hotels.length === 0 ? (
-            <div className="text-center py-16">
-              <Dog className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--text-soft)' }} />
-              <p style={{ color: 'var(--text-muted)' }}>該当する宿が見つかりませんでした</p>
-              <p className="text-sm mt-2" style={{ color: 'var(--text-soft)' }}>
-                検索条件を変更してお試しください
-              </p>
-            </div>
-          ) : viewMode === 'list' ? (
-            <>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {visibleHotels.map((h, idx) => (
-                  <HotelCard key={`${h.id}-${idx}`} hotel={h} layout="vert" />
-                ))}
-              </div>
-
-              {totalPages > 1 && (
+                    <option>人気順</option>
+                    <option>宿泊価格順</option>
+                    <option>新着順</option>
+                  </select>
+                </div>
                 <div
-                  className="flex justify-center items-center gap-2 mt-2 py-4"
+                  className="inline-flex p-1"
                   style={{
                     background: 'var(--surface)',
                     border: '1px solid var(--line)',
-                    borderRadius: 'var(--r-md)',
+                    borderRadius: 'var(--r-sm)',
                   }}
                 >
-                  <button
-                    disabled={currentPage === 1}
-                    onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
-                    className="inline-flex items-center justify-center"
+                  {([
+                    { key: 'list' as const, icon: List, label: 'リスト' },
+                    { key: 'map' as const, icon: MapIcon, label: '地図' },
+                  ]).map(({ key, icon: Icon, label }) => {
+                    const active = viewMode === key;
+                    return (
+                      <button
+                        key={key}
+                        onClick={() => setViewMode(key)}
+                        className="inline-flex items-center gap-1.5 transition-all"
+                        style={{
+                          padding: '7px 14px',
+                          borderRadius: 'var(--r-xs)',
+                          background: active ? 'var(--primary)' : 'transparent',
+                          color: active ? 'var(--on-primary)' : 'var(--text-muted)',
+                          fontSize: 13,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          border: 'none',
+                        }}
+                      >
+                        <Icon className="w-4 h-4" />
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Results */}
+              {isLoading ? (
+                <div className="text-center py-16">
+                  <div
+                    className="animate-spin rounded-full h-12 w-12 mx-auto mb-4"
                     style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 'var(--r-sm)',
-                      background: 'var(--surface)',
-                      border: '1px solid var(--line)',
-                      color: currentPage === 1 ? 'var(--text-soft)' : 'var(--text-muted)',
-                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
-                      opacity: currentPage === 1 ? 0.5 : 1,
+                      borderBottom: '2px solid var(--primary)',
+                      borderLeft: '2px solid transparent',
+                      borderRight: '2px solid transparent',
+                      borderTop: '2px solid transparent',
                     }}
-                  >
-                    <ArrowLeft className="w-4 h-4" />
-                  </button>
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
-                    <button
-                      key={p}
-                      onClick={() => setCurrentPage(p)}
+                  />
+                  <p style={{ color: 'var(--text-muted)' }}>検索中...</p>
+                </div>
+              ) : error ? (
+                <div className="text-center py-16">
+                  <AlertCircle className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--primary)' }} />
+                  <p className="mb-4" style={{ color: 'var(--text)' }}>{error}</p>
+                  <button onClick={searchHotels} className="kt-btn kt-btn--primary">再試行</button>
+                </div>
+              ) : !hotels || hotels.length === 0 ? (
+                <div className="text-center py-16">
+                  <Dog className="w-12 h-12 mx-auto mb-4" style={{ color: 'var(--text-soft)' }} />
+                  <p style={{ color: 'var(--text-muted)' }}>該当する宿が見つかりませんでした</p>
+                  <p className="text-sm mt-2" style={{ color: 'var(--text-soft)' }}>
+                    検索条件を変更してお試しください
+                  </p>
+                </div>
+              ) : viewMode === 'list' ? (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {visibleHotels.map((h, idx) => (
+                      <HotelCard key={`${h.id}-${idx}`} hotel={h} layout="vert" />
+                    ))}
+                  </div>
+
+                  {totalPages > 1 && (
+                    <div
+                      className="flex justify-center items-center gap-2 mt-4 py-3"
                       style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: 'var(--r-sm)',
-                        background: currentPage === p ? 'var(--primary)' : 'var(--surface)',
-                        color: currentPage === p ? 'var(--on-primary)' : 'var(--text)',
-                        border: `1px solid ${currentPage === p ? 'var(--primary)' : 'var(--line)'}`,
-                        fontSize: 13,
-                        fontWeight: 600,
-                        cursor: 'pointer',
+                        background: 'var(--surface)',
+                        border: '1px solid var(--line)',
+                        borderRadius: 'var(--r-md)',
                       }}
                     >
-                      {p}
-                    </button>
-                  ))}
-                  <button
-                    disabled={currentPage === totalPages}
-                    onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
-                    className="inline-flex items-center justify-center"
-                    style={{
-                      width: 36,
-                      height: 36,
-                      borderRadius: 'var(--r-sm)',
-                      background: 'var(--surface)',
-                      border: '1px solid var(--line)',
-                      color: currentPage === totalPages ? 'var(--text-soft)' : 'var(--text-muted)',
-                      cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
-                      opacity: currentPage === totalPages ? 0.5 : 1,
-                    }}
-                  >
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
+                      <button
+                        disabled={currentPage === 1}
+                        onClick={() => currentPage > 1 && setCurrentPage(currentPage - 1)}
+                        className="inline-flex items-center justify-center"
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 'var(--r-sm)',
+                          background: 'var(--surface)',
+                          border: '1px solid var(--line)',
+                          color: currentPage === 1 ? 'var(--text-soft)' : 'var(--text-muted)',
+                          cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                          opacity: currentPage === 1 ? 0.5 : 1,
+                        }}
+                      >
+                        <ArrowLeft className="w-4 h-4" />
+                      </button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                        <button
+                          key={p}
+                          onClick={() => setCurrentPage(p)}
+                          style={{
+                            width: 36,
+                            height: 36,
+                            borderRadius: 'var(--r-sm)',
+                            background: currentPage === p ? 'var(--primary)' : 'var(--surface)',
+                            color: currentPage === p ? 'var(--on-primary)' : 'var(--text)',
+                            border: `1px solid ${currentPage === p ? 'var(--primary)' : 'var(--line)'}`,
+                            fontSize: 13,
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          {p}
+                        </button>
+                      ))}
+                      <button
+                        disabled={currentPage === totalPages}
+                        onClick={() => currentPage < totalPages && setCurrentPage(currentPage + 1)}
+                        className="inline-flex items-center justify-center"
+                        style={{
+                          width: 36,
+                          height: 36,
+                          borderRadius: 'var(--r-sm)',
+                          background: 'var(--surface)',
+                          border: '1px solid var(--line)',
+                          color: currentPage === totalPages ? 'var(--text-soft)' : 'var(--text-muted)',
+                          cursor: currentPage === totalPages ? 'not-allowed' : 'pointer',
+                          opacity: currentPage === totalPages ? 0.5 : 1,
+                        }}
+                      >
+                        <ArrowRight className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div>
+                  <HotelMap hotels={hotels || []} onHotelSelect={handleHotelSelect} />
                 </div>
               )}
-            </>
-          ) : (
-            <div>
-              <HotelMap hotels={hotels || []} onHotelSelect={handleHotelSelect} />
             </div>
-          )}
+          </div>
         </div>
       </main>
 
       <SiteFooter />
     </div>
+  );
+}
+
+function FilterGroup({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div
+      className="mb-3 pb-3"
+      style={{ borderBottom: '1px solid var(--line-soft)' }}
+    >
+      <div
+        className="text-[11px] font-bold mb-2"
+        style={{ color: 'var(--text-muted)' }}
+      >
+        {title}
+      </div>
+      <div className="space-y-1">{children}</div>
+    </div>
+  );
+}
+
+function FilterCheckbox({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: () => void;
+}) {
+  return (
+    <label
+      className="flex items-center gap-2 cursor-pointer py-1"
+      style={{ fontSize: 12, color: checked ? 'var(--text)' : 'var(--text-muted)' }}
+    >
+      <input type="checkbox" checked={checked} onChange={onChange} className="form-checkbox h-4 w-4" />
+      {label}
+    </label>
   );
 }
 
