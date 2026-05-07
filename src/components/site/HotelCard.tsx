@@ -14,10 +14,18 @@ export default function HotelCard({
   layout?: Layout;
   priority?: boolean;
 }) {
-  const sizePills: { label: string; cls: string }[] = [];
-  if (hotel.smallDog) sizePills.push({ label: '小型', cls: 'kt-pill kt-pill--ok' });
-  if (hotel.mediumDog) sizePills.push({ label: '中型', cls: 'kt-pill kt-pill--ok' });
-  if (hotel.largeDog) sizePills.push({ label: '大型', cls: 'kt-pill kt-pill--ok' });
+  // 受入可能サイズを1ピルに集約（"全サイズOK" / "小型・中型OK" 等）
+  const sizes = [
+    hotel.smallDog && '小型',
+    hotel.mediumDog && '中型',
+    hotel.largeDog && '大型',
+  ].filter(Boolean) as string[];
+  const sizeLabel =
+    sizes.length === 0
+      ? null
+      : sizes.length === 3
+        ? '全サイズOK'
+        : `${sizes.join('・')}OK`;
 
   if (layout === 'row') {
     return (
@@ -58,13 +66,11 @@ export default function HotelCard({
             >
               {hotel.name}
             </div>
-            {sizePills.length > 0 && (
-              <div className="flex gap-1 mt-1.5 flex-wrap">
-                {sizePills.map((p) => (
-                  <span key={p.label} className={p.cls} style={{ fontSize: 9, padding: '2px 6px' }}>
-                    {p.label}
-                  </span>
-                ))}
+            {sizeLabel && (
+              <div className="mt-1.5">
+                <span className="kt-pill kt-pill--ok" style={{ fontSize: 9, padding: '2px 8px' }}>
+                  {sizeLabel}
+                </span>
               </div>
             )}
             <div className="flex items-center justify-between mt-2">
@@ -145,13 +151,11 @@ export default function HotelCard({
           ) : null}
         </div>
 
-        {sizePills.length > 0 && (
-          <div className="flex gap-1.5 flex-wrap mt-2">
-            {sizePills.map((p) => (
-              <span key={p.label} className={p.cls} style={{ fontSize: 10, padding: '3px 8px' }}>
-                {p.label}犬OK
-              </span>
-            ))}
+        {sizeLabel && (
+          <div className="mt-2">
+            <span className="kt-pill kt-pill--ok" style={{ fontSize: 10, padding: '3px 10px' }}>
+              {sizeLabel}
+            </span>
           </div>
         )}
 

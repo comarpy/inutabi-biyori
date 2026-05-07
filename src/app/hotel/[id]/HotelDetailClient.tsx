@@ -41,9 +41,27 @@ export default function HotelDetailClient({
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
 
   const availableFeatures = hotel.dogFeatures.filter((f) => f.available);
-  const sizeAvailable = availableFeatures.find(
-    (f) => f.name.includes('大型') || f.name.includes('中型') || f.name.includes('小型')
-  );
+  // タイトル横ピル用: 受入可能サイズを集約（全サイズOK / 小型・中型OK 等）
+  const acceptedSizes = [
+    availableFeatures.find((f) => f.name.includes('小型')) && '小型',
+    availableFeatures.find((f) => f.name.includes('中型')) && '中型',
+    availableFeatures.find((f) => f.name.includes('大型')) && '大型',
+  ].filter(Boolean) as string[];
+  const sizeLabel =
+    acceptedSizes.length === 0
+      ? null
+      : acceptedSizes.length === 3
+        ? '全サイズOK'
+        : `${acceptedSizes.join('・')}OK`;
+
+  // "15:00:00" のような形式を "15:00" に整形
+  const formatTime = (t: string | undefined): string => {
+    if (!t) return '';
+    return t.replace(/^(\d{1,2}):(\d{2}):\d{2}$/, '$1:$2');
+  };
+  const checkinTime = formatTime(hotel.checkin);
+  const checkoutTime = formatTime(hotel.checkout);
+
   const ota = buildVcBookingLinks(hotel.name);
 
   // 「料金」項目: petFee の最初のセグメント(例: "小型犬: ¥3,000")を value、残りを sub に
@@ -195,10 +213,10 @@ export default function HotelDetailClient({
       {/* Title (PC) */}
       <section className="hidden md:block max-w-7xl mx-auto px-4 md:px-8 mt-5">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
-          {sizeAvailable && (
+          {sizeLabel && (
             <span className="kt-pill kt-pill--ok">
               <Check className="w-3 h-3" />
-              {sizeAvailable.name}
+              {sizeLabel}
             </span>
           )}
           {hotel.location && (
@@ -249,10 +267,10 @@ export default function HotelDetailClient({
             {/* Title (SP only) */}
             <div className="md:hidden mb-3">
               <div className="flex items-center gap-2 mb-2 flex-wrap">
-                {sizeAvailable && (
+                {sizeLabel && (
                   <span className="kt-pill kt-pill--ok">
                     <Check className="w-3 h-3" />
-                    {sizeAvailable.name}
+                    {sizeLabel}
                   </span>
                 )}
                 <span className="kt-pill kt-pill--accent">旅館・ホテル</span>
@@ -314,25 +332,35 @@ export default function HotelDetailClient({
               </div>
             </Card>
 
-            {/* Amenities */}
-            {availableFeatures.length > 0 && (
-              <Card>
-                <h2 className="text-[14px] font-bold mb-3" style={{ color: 'var(--text)' }}>
-                  犬用設備・特徴
-                </h2>
-                <div className="flex flex-wrap gap-1.5">
-                  {availableFeatures.map((f, i) => {
-                    const Icon = featureIcon(f.name);
-                    return (
-                      <span key={i} className="kt-pill kt-pill--ok">
-                        <Icon className="w-3 h-3" />
-                        {f.name}
-                      </span>
-                    );
-                  })}
-                </div>
-              </Card>
-            )}
+            {/* Amenities (サイズ・頭数系は「犬の受入れ条件」と重複するため除外) */}
+            {(() => {
+              const amenityOnly = availableFeatures.filter(
+                (f) =>
+                  !f.name.includes('小型') &&
+                  !f.name.includes('中型') &&
+                  !f.name.includes('大型') &&
+                  !f.name.includes('多頭')
+              );
+              if (amenityOnly.length === 0) return null;
+              return (
+                <Card>
+                  <h2 className="text-[14px] font-bold mb-3" style={{ color: 'var(--text)' }}>
+                    犬用設備・特徴
+                  </h2>
+                  <div className="flex flex-wrap gap-1.5">
+                    {amenityOnly.map((f, i) => {
+                      const Icon = featureIcon(f.name);
+                      return (
+                        <span key={i} className="kt-pill kt-pill--ok">
+                          <Icon className="w-3 h-3" />
+                          {f.name}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </Card>
+              );
+            })()}
 
             {/* SP: Basic info card (PC は本文下に全幅) */}
             <div className="md:hidden">
@@ -349,7 +377,7 @@ export default function HotelDetailClient({
                 >
                   <Row label="住所" value={hotel.location} />
                   <Row label="アクセス" value={hotel.access || '情報なし'} />
-                  <Row label="チェックイン / アウト" value={`${hotel.checkin} / ${hotel.checkout}`} />
+                  <Row label="チェックイン / アウト" value={`${checkinTime} / ${checkoutTime}`} />
                   <Row
                     label="駐車場"
                     value={
@@ -520,8 +548,8 @@ export default function HotelDetailClient({
           >
             {[
               ['宿タイプ', '旅館・ホテル'],
-              ['チェックイン', hotel.checkin || '15:00'],
-              ['チェックアウト', hotel.checkout || '10:00'],
+              ['チェックイン', checkinTime || '15:00'],
+              ['チェックアウト', checkoutTime || '10:00'],
               ['駐車場', hotel.parking || '要確認'],
               ['住所', hotel.location],
               ['アクセス', hotel.access || '情報なし'],

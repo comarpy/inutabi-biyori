@@ -401,8 +401,12 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
         }
       }
     } else {
-      // エリア内でマッチなし → キーワード検索キャッシュを確認（同名マッチのみ採用）
-      const kw = rakutenMatchCache.get(microCMSHotel.hotelName);
+      // エリア内でマッチなし → キーワード検索（同名マッチのみ採用）
+      // キャッシュにある場合はそれ、無ければその場で取得を試みる（最大2秒タイムアウト）
+      let kw = rakutenMatchCache.get(microCMSHotel.hotelName);
+      if (!kw && !manualImage) {
+        kw = (await withTimeout(getRakutenMatchByName(microCMSHotel.hotelName), 2000, null)) ?? undefined;
+      }
       if (kw && !kw.missing && kw.image) {
         if (!manualImage) hotelImage = kw.image;
         if (kw.reviewAverage && !reviewAverage) reviewAverage = kw.reviewAverage;
@@ -410,8 +414,7 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
         if (kw.latitude && !latitude) latitude = kw.latitude;
         if (kw.longitude && !longitude) longitude = kw.longitude;
       }
-      // 別宿の写真を流用しない方針: ここでフォールバック画像は生成しない
-      // hotelImage は default の PLACEHOLDER_IMAGE のまま
+      // それでも画像が見つからなければ PLACEHOLDER_IMAGE のまま
     }
   }
   
