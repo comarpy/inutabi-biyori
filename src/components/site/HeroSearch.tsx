@@ -5,12 +5,8 @@ import { useRouter } from 'next/navigation';
 import {
   Search,
   Waves,
-  Dog,
   Bone,
   ParkingCircle,
-  ShoppingBag,
-  Utensils,
-  Scissors,
   Home as HomeIcon,
   ChevronDown,
   MapPin,
@@ -19,15 +15,7 @@ import {
 
 type DogSize = 'small' | 'medium' | 'large' | 'xl';
 type DogCount = '1' | '2' | '3+';
-type PriorityKey =
-  | 'dogRun'
-  | 'hotSpring'
-  | 'diningWithDog'
-  | 'dogMenu'
-  | 'roomDogRun'
-  | 'petAmenities'
-  | 'parking'
-  | 'grooming';
+type PriorityKey = 'dogRun' | 'roomDogRun' | 'hotSpring' | 'parking';
 
 interface PriorityOption {
   key: PriorityKey;
@@ -35,15 +23,12 @@ interface PriorityOption {
   icon: React.ComponentType<{ className?: string }>;
 }
 
+// ★載せたい4項目に精査（ペット用品貸出/犬用メニュー/グルーミング/同伴食事は除外）
 const PRIORITY_OPTIONS: PriorityOption[] = [
   { key: 'dogRun', label: 'ドッグラン', icon: Bone },
-  { key: 'hotSpring', label: '温泉', icon: Waves },
-  { key: 'dogMenu', label: '犬用メニュー', icon: Utensils },
   { key: 'roomDogRun', label: '客室ドッグラン', icon: HomeIcon },
-  { key: 'petAmenities', label: 'ペット用品貸出', icon: ShoppingBag },
-  { key: 'parking', label: '駐車場あり', icon: ParkingCircle },
-  { key: 'grooming', label: 'グルーミング', icon: Scissors },
-  { key: 'diningWithDog', label: 'ペット同伴食事', icon: Utensils },
+  { key: 'hotSpring', label: '温泉', icon: Waves },
+  { key: 'parking', label: '駐車場', icon: ParkingCircle },
 ];
 
 const DOG_SIZE_OPTIONS: { key: DogSize; label: string; desc: string }[] = [
@@ -85,8 +70,6 @@ export default function HeroSearch() {
   const [count, setCount] = useState<DogCount | ''>('');
   const [priorities, setPriorities] = useState<Set<PriorityKey>>(new Set());
   const [areas, setAreas] = useState<string[]>([]);
-  const [checkIn, setCheckIn] = useState('');
-  const [checkOut, setCheckOut] = useState('');
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -146,13 +129,8 @@ export default function HeroSearch() {
       params.set('multipleDogs', 'true');
       params.set('minDogs', '3');
     }
-    priorities.forEach((k) => {
-      if (k === 'diningWithDog') params.set('roomDining', 'true');
-      else params.set(k, 'true');
-    });
+    priorities.forEach((k) => params.set(k, 'true'));
     if (areas.length > 0) params.set('areas', areas.join(','));
-    if (checkIn) params.set('checkIn', checkIn);
-    if (checkOut) params.set('checkOut', checkOut);
     router.push(`/search?${params.toString()}`);
   };
 
@@ -183,8 +161,9 @@ export default function HeroSearch() {
           type="button"
           onClick={handleSearch}
           className="kt-btn kt-btn--primary flex-shrink-0"
-          style={{ padding: '8px 16px', fontSize: 12 }}
+          style={{ padding: '12px 24px', fontSize: 14 }}
         >
+          <Search className="w-4 h-4" />
           検索
         </button>
 
@@ -414,56 +393,6 @@ export default function HeroSearch() {
                   </button>
                 );
               })}
-            </div>
-          </div>
-
-          {/* Dates */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label
-                className="block text-[11px] mb-1 font-semibold"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                チェックイン
-              </label>
-              <input
-                type="date"
-                className="w-full"
-                style={{
-                  background: 'var(--surface-2)',
-                  border: '1px solid var(--line)',
-                  borderRadius: 'var(--r-sm)',
-                  padding: '8px 10px',
-                  fontSize: 13,
-                  color: 'var(--text)',
-                }}
-                value={checkIn}
-                onChange={(e) => setCheckIn(e.target.value)}
-                min={new Date().toISOString().split('T')[0]}
-              />
-            </div>
-            <div>
-              <label
-                className="block text-[11px] mb-1 font-semibold"
-                style={{ color: 'var(--text-muted)' }}
-              >
-                チェックアウト
-              </label>
-              <input
-                type="date"
-                className="w-full"
-                style={{
-                  background: 'var(--surface-2)',
-                  border: '1px solid var(--line)',
-                  borderRadius: 'var(--r-sm)',
-                  padding: '8px 10px',
-                  fontSize: 13,
-                  color: 'var(--text)',
-                }}
-                value={checkOut}
-                onChange={(e) => setCheckOut(e.target.value)}
-                min={checkIn || new Date().toISOString().split('T')[0]}
-              />
             </div>
           </div>
 

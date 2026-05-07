@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { ChevronRight } from 'lucide-react';
 
 import SiteHeader from '@/components/site/SiteHeader';
@@ -46,28 +47,30 @@ export default async function HomePage() {
       <SiteHeader />
 
       {/* ============== Hero — fullbleed ============== */}
-      <section
-        className="relative"
-        style={{
-          marginBottom: 80,
-        }}
-      >
+      <section className="relative">
         <div
           className="relative w-full"
           style={{
             height: 'clamp(360px, 60vw, 520px)',
             overflow: 'hidden',
-            background:
-              'linear-gradient(135deg, oklch(0.42 0.14 45) 0%, oklch(0.28 0.04 60) 100%)',
           }}
         >
-          {/* Diagonal pattern overlay */}
+          {/* Background image */}
+          <Image
+            src="/images/hero.png"
+            alt=""
+            fill
+            sizes="100vw"
+            priority
+            className="object-cover"
+            style={{ objectPosition: 'center' }}
+          />
+          {/* Dark gradient overlay (text readability) */}
           <div
             className="absolute inset-0"
             style={{
               background:
-                'repeating-linear-gradient(135deg, rgba(255,255,255,0.06) 0 18px, transparent 18px 36px)',
-              mixBlendMode: 'overlay',
+                'linear-gradient(135deg, rgba(56,38,18,0.55) 0%, rgba(20,14,8,0.45) 50%, rgba(20,14,8,0.15) 100%)',
             }}
           />
 
@@ -78,8 +81,9 @@ export default async function HomePage() {
                 style={{
                   fontSize: 'clamp(11px, 1.2vw, 14px)',
                   letterSpacing: '0.18em',
-                  opacity: 0.85,
+                  opacity: 0.95,
                   marginBottom: 8,
+                  textShadow: '0 1px 4px rgba(0,0,0,0.4)',
                 }}
               >
                 FOR YOUR DOG&apos;S TRIP
@@ -91,6 +95,7 @@ export default async function HomePage() {
                   lineHeight: 1.2,
                   letterSpacing: '-0.01em',
                   marginBottom: 12,
+                  textShadow: '0 2px 8px rgba(0,0,0,0.5)',
                 }}
               >
                 愛犬と、
@@ -101,8 +106,9 @@ export default async function HomePage() {
                 className="max-w-lg"
                 style={{
                   fontSize: 'clamp(13px, 1.4vw, 16px)',
-                  opacity: 0.92,
+                  opacity: 0.95,
                   lineHeight: 1.7,
+                  textShadow: '0 1px 4px rgba(0,0,0,0.5)',
                 }}
               >
                 犬種・サイズ別の条件がひと目でわかる宿探しで、
@@ -113,11 +119,8 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* Search box pinned to bottom (overlaps hero) */}
-        <div
-          className="absolute left-0 right-0 px-4 md:px-8"
-          style={{ bottom: '-40px' }}
-        >
+        {/* Search box: hero直下に通常配置(展開時は下に伸びる) */}
+        <div className="px-4 md:px-8 -mt-10 md:-mt-12 relative z-10">
           <div className="max-w-4xl mx-auto">
             <HeroSearch />
           </div>
@@ -125,7 +128,7 @@ export default async function HomePage() {
       </section>
 
       {/* ============== 編集部のおすすめ ============== */}
-      <section className="px-4 md:px-8 pt-12 md:pt-20 pb-10 md:pb-12">
+      <section className="px-4 md:px-8 pt-10 md:pt-14 pb-10 md:pb-12">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-baseline justify-between mb-1">
             <h2
