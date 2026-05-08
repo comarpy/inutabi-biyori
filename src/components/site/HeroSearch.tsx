@@ -9,7 +9,6 @@ import {
   ParkingCircle,
   Home as HomeIcon,
   ChevronDown,
-  MapPin,
   Heart,
   Bath,
   Utensils,
@@ -429,28 +428,6 @@ export default function HeroSearch() {
         </div>
       )}
 
-      {/* Quick filter pills */}
-      <div className="flex gap-1.5 flex-wrap mt-3">
-        {(
-          [
-            { label: '大型犬OK', key: 'largeDog' },
-            { label: '温泉', key: 'hotSpring' },
-            { label: 'ドッグラン', key: 'dogRun' },
-            { label: '駐車場', key: 'parking' },
-          ] as const
-        ).map((p) => (
-          <button
-            key={p.label}
-            type="button"
-            onClick={() => router.push(`/search?${p.key}=true`)}
-            className="kt-pill"
-            style={{ cursor: 'pointer' }}
-          >
-            <MapPin className="w-3 h-3" />
-            {p.label}
-          </button>
-        ))}
-      </div>
     </div>
   );
 }
