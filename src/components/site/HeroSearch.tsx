@@ -166,13 +166,16 @@ export default function HeroSearch() {
       className="p-3 md:p-4"
     >
       {/* Quick search row */}
-      <div className="flex gap-2 items-center area-dropdown-container relative">
-        <Search className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--primary)' }} />
+      <div
+        className="flex gap-3 items-center area-dropdown-container relative"
+        style={{ padding: '4px 4px 4px 12px' }}
+      >
+        <Search className="w-5 h-5 flex-shrink-0" style={{ color: 'var(--primary)' }} />
         <button
           type="button"
           onClick={() => setShowAreaDropdown(!showAreaDropdown)}
-          className="flex-1 text-left text-[13px] truncate"
-          style={{ color: areas.length > 0 ? 'var(--text)' : 'var(--text-soft)' }}
+          className="flex-1 text-left text-[15px] md:text-[16px] truncate"
+          style={{ color: areas.length > 0 ? 'var(--text)' : 'var(--text-soft)', padding: '8px 0' }}
         >
           {areas.length > 0 ? areas.join(', ') : 'エリアで検索 (例: 軽井沢、箱根)'}
         </button>
@@ -180,9 +183,9 @@ export default function HeroSearch() {
           type="button"
           onClick={handleSearch}
           className="kt-btn kt-btn--primary flex-shrink-0"
-          style={{ padding: '12px 24px', fontSize: 14 }}
+          style={{ padding: '14px 28px', fontSize: 15 }}
         >
-          <Search className="w-4 h-4" />
+          <Search className="w-5 h-5" />
           検索
         </button>
 

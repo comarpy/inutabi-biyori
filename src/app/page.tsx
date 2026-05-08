@@ -119,8 +119,8 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* Search box: hero直下に通常配置(展開時は下に伸びる) */}
-        <div className="px-4 md:px-8 -mt-10 md:-mt-12 relative z-10">
+        {/* Search box: hero に食い込む形で配置(展開時は下に伸びる) */}
+        <div className="px-4 md:px-8 -mt-20 md:-mt-28 relative z-10">
           <div className="max-w-4xl mx-auto">
             <HeroSearch />
           </div>
