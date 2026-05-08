@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, PawPrint } from 'lucide-react';
 
 import SiteHeader from '@/components/site/SiteHeader';
 import SiteFooter from '@/components/site/SiteFooter';
@@ -228,6 +228,70 @@ export default async function HomePage() {
                 </Link>
               );
             })}
+          </div>
+        </div>
+      </section>
+
+      {/* ============== 愛犬サイズ別に探す ============== */}
+      <section className="px-4 md:px-8 py-10 md:py-12">
+        <div className="max-w-5xl mx-auto">
+          <h2
+            className="font-extrabold mb-1"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(20px, 3.4vw, 26px)',
+              color: 'var(--text)',
+            }}
+          >
+            愛犬サイズ別に探す
+          </h2>
+          <p className="text-[12px] mb-5" style={{ color: 'var(--text-soft)' }}>
+            体重・サイズに合わせて、ぴったりの宿が見つかります
+          </p>
+          <div className="grid grid-cols-3 gap-2.5 md:gap-3">
+            {[
+              { slug: 'small', label: '小型犬', desc: '〜10kg' },
+              { slug: 'medium', label: '中型犬', desc: '10〜25kg' },
+              { slug: 'large', label: '大型犬', desc: '25kg〜' },
+            ].map((s) => (
+              <Link
+                key={s.slug}
+                href={`/breed/${s.slug}`}
+                className="text-center transition-all hover:-translate-y-0.5 p-4 md:p-5"
+                style={{
+                  background: 'var(--surface)',
+                  border: '1px solid var(--line)',
+                  borderRadius: 'var(--r-md)',
+                  boxShadow: 'var(--sh-sm)',
+                }}
+              >
+                <div
+                  className="mx-auto mb-2 flex items-center justify-center"
+                  style={{
+                    width: 48,
+                    height: 48,
+                    borderRadius: '50%',
+                    background: 'var(--primary-soft)',
+                    color: 'var(--primary)',
+                  }}
+                >
+                  <PawPrint className="w-6 h-6" />
+                </div>
+                <div
+                  className="font-bold"
+                  style={{
+                    fontFamily: 'var(--font-display)',
+                    fontSize: 'clamp(14px, 2vw, 16px)',
+                    color: 'var(--text)',
+                  }}
+                >
+                  {s.label}
+                </div>
+                <div className="mt-1" style={{ fontSize: 11, color: 'var(--text-soft)' }}>
+                  {s.desc}
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
