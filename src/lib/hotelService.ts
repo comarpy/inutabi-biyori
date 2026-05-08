@@ -441,10 +441,21 @@ async function convertMicroCMSToHotel(microCMSHotel: DogHotelInfo, index: number
     ? [latitude, longitude]
     : generateCoordinates(microCMSHotel.prefecture, microCMSHotel.id);
 
+  // address に prefecture が含まれている場合の二重表示を回避
+  // 統一フォーマット: "○○県○○市..."(県名1回のみ・スペースなし)
+  const joined = (() => {
+    const pref = microCMSHotel.prefecture || '';
+    const addr = microCMSHotel.address || '';
+    if (!pref) return addr;
+    if (!addr) return pref;
+    if (addr.startsWith(pref)) return addr;
+    return `${pref}${addr}`;
+  })();
+
   return {
     id: microCMSHotel.id,
     name: microCMSHotel.hotelName,
-    location: `${microCMSHotel.prefecture} ${microCMSHotel.address}`,
+    location: joined,
     price: price,
     amenities: amenities,
     image: hotelImage,
@@ -773,7 +784,7 @@ function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel, requestedId?: s
   const baseHotel: Hotel = {
     id: `r_${rakutenHotel.hotelNo || '0'}`,
     name: rakutenHotel.hotelName,
-    location: `${rakutenHotel.address1} ${rakutenHotel.address2}`.trim(),
+    location: `${rakutenHotel.address1 || ''}${rakutenHotel.address2 || ''}`.trim(),
     price: generatePrice(rakutenHotel.reviewAverage, rakutenHotel.hotelMinCharge),
     amenities: generateAmenities(),
     image: rakutenHotel.hotelImageUrl || '/images/画像2.jpeg',
@@ -855,7 +866,7 @@ function convertRakutenDetailToHotelDetail(rakutenDetail: any, requestedId?: str
   const baseHotel: Hotel = {
     id: `r_${basicInfo.hotelNo || '0'}`,
     name: basicInfo.hotelName,
-    location: `${basicInfo.address1} ${basicInfo.address2}`.trim(),
+    location: `${basicInfo.address1 || ''}${basicInfo.address2 || ''}`.trim(),
     price: generatePrice(basicInfo.reviewAverage || 4.0, basicInfo.hotelMinCharge),
     amenities: generateAmenities(),
     image: basicInfo.hotelImageUrl || '/images/画像2.jpeg',
