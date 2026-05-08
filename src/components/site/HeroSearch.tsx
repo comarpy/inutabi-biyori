@@ -11,11 +11,26 @@ import {
   ChevronDown,
   MapPin,
   Heart,
+  Bath,
+  Utensils,
+  ShoppingBag,
+  Scissors,
+  Sparkles,
 } from 'lucide-react';
 
 type DogSize = 'small' | 'medium' | 'large' | 'xl';
 type DogCount = '1' | '2' | '3+';
-type PriorityKey = 'dogRun' | 'roomDogRun' | 'hotSpring' | 'parking';
+type PriorityKey =
+  | 'parking'
+  | 'hotSpring'
+  | 'privateBath'
+  | 'dogRun'
+  | 'roomDogRun'
+  | 'petAmenities'
+  | 'roomDining'
+  | 'dogMenu'
+  | 'grooming'
+  | 'leashFree';
 
 interface PriorityOption {
   key: PriorityKey;
@@ -23,12 +38,17 @@ interface PriorityOption {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-// ★載せたい4項目に精査（ペット用品貸出/犬用メニュー/グルーミング/同伴食事は除外）
 const PRIORITY_OPTIONS: PriorityOption[] = [
-  { key: 'dogRun', label: 'ドッグラン', icon: Bone },
-  { key: 'roomDogRun', label: '客室ドッグラン', icon: HomeIcon },
-  { key: 'hotSpring', label: '温泉', icon: Waves },
   { key: 'parking', label: '駐車場', icon: ParkingCircle },
+  { key: 'hotSpring', label: '温泉', icon: Waves },
+  { key: 'privateBath', label: '露天風呂付き客室', icon: Bath },
+  { key: 'dogRun', label: '敷地内ドッグラン', icon: Bone },
+  { key: 'roomDogRun', label: '客室ドッグラン', icon: HomeIcon },
+  { key: 'petAmenities', label: 'ペットアメニティ', icon: ShoppingBag },
+  { key: 'roomDining', label: '一緒にごはん', icon: Utensils },
+  { key: 'dogMenu', label: '犬メニュー', icon: Bone },
+  { key: 'grooming', label: 'グルーミングルーム', icon: Scissors },
+  { key: 'leashFree', label: '施設内リードでOK', icon: Sparkles },
 ];
 
 const DOG_SIZE_OPTIONS: { key: DogSize; label: string; desc: string }[] = [
@@ -253,7 +273,7 @@ export default function HeroSearch() {
           style={{ color: 'var(--text-muted)' }}
         >
           <Heart className="w-3.5 h-3.5" style={{ color: 'var(--primary)' }} />
-          愛犬のプロフィールから絞り込み
+          条件から絞り込み
           {detailCount > 0 && (
             <span
               className="ml-1 px-1.5 py-0.5"

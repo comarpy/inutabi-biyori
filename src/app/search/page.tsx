@@ -70,6 +70,7 @@ interface DetailFiltersState {
   largeDog: boolean;
   xlDog: boolean;
   hotSpring: boolean;
+  privateBath: boolean;
   parking: boolean;
   multipleDogs: boolean;
   petAmenities: boolean;
@@ -77,6 +78,7 @@ interface DetailFiltersState {
   roomDining: boolean;
   roomDogRun: boolean;
   grooming: boolean;
+  leashFree: boolean;
 }
 
 function SearchContent() {
@@ -90,6 +92,7 @@ function SearchContent() {
     largeDog: searchParams.get('largeDog') === 'true',
     xlDog: searchParams.get('xlDog') === 'true',
     hotSpring: searchParams.get('hotSpring') === 'true',
+    privateBath: searchParams.get('privateBath') === 'true',
     parking: searchParams.get('parking') === 'true',
     multipleDogs: searchParams.get('multipleDogs') === 'true',
     petAmenities: searchParams.get('petAmenities') === 'true',
@@ -97,6 +100,7 @@ function SearchContent() {
     roomDining: searchParams.get('roomDining') === 'true',
     roomDogRun: searchParams.get('roomDogRun') === 'true',
     grooming: searchParams.get('grooming') === 'true',
+    leashFree: searchParams.get('leashFree') === 'true',
   });
 
   const [searchFilters, setSearchFilters] = useState({
@@ -123,8 +127,8 @@ function SearchContent() {
     setSearchFilters({ areas: [] });
     setDetailFilters({
       dogRun: false, smallDog: false, mediumDog: false, largeDog: false, xlDog: false,
-      hotSpring: false, parking: false, multipleDogs: false, petAmenities: false,
-      dogMenu: false, roomDining: false, roomDogRun: false, grooming: false,
+      hotSpring: false, privateBath: false, parking: false, multipleDogs: false, petAmenities: false,
+      dogMenu: false, roomDining: false, roomDogRun: false, grooming: false, leashFree: false,
     });
   };
 
