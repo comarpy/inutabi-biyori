@@ -2,15 +2,9 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Dog } from 'lucide-react';
-import { 
-  QuestionMarkCircleIcon, 
-  EnvelopeIcon, 
-  BuildingOfficeIcon,
-  HeartIcon 
-} from '@heroicons/react/24/outline';
-import { Instagram, Facebook, MessageCircle } from 'lucide-react';
-import { XIcon } from '../../components/XIcon';
+import { Mail, HelpCircle, Building2, Send } from 'lucide-react';
+import SiteHeader from '@/components/site/SiteHeader';
+import SiteFooter from '@/components/site/SiteFooter';
 
 export default function ContactPage() {
   const [isAgreed, setIsAgreed] = useState(false);
@@ -19,7 +13,7 @@ export default function ContactPage() {
     name: '',
     email: '',
     subject: '',
-    message: ''
+    message: '',
   });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -27,8 +21,6 @@ export default function ContactPage() {
     if (!isAgreed || isSubmitting) return;
 
     setIsSubmitting(true);
-
-    // Honeypot フィールドの値を取得（Bot のみが埋める）
     const form = e.currentTarget;
     const honeypotInput = form.querySelector('input[name="website"]') as HTMLInputElement | null;
     const website = honeypotInput?.value || '';
@@ -36,23 +28,13 @@ export default function ContactPage() {
     try {
       const response = await fetch('/api/contact', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...formData, website }),
       });
-
       const result = await response.json();
-
       if (response.ok) {
         alert('お問い合わせを送信しました。ありがとうございます！');
-        // フォームをリセット
-        setFormData({
-          name: '',
-          email: '',
-          subject: '',
-          message: ''
-        });
+        setFormData({ name: '', email: '', subject: '', message: '' });
         setIsAgreed(false);
       } else {
         alert(`送信に失敗しました: ${result.error}`);
@@ -67,179 +49,179 @@ export default function ContactPage() {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF6F1] relative">
-      {/* Background Pattern */}
-      <div 
-        className="absolute inset-0 opacity-30"
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' fill='%23E8D5B7' opacity='0.3' viewBox='0 0 512 512'%3E%3Cpath d='M144 96c26.5 0 48-21.5 48-48s-21.5-48-48-48-48 21.5-48 48 21.5 48 48 48zm-32 224c26.5 0 48-21.5 48-48s-21.5-48-48-48-48 21.5-48 48 21.5 48 48 48zm128-224c26.5 0 48-21.5 48-48s-21.5-48-48-48-48 21.5-48 48 21.5 48 48 48zM256 320c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zm48-160c-26.5 0-48 21.5-48 48s21.5 48 48 48 48-21.5 48-48-21.5-48-48-48zM368 96c26.5 0 48-21.5 48-48s-21.5-48-48-48-48 21.5-48 48 21.5 48 48 48zm-32 224c26.5 0 48-21.5 48-48s-21.5-48-48-48-48 21.5-48 48 21.5 48 48 48z'/%3E%3C/svg%3E")`,
-          backgroundRepeat: 'repeat'
-        }}
-      />
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+      <SiteHeader />
 
-      <div className="max-w-7xl mx-auto relative z-10 p-4">
-        <h1 className="text-3xl font-bold mb-4 text-[#484848]">お問い合わせ</h1>
-        
-        {/* Header Section */}
-        <div className="bg-gradient-to-br from-[#FF5A5F] to-[#FF385C] text-white p-4 rounded-t-lg mb-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <div className="bg-[#FAF6F1] p-2 rounded-full mr-3 w-[60px] h-[60px] flex items-center justify-center">
-              <Dog className="w-7 h-7 text-[#FF5A5F]" />
-            </div>
-            <h2 className="text-xl font-bold">Inutabi-biyori- 愛犬と泊まれる宿が見つかる、旅の検索サイト</h2>
+      <main className="max-w-3xl mx-auto px-4 md:px-8 py-8 md:py-12">
+        <h1
+          className="font-bold mb-2"
+          style={{
+            fontFamily: 'var(--font-display)',
+            fontSize: 'clamp(24px, 4vw, 32px)',
+            color: 'var(--text)',
+          }}
+        >
+          お問い合わせ
+        </h1>
+        <p className="text-sm mb-6" style={{ color: 'var(--text-muted)' }}>
+          ご質問・ご意見・ご要望など、お気軽にお問い合わせください。
+        </p>
+
+        <div
+          className="p-5 md:p-7 mb-5"
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--line)',
+            borderRadius: 'var(--r-md)',
+            boxShadow: 'var(--sh-sm)',
+          }}
+        >
+          <SectionLabel icon={HelpCircle}>よくある質問</SectionLabel>
+          <p className="text-[13px] mb-2" style={{ color: 'var(--text-muted)' }}>
+            お問い合わせの前に、よくある質問をご確認ください。
+          </p>
+          <Link
+            href="/faq"
+            className="inline-flex items-center gap-1.5 text-[13px] font-semibold"
+            style={{ color: 'var(--primary)' }}
+          >
+            よくある質問はこちら →
+          </Link>
+
+          <div
+            className="mt-5 p-4"
+            style={{
+              background: 'var(--primary-soft)',
+              border: '1px solid transparent',
+              borderRadius: 'var(--r-sm)',
+            }}
+          >
+            <Link
+              href="/business-contact"
+              className="flex items-center gap-2 font-semibold transition-opacity hover:opacity-80"
+              style={{ color: 'var(--primary)' }}
+            >
+              <Building2 className="w-5 h-5" />
+              <span>宿泊施設・企業様向けお問い合わせはこちら →</span>
+            </Link>
+            <p className="text-[12px] mt-2 ml-7" style={{ color: 'var(--text-muted)' }}>
+              掲載・提携に関するご相談はこちらからお願いいたします
+            </p>
           </div>
-          <div className="text-lg font-medium">お問い合わせ</div>
         </div>
 
-        {/* Content Container */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-4">
-          {/* FAQ Section */}
-          <div className="mb-6">
-            <div className="bg-[#F5F0E8] text-[#555555] p-3 rounded-md mb-3 font-semibold flex items-center">
-              <QuestionMarkCircleIcon className="w-5 h-5 mr-2" />
-              よくある質問
-            </div>
-            <div className="mb-4">
-              <p className="mb-2">お問い合わせの前に、よくある質問をご確認ください。</p>
-              <Link href="/search" className="flex items-center text-red-500 hover:text-red-600 font-medium">
-                <HeartIcon className="w-4 h-4 mr-2" />
-                よくある質問はこちら
-              </Link>
-            </div>
-          </div>
+        <div
+          className="p-5 md:p-7"
+          style={{
+            background: 'var(--surface)',
+            border: '1px solid var(--line)',
+            borderRadius: 'var(--r-md)',
+            boxShadow: 'var(--sh-sm)',
+          }}
+        >
+          <SectionLabel icon={Mail}>お問い合わせフォーム</SectionLabel>
 
-          {/* Contact Form Section */}
-          <div className="bg-[#F5F0E8] text-[#555555] p-3 rounded-md mb-4 font-semibold flex items-center">
-            <EnvelopeIcon className="w-5 h-5 mr-2" />
-            お問い合わせフォーム
-          </div>
-
-          {/* Description */}
-          <div className="mb-6">
-            <p className="font-medium mb-2">よくある質問で解決しない場合は、こちらからお問い合わせください。</p>
-            <p className="font-medium mb-2">掲載希望の宿泊施設様や企業様は、下記よりお願いいたします。</p>
-            
-            {/* Business Contact Link - Enhanced Visibility */}
-            <div className="bg-gradient-to-r from-[#FF5A5F]/10 to-[#FF385C]/10 border border-[#FF5A5F]/30 rounded-lg p-4 mb-4">
-              <Link href="/business-contact" className="flex items-center text-[#FF5A5F] hover:text-[#FF385C] font-semibold text-lg transition-colors duration-300">
-                <BuildingOfficeIcon className="w-6 h-6 mr-3" />
-                <span>宿泊施設・企業様向けお問い合わせはこちら</span>
-                <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                </svg>
-              </Link>
-              <p className="text-sm text-gray-600 mt-2 ml-9">掲載・提携に関するご相談はこちらからお願いいたします</p>
-            </div>
-          </div>
-
-          {/* Contact Form */}
-          <form onSubmit={handleSubmit} className="space-y-4 max-w-2xl mx-auto">
-            {/* Honeypot: Bot はこの隠しフィールドを埋めがち。ユーザーは見えない */}
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-              <label>Website (do not fill)
+              <label>
+                Website (do not fill)
                 <input type="text" name="website" tabIndex={-1} autoComplete="off" />
               </label>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                お名前 <span className="text-red-500">*</span>
-              </label>
+            <FormField label="お名前" required>
               <input
                 type="text"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full h-10 border border-gray-300 rounded-md px-3 bg-gray-50 focus:outline-none focus:border-[#FF5A5F] focus:ring-2 focus:ring-[#FF5A5F]/20"
+                className="w-full"
+                style={inputStyle}
                 required
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                メールアドレス <span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="email" 
+            </FormField>
+            <FormField label="メールアドレス" required>
+              <input
+                type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleInputChange}
-                className="w-full h-10 border border-gray-300 rounded-md px-3 bg-gray-50 focus:outline-none focus:border-[#FF5A5F] focus:ring-2 focus:ring-[#FF5A5F]/20"
-                required 
+                className="w-full"
+                style={inputStyle}
+                required
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                件名 <span className="text-red-500">*</span>
-              </label>
-              <input 
-                type="text" 
+            </FormField>
+            <FormField label="件名" required>
+              <input
+                type="text"
                 name="subject"
                 value={formData.subject}
                 onChange={handleInputChange}
-                className="w-full h-10 border border-gray-300 rounded-md px-3 bg-gray-50 focus:outline-none focus:border-[#FF5A5F] focus:ring-2 focus:ring-[#FF5A5F]/20"
-                required 
+                className="w-full"
+                style={inputStyle}
+                required
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">
-                お問い合わせ内容 <span className="text-red-500">*</span>
-              </label>
-              <textarea 
+            </FormField>
+            <FormField label="お問い合わせ内容" required>
+              <textarea
                 name="message"
                 value={formData.message}
                 onChange={handleInputChange}
                 rows={5}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 bg-gray-50 focus:outline-none focus:border-[#FF5A5F] focus:ring-2 focus:ring-[#FF5A5F]/20"
+                className="w-full"
+                style={{ ...inputStyle, padding: '10px 12px' }}
                 required
               />
-            </div>
+            </FormField>
 
-            <div className="my-4">
-              <label className="flex items-start cursor-pointer">
-                <input 
-                  type="checkbox" 
-                  className="mr-2 mt-1"
-                  checked={isAgreed}
-                  onChange={(e) => setIsAgreed(e.target.checked)}
-                  required 
-                />
-                                 <span className="text-sm">
-                   <Link href="/terms" className="text-red-500 hover:underline">利用規約</Link>
-                   および
-                   <Link href="/privacy" className="text-red-500 hover:underline">プライバシーポリシー</Link>
-                   に同意します<span className="text-red-500">*</span>
-                 </span>
-              </label>
-            </div>
+            <label className="flex items-start gap-2 cursor-pointer mt-4">
+              <input
+                type="checkbox"
+                className="form-checkbox h-4 w-4 mt-1 flex-shrink-0"
+                checked={isAgreed}
+                onChange={(e) => setIsAgreed(e.target.checked)}
+                required
+              />
+              <span className="text-[13px]" style={{ color: 'var(--text-muted)' }}>
+                <Link href="/terms" style={{ color: 'var(--primary)' }} className="hover:underline">
+                  利用規約
+                </Link>
+                および
+                <Link href="/privacy" style={{ color: 'var(--primary)' }} className="hover:underline">
+                  プライバシーポリシー
+                </Link>
+                に同意します
+                <span style={{ color: 'var(--primary)' }}>*</span>
+              </span>
+            </label>
 
-            <div className="text-center">
-              <button 
+            <div className="text-center pt-2">
+              <button
                 type="submit"
                 disabled={!isAgreed || isSubmitting}
-                className={`px-6 py-3 rounded-md font-medium text-white transition-all duration-300 flex items-center justify-center mx-auto ${
-                  isAgreed && !isSubmitting
-                    ? 'bg-gradient-to-br from-[#FF5A5F] to-[#FF385C] hover:from-[#FF7A7F] hover:to-[#FF587C] hover:-translate-y-0.5 hover:shadow-lg' 
-                    : 'bg-gradient-to-br from-[#FF5A5F] to-[#FF385C] opacity-70 cursor-not-allowed'
-                }`}
+                className="kt-btn kt-btn--primary"
+                style={{ padding: '12px 28px', fontSize: 14 }}
               >
                 {isSubmitting ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div
+                      className="animate-spin rounded-full h-4 w-4 mr-1"
+                      style={{
+                        borderBottom: '2px solid #fff',
+                        borderLeft: '2px solid transparent',
+                        borderRight: '2px solid transparent',
+                        borderTop: '2px solid transparent',
+                      }}
+                    />
                     送信中...
                   </>
                 ) : (
                   <>
-                    <HeartIcon className="w-4 h-4 mr-2" />
+                    <Send className="w-4 h-4" />
                     送信する
                   </>
                 )}
@@ -247,63 +229,62 @@ export default function ContactPage() {
             </div>
           </form>
         </div>
+      </main>
 
-        {/* Footer */}
-        <footer className="bg-[#3A3A3A] text-white mt-16 rounded-b-xl">
-          <div className="max-w-7xl mx-auto px-4 py-12">
-            <div className="grid grid-cols-3 gap-8">
-              <div>
-                <div className="flex items-center font-bold mb-4 text-white">
-                  <BuildingOfficeIcon className="w-4 h-4 mr-2 text-[#FF5A5F]" />
-                  宿泊施設向け
-                </div>
-                <ul className="space-y-2 text-sm">
-                  <li><Link href="/business-contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">宿を掲載する</Link></li>
-                </ul>
-              </div>
-
-              
-              <div>
-                <div className="flex items-center font-bold mb-4 text-white">
-                  <HeartIcon className="w-4 h-4 mr-2 text-[#FF5A5F]" />
-                  サポート
-                </div>
-                <ul className="space-y-2 text-sm">
-                  <li><Link href="/faq" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">よくある質問</Link></li>
-                  <li><Link href="/contact" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">お問い合わせ</Link></li>
-                  <li><Link href="/terms" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">利用規約</Link></li>
-                  <li><Link href="/privacy" className="text-gray-300 hover:text-white hover:underline cursor-pointer transition-colors">プライバシーポリシー</Link></li>
-                </ul>
-              </div>
-
-              <div>
-                <div className="flex items-center mb-4">
-                  <HeartIcon className="w-6 h-6 mr-2 text-[#FF5A5F]" />
-                  <h3 className="font-bold text-white">SNS</h3>
-                </div>
-                <p className="text-sm text-gray-300 mb-4">
-                  愛犬との素敵な旅行をサポートします
-                </p>
-                <div className="flex space-x-3">
-                  <a href="https://www.facebook.com/profile.php?id=61578037163409&locale=ja_JP" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
-                    <Facebook className="w-4 h-4 text-white" />
-                  </a>
-                  <a href="https://x.com/inutabi_biyori" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
-                    <XIcon size={16} className="text-white" />
-                  </a>
-                  <a href="https://www.instagram.com/inutabi_biyori?igsh=dzlkOGRpMHJtamVq" target="_blank" rel="noopener noreferrer" className="w-9 h-9 bg-gray-600 rounded-full flex items-center justify-center cursor-pointer hover:bg-[#FF5A5F] hover:-translate-y-1 transition-all duration-300">
-                    <Instagram className="w-4 h-4 text-white" />
-                  </a>
-                </div>
-              </div>
-            </div>
-            
-            <div className="border-t border-gray-600 mt-8 pt-8 text-center text-sm text-gray-300">
-              <p>© 2025 犬旅びより All Rights Reserved.</p>
-            </div>
-          </div>
-        </footer>
-      </div>
+      <SiteFooter />
     </div>
   );
-} 
+}
+
+const inputStyle: React.CSSProperties = {
+  background: 'var(--surface-2)',
+  border: '1px solid var(--line)',
+  borderRadius: 'var(--r-sm)',
+  padding: '10px 12px',
+  fontSize: 14,
+  color: 'var(--text)',
+};
+
+function SectionLabel({
+  icon: Icon,
+  children,
+}: {
+  icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }>;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="flex items-center gap-2 px-3 py-2 mb-4"
+      style={{
+        background: 'var(--surface-2)',
+        borderRadius: 'var(--r-sm)',
+        color: 'var(--text)',
+        fontWeight: 700,
+        fontSize: 14,
+      }}
+    >
+      <Icon className="w-4 h-4" style={{ color: 'var(--primary)' }} />
+      {children}
+    </div>
+  );
+}
+
+function FormField({
+  label,
+  required,
+  children,
+}: {
+  label: string;
+  required?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <label className="block text-[13px] font-semibold mb-1.5" style={{ color: 'var(--text)' }}>
+        {label}
+        {required && <span style={{ color: 'var(--primary)' }}> *</span>}
+      </label>
+      {children}
+    </div>
+  );
+}

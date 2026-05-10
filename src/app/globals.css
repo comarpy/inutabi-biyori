@@ -1,77 +1,153 @@
 @import "tailwindcss";
 
+/* ===========================================
+   犬旅びより — Design Tokens (C案: clean)
+   =========================================== */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Typography */
+  --font-sans: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans JP", system-ui, sans-serif;
+  --font-serif: "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", "BIZ UDPMincho", serif;
+  --font-display: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", monospace;
+
+  /* Radii */
+  --r-xs: 4px;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 14px;
+  --r-xl: 20px;
+  --r-pill: 999px;
+
+  /* Shadow */
+  --sh-sm: 0 1px 2px rgba(20, 16, 10, 0.04), 0 1px 3px rgba(20, 16, 10, 0.06);
+  --sh-md: 0 4px 14px rgba(20, 16, 10, 0.08), 0 2px 4px rgba(20, 16, 10, 0.04);
+  --sh-lg: 0 12px 32px rgba(20, 16, 10, 0.10), 0 4px 8px rgba(20, 16, 10, 0.05);
+
+  /* Easing */
+  --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+
+  /* Theme C — clean modern */
+  --bg: #FAFAF7;
+  --bg-soft: #F1EFE8;
+  --surface: #FFFFFF;
+  --surface-2: #F6F4EE;
+  --line: #E5E2D8;
+  --line-soft: #EFEDE3;
+
+  --text: #1F1D17;
+  --text-muted: #5C5950;
+  --text-soft: #8B887E;
+
+  --primary: #C75200;
+  --primary-hover: #A84500;
+  --primary-soft: #FFE9D6;
+  --on-primary: #FFFFFF;
+
+  --accent: #1A6BC4;
+  --accent-soft: #E0EDFB;
+
+  --gold: #C09040;
+
+  --ok: #0A7B3E;
+  --ok-soft: #E0F2E6;
+  --warn: #C58A19;
+  --warn-soft: #FBF1DC;
+
+  /* Tailwind v4 token bridge */
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  line-height: 1.65;
 }
-/* --- ここから追加 --- */
-body {
-  font-family: 'Noto Sans JP', sans-serif;
-  background-color: #FAF6F1;
-  color: #484848;
+
+/* Utility — Pills (tags / badges) */
+.kt-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: var(--r-pill);
+  background: var(--surface-2);
+  color: var(--text-muted);
+  border: 1px solid var(--line-soft);
+  white-space: nowrap;
+  line-height: 1.4;
 }
-/* optgroupのスタイリング（楽天トラベル風） */
-optgroup {
-  font-weight: bold;
-  color: #FF5A5F;
-  background-color: #f8f9fa;
-  padding: 8px 0;
+.kt-pill--ok      { background: var(--ok-soft);      color: var(--ok);      border-color: transparent; }
+.kt-pill--accent  { background: var(--accent-soft);  color: var(--accent);  border-color: transparent; }
+.kt-pill--primary { background: var(--primary-soft); color: var(--primary); border-color: transparent; }
+.kt-pill--warn    { background: var(--warn-soft);    color: var(--warn);    border-color: transparent; }
+
+/* Utility — Buttons */
+.kt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-family: var(--font-sans);
+  font-weight: 600;
   font-size: 14px;
+  padding: 12px 18px;
+  border-radius: var(--r-md);
+  border: 1px solid transparent;
+  cursor: pointer;
+  line-height: 1;
+  transition: background .15s var(--ease-out), transform .15s var(--ease-out), box-shadow .15s var(--ease-out);
+  text-decoration: none;
+}
+.kt-btn--primary { background: var(--primary); color: var(--on-primary); }
+.kt-btn--primary:hover { background: var(--primary-hover); }
+.kt-btn--ghost { background: var(--surface); color: var(--text); border-color: var(--line); }
+.kt-btn--ghost:hover { background: var(--surface-2); }
+.kt-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Optional placeholder image (striped) */
+.kt-ph {
+  background:
+    repeating-linear-gradient(135deg, var(--surface-2) 0 12px, var(--bg-soft) 12px 24px);
+  color: var(--text-soft);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--r-md);
+  position: relative;
+  overflow: hidden;
 }
 
-optgroup option {
-  font-weight: normal;
-  color: #333;
-  padding-left: 16px;
-}
-
-/* セレクトボックスのoptionスタイリング */
-select option {
-  padding: 8px 12px;
-  font-size: 16px;
-}
-
-select optgroup {
-  background-color: #f8f9fa;
-  border-bottom: 1px solid #e9ecef;
-}
-
-/* チェックボックスのカスタムスタイル */
+/* Form checkbox (used in area selector) */
 .form-checkbox {
   appearance: none;
-  background-color: #fff;
-  border: 2px solid #d1d5db;
+  background-color: var(--surface);
+  border: 2px solid var(--line);
   border-radius: 4px;
   display: inline-block;
   position: relative;
   transition: all 0.2s ease;
 }
-
 .form-checkbox:checked {
-  background-color: #FF5A5F;
-  border-color: #FF5A5F;
+  background-color: var(--primary);
+  border-color: var(--primary);
 }
-
 .form-checkbox:checked::before {
   content: '✓';
   position: absolute;
@@ -82,17 +158,14 @@ select optgroup {
   font-size: 12px;
   font-weight: bold;
 }
-
 .form-checkbox:focus {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 90, 95, 0.1);
+  box-shadow: 0 0 0 3px rgba(199, 82, 0, 0.15);
 }
-
 .form-checkbox:indeterminate {
-  background-color: #FF5A5F;
-  border-color: #FF5A5F;
+  background-color: var(--primary);
+  border-color: var(--primary);
 }
-
 .form-checkbox:indeterminate::before {
   content: '–';
   position: absolute;
@@ -102,4 +175,9 @@ select optgroup {
   color: white;
   font-size: 14px;
   font-weight: bold;
+}
+
+/* Date input — adopt theme tone */
+input[type="date"] {
+  color-scheme: light;
 }

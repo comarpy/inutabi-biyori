@@ -464,7 +464,77 @@ export async function fetchRakutenHotelDetail(hotelNo: string): Promise<any | nu
     console.error('楽天ホテル詳細API 例外:', error);
     return null;
   }
-} 
+}
+
+// 楽天詳細APIレスポンスから「対象宿の高画質画像のみ」を厳格に抽出
+// 採用条件:
+//  - 楽天画像ホスト (img.travel.rakuten.co.jp / trvimg.r10s.jp)
+//  - URL に対象 hotelNo を含む（別宿の "おすすめ" 画像を除外）
+//  - 拡張子 .jpg/.jpeg/.png/.webp（gif=地図 / API リダイレクトを除外）
+//  - クエリパラメータなし（API リダイレクト除外）
+//  - "map." を含まない（地図画像除外）
+//  - サムネイル系を除外:
+//      /HIMG/<size>/ の size が 150 以下（小さいサイズ）
+//      _t / _s / _tn / _thumbnail / _small で終わる
+//      /thumbnail/ ディレクトリ
+export function isValidHotelImageUrl(s: string, hotelNo: string): boolean {
+  if (!s || !s.startsWith('http')) return false;
+  if (!s.includes('img.travel.rakuten.co.jp') && !s.includes('trvimg.r10s.jp')) return false;
+  if (!s.includes(hotelNo)) return false;
+  if (s.includes('map.')) return false;
+  if (s.includes('?')) return false;
+  if (!/\.(jpg|jpeg|png|webp)$/i.test(s)) return false;
+
+  // /HIMG/<size>/ パターン: size が小さいとサムネイル
+  const himgMatch = s.match(/\/HIMG\/(\d+)\//);
+  if (himgMatch && parseInt(himgMatch[1], 10) <= 150) return false;
+
+  // 末尾サフィックス: _t.jpg / _s.jpg / _tn.jpg / _thumbnail.jpg / _small.jpg
+  if (/_(t|s|tn|thumbnail|small)\.(jpg|jpeg|png|webp)$/i.test(s)) return false;
+
+  // /thumbnail/ ディレクトリ
+  if (/\/thumbnail\//i.test(s)) return false;
+
+  return true;
+}
+
+function extractImageUrlsFromDetail(
+  detail: unknown,
+  hotelNo: string,
+  found: Set<string> = new Set()
+): string[] {
+  if (!detail) return Array.from(found);
+  if (typeof detail === 'string') {
+    if (isValidHotelImageUrl(detail.trim(), hotelNo)) found.add(detail.trim());
+    return Array.from(found);
+  }
+  if (Array.isArray(detail)) {
+    for (const item of detail) extractImageUrlsFromDetail(item, hotelNo, found);
+    return Array.from(found);
+  }
+  if (typeof detail === 'object') {
+    for (const key of Object.keys(detail as Record<string, unknown>)) {
+      extractImageUrlsFromDetail((detail as Record<string, unknown>)[key], hotelNo, found);
+    }
+  }
+  return Array.from(found);
+}
+
+// 楽天 hotelNo から取れるすべての画像URLを返す（キャッシュ付き）
+const detailImagesCache = new Map<string, { urls: string[]; cachedAt: number }>();
+const DETAIL_IMAGES_TTL = 24 * 60 * 60 * 1000;
+
+export async function fetchRakutenHotelImages(hotelNo: string): Promise<string[]> {
+  if (!hotelNo) return [];
+  const now = Date.now();
+  const cached = detailImagesCache.get(hotelNo);
+  if (cached && now - cached.cachedAt < DETAIL_IMAGES_TTL) return cached.urls;
+
+  const detail = await fetchRakutenHotelDetail(hotelNo).catch(() => null);
+  const urls = detail ? extractImageUrlsFromDetail(detail, hotelNo) : [];
+  detailImagesCache.set(hotelNo, { urls, cachedAt: now });
+  return urls;
+}
 
 // 指定エリア（都道府県/地方）で楽天ホテル配列をフィルタ
 function filterHotelsByArea(hotels: RakutenHotel[], area: string): RakutenHotel[] {

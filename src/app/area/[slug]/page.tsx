@@ -1,14 +1,40 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { Dog, MapPin, Search, Star } from 'lucide-react';
-import { getAreaJpName, getAllAreaSlugs } from '@/lib/areaSlugs';
+import { Dog, Search, ChevronRight } from 'lucide-react';
+import { getAreaJpName, getAllAreaSlugs, AREA_SLUG_MAP } from '@/lib/areaSlugs';
 import { getMicroCMSHotels } from '@/lib/hotelService';
+import SiteHeader from '@/components/site/SiteHeader';
+import SiteFooter from '@/components/site/SiteFooter';
+import HotelCard from '@/components/site/HotelCard';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.inutabi-biyori.jp';
 
 export const revalidate = 3600;
+
+// 地方区分（同じ地方の他都道府県セレクタ用）
+const REGIONS: { name: string; areas: string[] }[] = [
+  { name: '北海道', areas: ['北海道'] },
+  { name: '東北', areas: ['青森県', '岩手県', '宮城県', '秋田県', '山形県', '福島県'] },
+  { name: '関東', areas: ['茨城県', '栃木県', '群馬県', '埼玉県', '千葉県', '東京都', '神奈川県'] },
+  { name: '甲信越', areas: ['山梨県', '長野県', '新潟県'] },
+  { name: '北陸', areas: ['富山県', '石川県', '福井県'] },
+  { name: '東海', areas: ['岐阜県', '静岡県', '愛知県'] },
+  { name: '近畿', areas: ['三重県', '滋賀県', '京都府', '大阪府', '兵庫県', '奈良県', '和歌山県'] },
+  { name: '中国', areas: ['鳥取県', '島根県', '岡山県', '広島県', '山口県'] },
+  { name: '四国', areas: ['徳島県', '香川県', '愛媛県', '高知県'] },
+  { name: '九州', areas: ['福岡県', '佐賀県', '長崎県', '熊本県', '大分県', '宮崎県', '鹿児島県'] },
+  { name: '沖縄', areas: ['沖縄県'] },
+];
+
+const QUICK_FILTERS: { key: string; label: string }[] = [
+  { key: 'largeDog', label: '大型犬OK' },
+  { key: 'multipleDogs', label: '多頭OK' },
+  { key: 'dogRun', label: 'ドッグラン' },
+  { key: 'hotSpring', label: '温泉' },
+  { key: 'roomDining', label: '部屋食' },
+  { key: 'parking', label: '駐車場' },
+];
 
 export async function generateStaticParams() {
   return getAllAreaSlugs().map((slug) => ({ slug }));
@@ -39,6 +65,14 @@ export async function generateMetadata(
   };
 }
 
+// 都道府県名 → slug の逆引き
+function jpToSlug(jp: string): string | null {
+  for (const [slug, name] of Object.entries(AREA_SLUG_MAP)) {
+    if (name === jp) return slug;
+  }
+  return null;
+}
+
 export default async function AreaPage({
   params,
 }: {
@@ -49,7 +83,13 @@ export default async function AreaPage({
   if (!jp) notFound();
 
   const hotels = await getMicroCMSHotels(jp).catch(() => []);
-  const topHotels = hotels.slice(0, 12);
+  const PAGE_SIZE = 12;
+  const visible = hotels.slice(0, PAGE_SIZE);
+  const totalPages = Math.max(1, Math.ceil(hotels.length / PAGE_SIZE));
+
+  // 同地方の都道府県
+  const region = REGIONS.find((r) => r.areas.includes(jp));
+  const sameRegionPrefs = region ? region.areas : [jp];
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -59,7 +99,7 @@ export default async function AreaPage({
     url: `${SITE_URL}/area/${slug}`,
     mainEntity: {
       '@type': 'ItemList',
-      itemListElement: topHotels.map((h, i) => ({
+      itemListElement: visible.map((h, i) => ({
         '@type': 'ListItem',
         position: i + 1,
         url: `${SITE_URL}/hotel/${h.id}`,
@@ -74,106 +114,211 @@ export default async function AreaPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <div className="min-h-screen bg-[#FDF8F3]">
-        <header className="bg-gradient-to-r from-[#FF5A5F] to-[#FF385C] text-white p-3">
-          <div className="max-w-7xl mx-auto flex items-center justify-between">
-            <Link href="/" className="flex items-center hover:opacity-80">
-              <Dog className="w-6 h-6 mr-2" />
-              <div className="flex flex-col">
-                <span className="font-bold text-lg">犬旅びより</span>
-                <span className="text-xs opacity-90">- 愛犬と泊まれる宿が見つかる、旅の検索サイト</span>
-              </div>
-            </Link>
-          </div>
-        </header>
+      <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
+        <SiteHeader />
 
-        <main className="max-w-5xl mx-auto px-4 py-8">
-          <nav aria-label="breadcrumb" className="text-sm text-gray-600 mb-4">
-            <Link href="/" className="hover:underline">ホーム</Link>
-            <span className="mx-2">/</span>
-            <span>{jp}</span>
-          </nav>
+        {/* Breadcrumb */}
+        <nav
+          aria-label="breadcrumb"
+          className="max-w-7xl mx-auto px-4 md:px-8 pt-3 text-[12px] flex items-center gap-1.5"
+          style={{ color: 'var(--text-soft)' }}
+        >
+          <Link href="/" className="hover:opacity-70">トップ</Link>
+          <ChevronRight className="w-3 h-3" />
+          <Link href="/search" className="hover:opacity-70">エリア</Link>
+          {region && (
+            <>
+              <ChevronRight className="w-3 h-3" />
+              <span style={{ color: 'var(--text-muted)' }}>{region.name}</span>
+            </>
+          )}
+          <ChevronRight className="w-3 h-3" />
+          <span style={{ color: 'var(--text)' }}>{jp}</span>
+        </nav>
 
-          <h1 className="text-3xl md:text-4xl font-bold flex items-center mb-3">
-            <MapPin className="w-8 h-8 mr-2 text-[#FF5A5F]" />
+        {/* Hero */}
+        <section className="max-w-7xl mx-auto px-4 md:px-8 pt-3 md:pt-5 pb-5 md:pb-7">
+          <h1
+            className="font-bold mb-2"
+            style={{
+              fontFamily: 'var(--font-display)',
+              fontSize: 'clamp(24px, 4.5vw, 36px)',
+              color: 'var(--text)',
+              lineHeight: 1.3,
+            }}
+          >
             {jp}で愛犬と泊まれる宿
           </h1>
-          <p className="text-gray-700 mb-6 leading-relaxed">
-            {jp}エリアには、愛犬と一緒にくつろげる宿・ホテルが多数あります。
-            ドッグラン付きの温泉旅館、ペット同伴で食事ができるレストラン付きホテル、
-            大型犬OKのコテージなど、さまざまな選択肢から「犬旅びより」がセレクトしてご紹介します。
+          <p className="text-[13px] md:text-[14px]" style={{ color: 'var(--text-muted)', lineHeight: 1.8 }}>
+            {region?.name === '関東'
+              ? '箱根・伊豆・那須・軽井沢など、犬連れに人気の観光地が集中。'
+              : `${jp}エリアの犬連れOKの宿をセレクトしてご紹介します。`}
           </p>
+        </section>
 
-          <Link
-            href={`/search?areas=${encodeURIComponent(jp)}`}
-            className="inline-flex items-center bg-[#FF5A5F] hover:bg-[#FF385C] text-white px-5 py-3 rounded-full text-sm font-semibold transition-colors mb-8"
-          >
-            <Search className="w-4 h-4 mr-2" />
-            {jp}の宿を絞り込み検索
-          </Link>
+        {/* Same-region prefecture selector */}
+        {sameRegionPrefs.length > 1 && (
+          <section className="max-w-7xl mx-auto px-4 md:px-8 pb-5 md:pb-7">
+            <div className="text-[12px] font-bold mb-2" style={{ color: 'var(--text-muted)' }}>
+              都道府県から選ぶ
+            </div>
+            <div
+              className="grid gap-1.5"
+              style={{
+                gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 110px), 1fr))',
+              }}
+            >
+              {sameRegionPrefs.map((p) => {
+                const sg = jpToSlug(p);
+                const isCurrent = p === jp;
+                const Inner = (
+                  <div
+                    className="text-center py-2 px-1.5 transition-all"
+                    style={{
+                      background: isCurrent ? 'var(--primary-soft)' : 'var(--surface)',
+                      border: `1px solid ${isCurrent ? 'var(--primary)' : 'var(--line)'}`,
+                      borderRadius: 'var(--r-sm)',
+                      color: isCurrent ? 'var(--primary)' : 'var(--text)',
+                    }}
+                  >
+                    <div className="text-[12px] font-bold leading-tight">{p}</div>
+                  </div>
+                );
+                return sg && !isCurrent ? (
+                  <Link key={p} href={`/area/${sg}`} className="block">
+                    {Inner}
+                  </Link>
+                ) : (
+                  <div key={p}>{Inner}</div>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
-          <h2 className="text-2xl font-bold mb-4 mt-4">おすすめの宿</h2>
+        {/* Quick filter pills */}
+        <section className="max-w-7xl mx-auto px-4 md:px-8 pb-3">
+          <div className="flex gap-1.5 flex-wrap">
+            <Link
+              href={`/search?areas=${encodeURIComponent(jp)}`}
+              className="kt-pill kt-pill--primary"
+              style={{ fontSize: 12, padding: '6px 14px' }}
+            >
+              すべて
+            </Link>
+            {QUICK_FILTERS.map((f) => (
+              <Link
+                key={f.key}
+                href={`/search?areas=${encodeURIComponent(jp)}&${f.key}=true`}
+                className="kt-pill"
+                style={{ fontSize: 12, padding: '6px 14px' }}
+              >
+                {f.label}
+              </Link>
+            ))}
+          </div>
+        </section>
 
-          {topHotels.length === 0 ? (
-            <p className="text-gray-600">現在 {jp} の宿データを準備中です。</p>
+        {/* Result meta */}
+        <section className="max-w-7xl mx-auto px-4 md:px-8 pb-3 flex items-center justify-between text-[12px]" style={{ color: 'var(--text-muted)' }}>
+          <span>
+            {hotels.length}件中 1-{Math.min(visible.length, hotels.length)}件を表示
+          </span>
+          <span>並び順: おすすめ ▾</span>
+        </section>
+
+        {/* Hotel cards */}
+        <section className="max-w-7xl mx-auto px-4 md:px-8">
+          {visible.length === 0 ? (
+            <p
+              className="py-8 text-center"
+              style={{
+                color: 'var(--text-muted)',
+                background: 'var(--surface)',
+                border: '1px solid var(--line)',
+                borderRadius: 'var(--r-md)',
+              }}
+            >
+              現在 {jp} の宿データを準備中です。
+            </p>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {topHotels.map((h) => (
-                <Link
-                  key={h.id}
-                  href={`/hotel/${h.id}`}
-                  className="bg-white rounded-xl overflow-hidden shadow hover:shadow-lg hover:-translate-y-1 transition-all border border-gray-100"
-                >
-                  <div className="relative w-full h-44 bg-gray-100">
-                    <Image
-                      src={h.image}
-                      alt={h.name}
-                      fill
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-bold text-base mb-1 line-clamp-2">{h.name}</h3>
-                    <p className="text-xs text-gray-600 line-clamp-1 mb-2">{h.location}</p>
-                    {h.reviewAverage ? (
-                      <div className="flex items-center text-xs mb-2">
-                        <Star className="w-3.5 h-3.5 mr-1 text-yellow-500 fill-yellow-500" />
-                        <span className="font-semibold">{h.reviewAverage.toFixed(1)}</span>
-                        {h.reviewCount ? (
-                          <span className="ml-1 text-gray-500">({h.reviewCount})</span>
-                        ) : null}
-                      </div>
-                    ) : null}
-                    <div className="flex items-center justify-between">
-                      <span className="text-[#FF5A5F] font-bold text-sm">¥{h.price.toLocaleString()}〜</span>
-                      <span className="text-xs text-gray-500">詳細へ →</span>
-                    </div>
-                  </div>
-                </Link>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {visible.map((h) => (
+                <HotelCard key={h.id} hotel={h} layout="row" />
               ))}
             </div>
           )}
+        </section>
 
-          <section className="mt-10 bg-white rounded-xl p-6 border border-gray-100">
-            <h2 className="text-xl font-bold mb-3 flex items-center">
-              <Dog className="w-5 h-5 mr-2 text-[#FF5A5F]" />
-              {jp}で犬と泊まるときのヒント
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <section className="max-w-7xl mx-auto px-4 md:px-8 mt-5 flex justify-center gap-1.5">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+              <span
+                key={p}
+                className="inline-flex items-center justify-center"
+                style={{
+                  width: 32,
+                  height: 32,
+                  background: p === 1 ? 'var(--primary)' : 'var(--surface)',
+                  color: p === 1 ? 'var(--on-primary)' : 'var(--text)',
+                  border: `1px solid ${p === 1 ? 'var(--primary)' : 'var(--line)'}`,
+                  borderRadius: 'var(--r-sm)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                }}
+              >
+                {p}
+              </span>
+            ))}
+          </section>
+        )}
+
+        {/* CTA - 詳細検索へ */}
+        <section className="max-w-7xl mx-auto px-4 md:px-8 mt-6 md:mt-8 text-center">
+          <Link
+            href={`/search?areas=${encodeURIComponent(jp)}`}
+            className="kt-btn kt-btn--primary inline-flex"
+            style={{ padding: '12px 24px', fontSize: 14 }}
+          >
+            <Search className="w-4 h-4" />
+            {jp}の宿を絞り込み検索
+          </Link>
+        </section>
+
+        {/* Tips */}
+        <section className="max-w-7xl mx-auto px-4 md:px-8 mt-10 md:mt-14">
+          <div
+            className="p-5 md:p-6"
+            style={{
+              background: 'var(--surface-2)',
+              borderRadius: 'var(--r-md)',
+            }}
+          >
+            <h2
+              className="font-bold mb-3 flex items-center gap-2"
+              style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 16,
+                color: 'var(--text)',
+              }}
+            >
+              <Dog className="w-5 h-5" style={{ color: 'var(--primary)' }} />
+              {jp}で犬と泊まる宿の選び方
             </h2>
-            <ul className="text-sm text-gray-700 space-y-2 list-disc pl-5">
+            <ul
+              className="text-[13px] space-y-2 list-disc pl-5"
+              style={{ color: 'var(--text-muted)', lineHeight: 1.8 }}
+            >
               <li>予約前に、同伴可能な犬のサイズ・頭数・料金を必ず確認しましょう。</li>
               <li>ワクチン接種証明書の持参を求める宿が多いです。</li>
               <li>ドッグラン付き、温泉付き、ペット同伴食事OKなど、条件で絞り込むと探しやすくなります。</li>
               <li>室内でリードを外していいかは宿ごとに違うので、事前に確認を。</li>
             </ul>
-          </section>
-        </main>
-
-        <footer className="bg-[#3A3A3A] text-white mt-10">
-          <div className="max-w-7xl mx-auto px-4 py-6 text-sm text-gray-300 text-center">
-            © 2025 犬旅びより All Rights Reserved.
           </div>
-        </footer>
+        </section>
+
+        <SiteFooter />
       </div>
     </>
   );
