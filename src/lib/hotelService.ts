@@ -135,6 +135,8 @@ function generatePrice(reviewAverage: number, hotelMinCharge?: number): number {
 }
 
 // 画像未登録宿のフォールバック（汎用プレースホルダ）
+// AI生成画像（バーニーズ等）で差し替えたい場合は public/images/ に新画像を
+// アップロードして以下のパスを変更するだけで全箇所に反映される。
 const PLACEHOLDER_IMAGE = '/images/画像2.jpeg';
 
 // 詳細条件のインターフェース
@@ -683,8 +685,8 @@ async function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): Promis
     });
 
     if (matched) {
-      // 画像候補の優先順位: hotelImageUrl > roomImageUrl > hotelThumbnailUrl > roomThumbnailUrl > hotelMapImageUrl
-      const candidates = [matched.hotelImageUrl, matched.roomImageUrl, matched.hotelThumbnailUrl, matched.roomThumbnailUrl, matched.hotelMapImageUrl]
+      // フル画像のみ採用（Thumbnail / MapImage は除外）
+      const candidates = [matched.hotelImageUrl, matched.roomImageUrl]
         .filter((u): u is string => !!u && typeof u === 'string');
       for (const url of candidates) {
         if (!images.includes(url)) images.push(url);
@@ -706,9 +708,9 @@ async function convertMicroCMSToHotelDetail(microCMSHotel: DogHotelInfo): Promis
   if (images.length === 0 || !rakutenUrl) {
     const kwResults = await searchRakutenByKeyword(microCMSHotel.hotelName);
     if (kwResults.length > 0) {
-      // 最上位を採用（楽天のスコア順）
+      // 最上位を採用（楽天のスコア順）。フル画像のみ採用
       const best = kwResults[0];
-      const candidates = [best.hotelImageUrl, best.roomImageUrl, best.hotelThumbnailUrl, best.roomThumbnailUrl, best.hotelMapImageUrl]
+      const candidates = [best.hotelImageUrl, best.roomImageUrl]
         .filter((u): u is string => !!u && typeof u === 'string');
       for (const url of candidates) {
         if (!images.includes(url)) images.push(url);
@@ -795,34 +797,13 @@ function convertRakutenToHotelDetail(rakutenHotel: RakutenHotel, requestedId?: s
     reviewCount: rakutenHotel.reviewCount || undefined,
   };
 
-  // 楽天APIから取得できる複数の画像URLを配列として設定
+  // フル画像のみ採用（Thumbnail / MapImage は劣化版/地図のため除外）
   const images: string[] = [];
-  
-  // メイン画像
-  if (rakutenHotel.hotelImageUrl) {
-    images.push(rakutenHotel.hotelImageUrl);
-  }
-  
-  // 客室画像
-  if (rakutenHotel.roomImageUrl) {
+  if (rakutenHotel.hotelImageUrl) images.push(rakutenHotel.hotelImageUrl);
+  if (rakutenHotel.roomImageUrl && !images.includes(rakutenHotel.roomImageUrl)) {
     images.push(rakutenHotel.roomImageUrl);
   }
-  
-  // サムネイル画像（メイン画像と異なる場合のみ）
-  if (rakutenHotel.hotelThumbnailUrl && rakutenHotel.hotelThumbnailUrl !== rakutenHotel.hotelImageUrl) {
-    images.push(rakutenHotel.hotelThumbnailUrl);
-  }
-  
-  // 客室サムネイル画像（他の画像と異なる場合のみ）
-  if (rakutenHotel.roomThumbnailUrl && !images.includes(rakutenHotel.roomThumbnailUrl)) {
-    images.push(rakutenHotel.roomThumbnailUrl);
-  }
-  
-  // 地図画像（他の画像と異なる場合のみ）
-  if (rakutenHotel.hotelMapImageUrl && !images.includes(rakutenHotel.hotelMapImageUrl)) {
-    images.push(rakutenHotel.hotelMapImageUrl);
-  }
-  
+
   // 画像が無い場合のみプレースホルダ1枚（別宿の写真は流用しない）
   if (images.length === 0) {
     images.push(PLACEHOLDER_IMAGE);
@@ -877,37 +858,13 @@ function convertRakutenDetailToHotelDetail(rakutenDetail: any, requestedId?: str
     reviewCount: basicInfo.reviewCount || undefined,
   };
   
-  // 楽天詳細APIから取得できる複数の画像URLを配列として設定
+  // フル画像のみ採用（Thumbnail / MapImage は劣化版/地図のため除外）
   const images: string[] = [];
-  
-  // メイン画像
-  if (basicInfo.hotelImageUrl) {
-    images.push(basicInfo.hotelImageUrl);
-  }
-  
-  // 客室画像
-  if (basicInfo.roomImageUrl) {
+  if (basicInfo.hotelImageUrl) images.push(basicInfo.hotelImageUrl);
+  if (basicInfo.roomImageUrl && !images.includes(basicInfo.roomImageUrl)) {
     images.push(basicInfo.roomImageUrl);
   }
-  
-  // サムネイル画像（メイン画像と異なる場合のみ）
-  if (basicInfo.hotelThumbnailUrl && basicInfo.hotelThumbnailUrl !== basicInfo.hotelImageUrl) {
-    images.push(basicInfo.hotelThumbnailUrl);
-  }
-  
-  // 客室サムネイル画像（他の画像と異なる場合のみ）
-  if (basicInfo.roomThumbnailUrl && !images.includes(basicInfo.roomThumbnailUrl)) {
-    images.push(basicInfo.roomThumbnailUrl);
-  }
-  
-  // 地図画像（他の画像と異なる場合のみ）
-  if (basicInfo.hotelMapImageUrl && !images.includes(basicInfo.hotelMapImageUrl)) {
-    images.push(basicInfo.hotelMapImageUrl);
-  }
-  
-  // 詳細APIでは更に多くの画像が取得できる可能性があります
-  // （楽天APIの仕様により追加の画像フィールドがある場合）
-  
+
   // 画像が無い場合のみプレースホルダ1枚（別宿の写真は流用しない）
   if (images.length === 0) {
     images.push(PLACEHOLDER_IMAGE);

@@ -466,20 +466,35 @@ export async function fetchRakutenHotelDetail(hotelNo: string): Promise<any | nu
   }
 }
 
-// 楽天詳細APIレスポンスから「対象宿の画像のみ」を厳格に抽出
+// 楽天詳細APIレスポンスから「対象宿の高画質画像のみ」を厳格に抽出
 // 採用条件:
 //  - 楽天画像ホスト (img.travel.rakuten.co.jp / trvimg.r10s.jp)
 //  - URL に対象 hotelNo を含む（別宿の "おすすめ" 画像を除外）
 //  - 拡張子 .jpg/.jpeg/.png/.webp（gif=地図 / API リダイレクトを除外）
 //  - クエリパラメータなし（API リダイレクト除外）
 //  - "map." を含まない（地図画像除外）
-function isValidHotelImageUrl(s: string, hotelNo: string): boolean {
+//  - サムネイル系を除外:
+//      /HIMG/<size>/ の size が 150 以下（小さいサイズ）
+//      _t / _s / _tn / _thumbnail / _small で終わる
+//      /thumbnail/ ディレクトリ
+export function isValidHotelImageUrl(s: string, hotelNo: string): boolean {
   if (!s || !s.startsWith('http')) return false;
   if (!s.includes('img.travel.rakuten.co.jp') && !s.includes('trvimg.r10s.jp')) return false;
   if (!s.includes(hotelNo)) return false;
   if (s.includes('map.')) return false;
   if (s.includes('?')) return false;
   if (!/\.(jpg|jpeg|png|webp)$/i.test(s)) return false;
+
+  // /HIMG/<size>/ パターン: size が小さいとサムネイル
+  const himgMatch = s.match(/\/HIMG\/(\d+)\//);
+  if (himgMatch && parseInt(himgMatch[1], 10) <= 150) return false;
+
+  // 末尾サフィックス: _t.jpg / _s.jpg / _tn.jpg / _thumbnail.jpg / _small.jpg
+  if (/_(t|s|tn|thumbnail|small)\.(jpg|jpeg|png|webp)$/i.test(s)) return false;
+
+  // /thumbnail/ ディレクトリ
+  if (/\/thumbnail\//i.test(s)) return false;
+
   return true;
 }
 
